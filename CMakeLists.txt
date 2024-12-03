@@ -38,6 +38,14 @@ add_subdirectory(${SDL_DIR} EXCLUDE_FROM_ALL)
 
 add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
+target_compile_definitions("${CMAKE_PROJECT_NAME}" 
+    PUBLIC
+        RESOURCES_PATH="${RESOURCE_DIR}"
+        $<$<CONFIG:Debug>:DEBUG>
+        $<$<CONFIG:RelWithDebInfo>:RELEASE>
+        $<$<CONFIG:Release>:RELEASE>
+        $<$<CONFIG:MinSizeRel>:RELEASE>)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static PRIVATE ${CMAKE_DL_LIBS})
 
