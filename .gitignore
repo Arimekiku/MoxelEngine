@@ -1,0 +1,24 @@
+# Visual Studio
+.cache/
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+**.csproj
+
+# JebBrains
+.idea/
+
+# Binaries
+cmake-build-debug/
+bin/
+int/
+out/
+build/
+
+# Git
+.git/
+
+# Nix
+.direnv
