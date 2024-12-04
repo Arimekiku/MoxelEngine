@@ -32,6 +32,10 @@ file(COPY ${RESOURCE_DIR} DESTINATION "${CMAKE_BINARY_DIR}/Resources/")
 # vulkan
 find_package(Vulkan REQUIRED)
 
+# vma 
+set(VMA_DIR "vendor/VulkanMemoryAllocator")
+add_subdirectory(${VMA_DIR} EXCLUDE_FROM_ALL)
+
 # vk-bootstrap
 set(VK_BOOT_DIR "vendor/vk-bootstrap")
 add_subdirectory(${VK_BOOT_DIR} EXCLUDE_FROM_ALL)
@@ -63,6 +67,6 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         "${PROJECT_SOURCE_DIR}")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES} spdlog PRIVATE ${CMAKE_DL_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES} GPUOpen::VulkanMemoryAllocator spdlog PRIVATE ${CMAKE_DL_LIBS})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
