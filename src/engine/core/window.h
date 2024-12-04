@@ -2,14 +2,16 @@
 
 #include "engine/vulkan/vulkan_engine.h"
 
-namespace SDLarria {
-	class GameWindow {
+namespace SDLarria 
+{
+	class GameWindow 
+	{
 	public:
-		GameWindow(VkExtent2D size);
+		GameWindow(int width, int height);
 		~GameWindow();
 
-		const SDL_Surface* GetWindowSurface() { return m_WindowSurface; }
-		SDL_Window* GetNativeWindow() { return m_NativeWindow; }
+		const SDL_Surface* GetWindowSurface() const { return m_WindowSurface; }
+		SDL_Window* GetNativeWindow() const { return m_NativeWindow; }
 
 		void Update(VulkanEngine& engine);
 

@@ -1,14 +1,18 @@
 #pragma once
 
-#include <vulkan/vulkan_core.h>
-#include <VkBootstrap.h>
+#include "vulkan_instance.h"
 
-namespace SDLarria {
-	struct FrameData {
+#include <vulkan/vulkan_core.h>
+
+namespace SDLarria 
+{
+	struct FrameData 
+	{
 		VkCommandPool CommandPool = nullptr;
 		VkCommandBuffer CommandBuffer = nullptr;
 
-		VkSemaphore SwapchainSemaphore, RenderSemaphore = nullptr;
+		VkSemaphore SwapchainSemaphore = nullptr; 
+		VkSemaphore RenderSemaphore = nullptr;
 		VkFence RenderFence = nullptr;
 
 		FrameData() = default;
@@ -16,12 +20,13 @@ namespace SDLarria {
 
 	constexpr unsigned int FRAME_OVERLAP = 2;
 
-	class VulkanCommandPool {
+	class VulkanCommandPool 
+	{
 	public:
 		VulkanCommandPool() = default;
 		
-		void Initialize(vkb::Device& device);
-		void Destroy();
+		void Initialize(const VulkanInstance& toolset);
+		void Destroy() const;
 
 		FrameData& GetLastFrame() { return m_Frames[m_CurrentFrame % FRAME_OVERLAP]; };
 

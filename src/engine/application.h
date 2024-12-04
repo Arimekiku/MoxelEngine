@@ -2,8 +2,10 @@
 
 #include "core/core.h"
 
-namespace SDLarria {
-	class Application {
+namespace SDLarria 
+{
+	class Application 
+	{
 	public:
 		Application();
 		~Application();

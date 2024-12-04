@@ -1,7 +1,9 @@
 #include "vulkan_image.h"
 
-namespace SDLarria {
-	void VulkanImage::WriteImage(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout) {
+namespace SDLarria 
+{
+	void VulkanImage::WriteImage(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout) 
+    {
         auto imageBarrier = VkImageMemoryBarrier2();
         imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
         imageBarrier.pNext = nullptr;

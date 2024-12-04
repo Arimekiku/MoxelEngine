@@ -1,15 +1,17 @@
 #pragma once
 
-#include <VkBootstrap.h>
+#include "vulkan_instance.h"
+
 #include <vector>
 
-namespace SDLarria {
-	class VulkanSwapchain {
+namespace SDLarria 
+{
+	class VulkanSwapchain 
+	{
 	public:
 		VulkanSwapchain() = default;
 
-		void Initialize(vkb::Device& device, VkSurfaceKHR surface, VkExtent2D& surfaceExtent);
-
+		void Initialize(const VulkanInstance& toolset, const VkExtent2D& windowSize);
 		void Destroy();
 
 	private:
