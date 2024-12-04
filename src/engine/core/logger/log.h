@@ -28,3 +28,4 @@ namespace SDLarria
 #define LOG_WARN(...)		::SDLarria::Log::GetLogger()->warn(__VA_ARGS__)
 #define LOG_ERROR(...)		::SDLarria::Log::GetLogger()->error(__VA_ARGS__)
 #define LOG_CRITICAL(...)	::SDLarria::Log::GetLogger()->critical(__VA_ARGS__)
+#define LOG_ASSERT(x, ...)	{ if (x == false) { LOG_ERROR("Invalid assertion: {0}", __VA_ARGS__); debugbreak(); } }

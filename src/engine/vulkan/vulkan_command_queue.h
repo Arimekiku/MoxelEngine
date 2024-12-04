@@ -5,11 +5,13 @@
 
 namespace SDLarria {
 	struct FrameData {
-		VkCommandPool CommandPool;
-		VkCommandBuffer CommandBuffer;
+		VkCommandPool CommandPool = nullptr;
+		VkCommandBuffer CommandBuffer = nullptr;
 
-		VkSemaphore SwapchainSemaphore, RenderSemaphore;
-		VkFence RenderFence;
+		VkSemaphore SwapchainSemaphore, RenderSemaphore = nullptr;
+		VkFence RenderFence = nullptr;
+
+		FrameData() = default;
 	};
 
 	constexpr unsigned int FRAME_OVERLAP = 2;

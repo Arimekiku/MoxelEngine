@@ -1,10 +1,9 @@
 #include "vulkan_engine.h"
 #include "vulkan_image.h"
+#include "vulkan.h"
 
 #include <cmath>
 #include <SDL3/SDL_vulkan.h>
-#include <vulkan/vk_enum_string_helper.h>
-#include <engine/core/logger/log.h>
 
 namespace SDLarria {
 	void VulkanEngine::Initialize(SDL_Window* window, VkExtent2D windowSize) {
@@ -56,28 +55,21 @@ namespace SDLarria {
 	 void VulkanEngine::Draw() {
          // Update fences
          auto result = vkWaitForFences(m_LogicalDevice, 1, &m_CommandPool.GetLastFrame().RenderFence, true, 1000000000);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan fence error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
+
          result = vkResetFences(m_LogicalDevice, 1, &m_CommandPool.GetLastFrame().RenderFence);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan fence error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          uint32_t swapchainImageIndex;
          const auto& lastFrame = m_CommandPool.GetLastFrame();
          result = vkAcquireNextImageKHR(m_LogicalDevice, m_Swapchain.m_SwapchainInstance, 1000000000, lastFrame.SwapchainSemaphore, nullptr, &swapchainImageIndex);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan swapchain error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          VkCommandBuffer cmd = lastFrame.CommandBuffer;
 
          // Render commands
          result = vkResetCommandBuffer(cmd, 0);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan command buffer error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          auto cmdBeginInfo = VkCommandBufferBeginInfo();
          cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -86,9 +78,7 @@ namespace SDLarria {
          cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
          result = vkBeginCommandBuffer(cmd, &cmdBeginInfo);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan command buffer error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          // make the swapchain image into writeable mode before rendering
          auto& image = m_Swapchain.m_Images[swapchainImageIndex];
@@ -114,9 +104,7 @@ namespace SDLarria {
 
          // finalize the command buffer (we can no longer add commands, but it can now be executed)
          result = vkEndCommandBuffer(cmd);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan command buffer error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          // prepare the submission to the queue.
          // we want to wait on the _presentSemaphore, as that semaphore is signaled when the swapchain is ready
@@ -138,7 +126,7 @@ namespace SDLarria {
          auto signalInfo = VkSemaphoreSubmitInfo();
          signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
          signalInfo.pNext = nullptr;
-         signalInfo.semaphore = lastFrame.SwapchainSemaphore;
+         signalInfo.semaphore = lastFrame.RenderSemaphore;
          signalInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
          signalInfo.deviceIndex = 0;
          signalInfo.value = 1;
@@ -156,9 +144,7 @@ namespace SDLarria {
          // submit command buffer to the queue and execute it.
          // Fence will now block until the graphic commands finish execution
          result = vkQueueSubmit2(m_CommandPool.m_GraphicsQueue, 1, &submit, lastFrame.RenderFence);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan queue error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          // prepare present
          // this will put the image we just rendered to into the visible window.
@@ -176,9 +162,7 @@ namespace SDLarria {
          presentInfo.pImageIndices = &swapchainImageIndex;
 
          result = vkQueuePresentKHR(m_CommandPool.m_GraphicsQueue, &presentInfo);
-         if (result != VK_SUCCESS) {
-             LOG_CRITICAL("Vulkan queue error: {0}", string_VkResult(result));
-         }
+         VULKAN_CHECK(result);
 
          //increase the number of frames drawn
          m_CommandPool.m_CurrentFrame++;

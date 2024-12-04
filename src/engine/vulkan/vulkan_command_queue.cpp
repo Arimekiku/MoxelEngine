@@ -1,7 +1,5 @@
 #include "vulkan_command_queue.h"
-#include "engine/core/logger/log.h"
-
-#include <vulkan/vk_enum_string_helper.h>
+#include "vulkan.h"
 
 namespace SDLarria {
 	void VulkanCommandPool::Initialize(vkb::Device& device) {
@@ -17,10 +15,10 @@ namespace SDLarria {
 
 		// Allocate buffers
 		for (int i = 0; i < FRAME_OVERLAP; i++) {
+			m_Frames[i] = FrameData();
+
 			auto result = vkCreateCommandPool(device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool);
-			if (result != VK_SUCCESS) {
-				LOG_CRITICAL("Vulkan command pool: {0}", string_VkResult(result));
-			}
+			VULKAN_CHECK(result);
 
 			auto cmdAllocInfo = VkCommandBufferAllocateInfo();
 			cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -30,9 +28,7 @@ namespace SDLarria {
 			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
 			result = vkAllocateCommandBuffers(device, &cmdAllocInfo, &m_Frames[i].CommandBuffer);
-			if (result != VK_SUCCESS) {
-				LOG_CRITICAL("Vulkan command buffer: {0}", string_VkResult(result));
-			}
+			VULKAN_CHECK(result);
 		}
 
 		auto fenceCreateInfo = VkFenceCreateInfo();
@@ -47,19 +43,13 @@ namespace SDLarria {
 		// Allocate fences and semaphores
 		for (int i = 0; i < FRAME_OVERLAP; i++) {
 			auto result = vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &m_Frames[i].RenderFence);
-			if (result != VK_SUCCESS) {
-				LOG_CRITICAL("Vulkan fence: {0}", string_VkResult(result));
-			}
+			VULKAN_CHECK(result);
 
 			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frames[i].SwapchainSemaphore);
-			if (result != VK_SUCCESS) {
-				LOG_CRITICAL("Vulkan semaphore: {0}", string_VkResult(result));
-			}
+			VULKAN_CHECK(result);
 
 			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frames[i].RenderSemaphore);
-			if (result != VK_SUCCESS) {
-				LOG_CRITICAL("Vulkan semaphore: {0}", string_VkResult(result));
-			}
+			VULKAN_CHECK(result);
 		}
 	}
 
