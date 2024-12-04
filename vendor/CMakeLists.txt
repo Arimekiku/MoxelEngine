@@ -17,6 +17,10 @@ add_subdirectory(${SDL_DIR} EXCLUDE_FROM_ALL)
 set(IMGUI_DIR "ImGui")
 file(GLOB IMGUI_SOURCES "${IMGUI_DIR}/imgui.h" "${IMGUI_DIR}/backends/imgui_impl_sdl2.h" "${IMGUI_DIR}/backends/imgui_impl_vulkan.h")
 
+# spdlog
+set(SPDLOG_DIR "spdlog")
+add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
+
 ################################# Library ####################################
 
 add_library(${PROJECT_NAME} ${IMGUI_SOURCES})
@@ -28,4 +32,4 @@ target_include_directories(${PROJECT_NAME}
 		"${VK_BOOT_DIR}/src"
 		"${Vulkan_INCLUDE_DIRS}")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES} spdlog)

@@ -15,11 +15,11 @@ namespace SDLarria {
 	private:
 		VkDevice m_DeviceInstance = nullptr;
 		VkSwapchainKHR m_SwapchainInstance = nullptr;
-		VkFormat m_SwapchainImageFormat;
+		VkFormat m_SwapchainImageFormat = VK_FORMAT_UNDEFINED;
 
 		std::vector<VkImage> m_Images;
 		std::vector<VkImageView> m_ImageViews;
-		VkExtent2D m_SwapchainExtent;
+		VkExtent2D m_SwapchainExtent = VkExtent2D(0, 0);
 
 		friend class VulkanEngine;
 	};

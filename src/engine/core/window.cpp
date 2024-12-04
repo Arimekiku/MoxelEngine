@@ -1,6 +1,5 @@
 #include "window.h"
 #include "image.h"
-#include "vulkan/vulkan_engine.h"
 
 #include <iostream>
 
@@ -15,7 +14,6 @@ namespace SDLarria {
         m_NativeWindow = SDL_CreateWindow("Vulkan Engine", width, height, window_flags);
         if (m_NativeWindow == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window: %s\n", SDL_GetError());
-            return;
         }
 	}
 

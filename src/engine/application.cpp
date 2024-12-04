@@ -2,7 +2,7 @@
 
 namespace SDLarria {
 	Application::Application() {
-		//TODO : initialize log
+		Log::Initialize();
 		
 		m_Engine = VulkanEngine();
 

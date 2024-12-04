@@ -2,8 +2,9 @@
 #include "vulkan_image.h"
 
 #include <cmath>
-//#include <VkBootstrap.h>
 #include <SDL3/SDL_vulkan.h>
+#include <vulkan/vk_enum_string_helper.h>
+#include <engine/core/logger/log.h>
 
 namespace SDLarria {
 	void VulkanEngine::Initialize(SDL_Window* window, VkExtent2D windowSize) {
@@ -22,19 +23,21 @@ namespace SDLarria {
          SDL_Vulkan_CreateSurface(window, m_Instance, nullptr, &m_WindowSurface);
 
          //vulkan 1.3 features
-         VkPhysicalDeviceVulkan13Features features{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
-         features.dynamicRendering = true;
-         features.synchronization2 = true;
+         auto features13 = VkPhysicalDeviceVulkan13Features();
+         features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+         features13.dynamicRendering = true;
+         features13.synchronization2 = true;
 
          //vulkan 1.2 features
-         VkPhysicalDeviceVulkan12Features features12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+         auto features12 = VkPhysicalDeviceVulkan12Features();
+         features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
          features12.bufferDeviceAddress = true;
          features12.descriptorIndexing = true;
 
          auto selector = vkb::PhysicalDeviceSelector(vkbInstance);
          auto physicalDevice = selector
              .set_minimum_version(1, 3)
-             .set_required_features_13(features)
+             .set_required_features_13(features13)
              .set_required_features_12(features12)
              .set_surface(m_WindowSurface)
              .select()
@@ -51,19 +54,30 @@ namespace SDLarria {
 	}
 
 	 void VulkanEngine::Draw() {
-         // TODO: log this
          // Update fences
-         vkWaitForFences(m_LogicalDevice, 1, &m_CommandPool.GetLastFrame().RenderFence, true, 1000000000);
-         vkResetFences(m_LogicalDevice, 1, &m_CommandPool.GetLastFrame().RenderFence);
+         auto result = vkWaitForFences(m_LogicalDevice, 1, &m_CommandPool.GetLastFrame().RenderFence, true, 1000000000);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan fence error: {0}", string_VkResult(result));
+         }
+         result = vkResetFences(m_LogicalDevice, 1, &m_CommandPool.GetLastFrame().RenderFence);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan fence error: {0}", string_VkResult(result));
+         }
 
          uint32_t swapchainImageIndex;
          const auto& lastFrame = m_CommandPool.GetLastFrame();
-         vkAcquireNextImageKHR(m_LogicalDevice, m_Swapchain.m_SwapchainInstance, 1000000000, lastFrame.SwapchainSemaphore, nullptr, &swapchainImageIndex);
+         result = vkAcquireNextImageKHR(m_LogicalDevice, m_Swapchain.m_SwapchainInstance, 1000000000, lastFrame.SwapchainSemaphore, nullptr, &swapchainImageIndex);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan swapchain error: {0}", string_VkResult(result));
+         }
 
          VkCommandBuffer cmd = lastFrame.CommandBuffer;
 
          // Render commands
-         vkResetCommandBuffer(cmd, 0);
+         result = vkResetCommandBuffer(cmd, 0);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan command buffer error: {0}", string_VkResult(result));
+         }
 
          auto cmdBeginInfo = VkCommandBufferBeginInfo();
          cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -71,7 +85,10 @@ namespace SDLarria {
          cmdBeginInfo.pInheritanceInfo = nullptr;
          cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-         vkBeginCommandBuffer(cmd, &cmdBeginInfo);
+         result = vkBeginCommandBuffer(cmd, &cmdBeginInfo);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan command buffer error: {0}", string_VkResult(result));
+         }
 
          // make the swapchain image into writeable mode before rendering
          auto& image = m_Swapchain.m_Images[swapchainImageIndex];
@@ -96,7 +113,10 @@ namespace SDLarria {
          VulkanImage::WriteImage(cmd, image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
          // finalize the command buffer (we can no longer add commands, but it can now be executed)
-         vkEndCommandBuffer(cmd);
+         result = vkEndCommandBuffer(cmd);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan command buffer error: {0}", string_VkResult(result));
+         }
 
          // prepare the submission to the queue.
          // we want to wait on the _presentSemaphore, as that semaphore is signaled when the swapchain is ready
@@ -135,7 +155,10 @@ namespace SDLarria {
 
          // submit command buffer to the queue and execute it.
          // Fence will now block until the graphic commands finish execution
-         vkQueueSubmit2(m_CommandPool.m_GraphicsQueue, 1, &submit, lastFrame.RenderFence);
+         result = vkQueueSubmit2(m_CommandPool.m_GraphicsQueue, 1, &submit, lastFrame.RenderFence);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan queue error: {0}", string_VkResult(result));
+         }
 
          // prepare present
          // this will put the image we just rendered to into the visible window.
@@ -152,7 +175,10 @@ namespace SDLarria {
 
          presentInfo.pImageIndices = &swapchainImageIndex;
 
-         vkQueuePresentKHR(m_CommandPool.m_GraphicsQueue, &presentInfo);
+         result = vkQueuePresentKHR(m_CommandPool.m_GraphicsQueue, &presentInfo);
+         if (result != VK_SUCCESS) {
+             LOG_CRITICAL("Vulkan queue error: {0}", string_VkResult(result));
+         }
 
          //increase the number of frames drawn
          m_CommandPool.m_CurrentFrame++;

@@ -1,4 +1,7 @@
 #include "vulkan_command_queue.h"
+#include "engine/core/logger/log.h"
+
+#include <vulkan/vk_enum_string_helper.h>
 
 namespace SDLarria {
 	void VulkanCommandPool::Initialize(vkb::Device& device) {
@@ -14,18 +17,22 @@ namespace SDLarria {
 
 		// Allocate buffers
 		for (int i = 0; i < FRAME_OVERLAP; i++) {
-			//TODO: log this
-			vkCreateCommandPool(device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool);
+			auto result = vkCreateCommandPool(device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool);
+			if (result != VK_SUCCESS) {
+				LOG_CRITICAL("Vulkan command pool: {0}", string_VkResult(result));
+			}
 
-			VkCommandBufferAllocateInfo cmdAllocInfo = {};
+			auto cmdAllocInfo = VkCommandBufferAllocateInfo();
 			cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			cmdAllocInfo.pNext = nullptr;
 			cmdAllocInfo.commandPool = m_Frames[i].CommandPool;
 			cmdAllocInfo.commandBufferCount = 1;
 			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-			//TODO: log this
-			vkAllocateCommandBuffers(device, &cmdAllocInfo, &m_Frames[i].CommandBuffer);
+			result = vkAllocateCommandBuffers(device, &cmdAllocInfo, &m_Frames[i].CommandBuffer);
+			if (result != VK_SUCCESS) {
+				LOG_CRITICAL("Vulkan command buffer: {0}", string_VkResult(result));
+			}
 		}
 
 		auto fenceCreateInfo = VkFenceCreateInfo();
@@ -39,11 +46,20 @@ namespace SDLarria {
 
 		// Allocate fences and semaphores
 		for (int i = 0; i < FRAME_OVERLAP; i++) {
-			//TODO: log all of this
-			vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &m_Frames[i].RenderFence);
+			auto result = vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &m_Frames[i].RenderFence);
+			if (result != VK_SUCCESS) {
+				LOG_CRITICAL("Vulkan fence: {0}", string_VkResult(result));
+			}
 
-			vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frames[i].SwapchainSemaphore);
-			vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frames[i].RenderSemaphore);
+			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frames[i].SwapchainSemaphore);
+			if (result != VK_SUCCESS) {
+				LOG_CRITICAL("Vulkan semaphore: {0}", string_VkResult(result));
+			}
+
+			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frames[i].RenderSemaphore);
+			if (result != VK_SUCCESS) {
+				LOG_CRITICAL("Vulkan semaphore: {0}", string_VkResult(result));
+			}
 		}
 	}
 

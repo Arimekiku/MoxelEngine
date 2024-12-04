@@ -1,7 +1,6 @@
 #pragma once
 
-#include "window.h"
-#include "vulkan/vulkan_engine.h"
+#include "core/core.h"
 
 namespace SDLarria {
 	class Application {
