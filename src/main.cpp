@@ -1,9 +1,10 @@
-﻿#include <engine/window.h>
+﻿#include <engine/application.h>
 
 int main(int argc, char** argv)
 {
-    auto window = SDLarria::GameWindow::GameWindow();
+    auto application = SDLarria::Application();
 
-    window.Update();
+    application.Run();
+
     return 0;
 }

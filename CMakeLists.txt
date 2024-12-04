@@ -21,13 +21,20 @@ if (MSVC)
 endif()
 
 # define headers
-file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/**.h)
+file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/**.h")
 
 # define source
-file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/**.cpp)
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/**.cpp")
 
 # define resources in binaries
 file(COPY ${RESOURCE_DIR} DESTINATION "${CMAKE_BINARY_DIR}/Resources/")
+
+# vulkan
+find_package(Vulkan REQUIRED)
+
+# vk-bootstrap
+set(VK_BOOT_DIR "vendor/vk-bootstrap")
+add_subdirectory(${VK_BOOT_DIR} EXCLUDE_FROM_ALL)
 
 # SDL
 set(SDL_DIR "vendor/SDL")
@@ -46,7 +53,12 @@ target_compile_definitions("${CMAKE_PROJECT_NAME}"
         $<$<CONFIG:Release>:RELEASE>
         $<$<CONFIG:MinSizeRel>:RELEASE>)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static PRIVATE ${CMAKE_DL_LIBS})
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        "${Vulkan_INCLUDE_DIRS}"
+    PRIVATE
+        "${PROJECT_SOURCE_DIR}")
+
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES} PRIVATE ${CMAKE_DL_LIBS})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
