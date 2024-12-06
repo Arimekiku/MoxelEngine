@@ -11,6 +11,8 @@ namespace SDLarria
 	public:
 		VulkanSwapchain() = default;
 
+		VkExtent2D GetSwapchainSize() { return m_SwapchainExtent; }
+
 		void Initialize(const VulkanInstance& toolset, const VkExtent2D& windowSize);
 		void Destroy();
 

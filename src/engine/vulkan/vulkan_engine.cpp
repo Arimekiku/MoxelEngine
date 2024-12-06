@@ -1,5 +1,4 @@
 #include "vulkan_engine.h"
-#include "vulkan_image.h"
 #include "vulkan.h"
 
 #include <cmath>
@@ -10,8 +9,12 @@ namespace SDLarria
     {
          m_Instance.Initialize(window);
 
+         m_Allocator.Initialize(m_Instance);
          m_Swapchain.Initialize(m_Instance, windowSize);
          m_CommandPool.Initialize(m_Instance);
+
+         m_Framebuffer = VulkanImage(m_Instance.GetLogicalDevice(), m_Allocator.GetAllocator(), windowSize);
+         m_WindowSize = windowSize;
 	}
 
 	 void VulkanEngine::Draw() 
@@ -46,8 +49,7 @@ namespace SDLarria
          VULKAN_CHECK(result);
 
          // make the swapchain image into writeable mode before rendering
-         auto& image = m_Swapchain.m_Images[swapchainImageIndex];
-         VulkanImage::WriteImage(cmd, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+         VulkanImage::Transit(cmd, m_Framebuffer.GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
          // make a clear-color from frame number. This will flash with a 120 frame period.
          VkClearColorValue clearValue;
@@ -61,11 +63,20 @@ namespace SDLarria
          clearRange.baseArrayLayer = 0;
          clearRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
 
-         // clear image
-         vkCmdClearColorImage(cmd, image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+         //clear image
+         vkCmdClearColorImage(cmd, m_Framebuffer.GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 
-         // make the swapchain image into presentable mode
-         VulkanImage::WriteImage(cmd, image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+         //transition the draw image and the swapchain image into their correct transfer layouts
+         VulkanImage::Transit(cmd, m_Framebuffer.GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+         auto& image = m_Swapchain.m_Images[swapchainImageIndex];
+         VulkanImage::Transit(cmd, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+         // execute a copy from the draw image into the swapchain
+         m_Framebuffer.Copy(cmd, image, m_Swapchain.GetSwapchainSize());
+
+         // set swapchain image layout to Present so we can show it on the screen
+         VulkanImage::Transit(cmd, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
          // finalize the command buffer (we can no longer add commands, but it can now be executed)
          result = vkEndCommandBuffer(cmd);
@@ -137,6 +148,8 @@ namespace SDLarria
     {
         m_Swapchain.Destroy();
         m_CommandPool.Destroy();
+        m_Allocator.DestroyVulkanImage(m_Framebuffer);
+        m_Allocator.Destroy();
         m_Instance.Destroy();
 	}
 }

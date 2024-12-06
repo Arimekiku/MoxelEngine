@@ -13,6 +13,7 @@ namespace SDLarria
 		void Initialize(SDL_Window* window);
 		void Destroy() const;
 
+		VkInstance GetInstance() const { return m_Instance; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		VkDevice GetLogicalDevice() const { return m_LogicalDevice; }
 		VkSurfaceKHR GetWindowSurface() const { return m_WindowSurface; }
