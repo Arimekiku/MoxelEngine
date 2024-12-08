@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/vulkan/vulkan_engine.h"
+#include "layer/layer_stack.h"
 
 namespace SDLarria 
 {
@@ -13,7 +14,7 @@ namespace SDLarria
 		const SDL_Surface* GetWindowSurface() const { return m_WindowSurface; }
 		SDL_Window* GetNativeWindow() const { return m_NativeWindow; }
 
-		void Update(VulkanEngine& engine);
+		void Update(VulkanEngine& engine, LayerStack layers);
 
 	private:
 		SDL_Window* m_NativeWindow = nullptr;

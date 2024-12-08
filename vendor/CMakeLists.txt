@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 3.12)
 
 project(libs)
 
-# vulkan 
+# vulkan
 find_package(Vulkan REQUIRED)
+
+# vma 
+set(VMA_DIR "VulkanMemoryAllocator")
+add_subdirectory(${VMA_DIR} EXCLUDE_FROM_ALL)
 
 # vk-bootstrap
 set(VK_BOOT_DIR "vk-bootstrap")
@@ -11,15 +15,25 @@ add_subdirectory(${VK_BOOT_DIR} EXCLUDE_FROM_ALL)
 
 # SDL
 set(SDL_DIR "SDL")
+set(SDL_STATIC ON)
 add_subdirectory(${SDL_DIR} EXCLUDE_FROM_ALL)
-
-# imgui
-set(IMGUI_DIR "ImGui")
-file(GLOB IMGUI_SOURCES "${IMGUI_DIR}/imgui.h" "${IMGUI_DIR}/backends/imgui_impl_sdl2.h" "${IMGUI_DIR}/backends/imgui_impl_vulkan.h")
 
 # spdlog
 set(SPDLOG_DIR "spdlog")
 add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
+
+# imgui
+set(IMGUI_DIR "imgui")
+file(GLOB IMGUI_SOURCES 
+        "${IMGUI_DIR}/imgui.h"
+        "${IMGUI_DIR}/imgui.cpp"
+        "${IMGUI_DIR}/imgui_demo.cpp"
+        "${IMGUI_DIR}/imgui_draw.cpp"
+        "${IMGUI_DIR}/imgui_widgets.cpp"
+        "${IMGUI_DIR}/imgui_tables.cpp"
+        "${IMGUI_DIR}/imgui_impl_vulkan.cpp"
+        "${IMGUI_DIR}/imgui_impl_sdl3.cpp"
+    )
 
 ################################# Library ####################################
 
@@ -30,6 +44,7 @@ target_include_directories(${PROJECT_NAME}
 	PUBLIC 
 		"${IMGUI_DIR}"
 		"${VK_BOOT_DIR}/src"
-		"${Vulkan_INCLUDE_DIRS}")
+		"${Vulkan_INCLUDE_DIRS}"
+    )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES} spdlog)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES} GPUOpen::VulkanMemoryAllocator vk-bootstrap::vk-bootstrap spdlog SDL3::SDL3-static )

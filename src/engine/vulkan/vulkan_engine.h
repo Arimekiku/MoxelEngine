@@ -17,12 +17,25 @@ namespace SDLarria
 		void Draw();
 		void Shutdown();
 
+		static VulkanEngine& Get() { return *s_Instance; }
+
+		VulkanInstance GetInstance() const { return m_Instance; }
+		VulkanSwapchain GetSwapchain() const { return m_Swapchain; }
+		VulkanCommandBuffer GetCommandPool() const { return m_CommandPool; }
+
+		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
+
 	private:
+		void ComputePipelineTest();
+
+		static VulkanEngine* s_Instance;
+		int m_CurrentFrameIndex = 0;
+
+		VulkanInstance m_Instance = VulkanInstance();
 		DescriptorAllocator m_DescriptorAllocator = DescriptorAllocator();
 		BufferAllocator m_BufferAllocator = BufferAllocator();
-		VulkanInstance m_Instance = VulkanInstance();
 		VulkanSwapchain m_Swapchain = VulkanSwapchain();
-		VulkanCommandPool m_CommandPool = VulkanCommandPool();
+		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
 
 		VkDescriptorSet Test_drawImageDescriptors;
 		VkDescriptorSetLayout Test_drawImageDescriptorLayout;

@@ -22,10 +22,12 @@ namespace SDLarria
 	{
 	public:
 		VulkanShader(const char* filePath, VkDevice device);
+		
+		void Unload(VkDevice device) const;
 
-		VkShaderModule GetRawShader() { return m_ShaderModule; }
+		VkPipelineShaderStageCreateInfo GetRawShader() const { return m_PipelineShaderStageInfo; }
 
 	private:
-		VkShaderModule m_ShaderModule = nullptr;
+		VkPipelineShaderStageCreateInfo m_PipelineShaderStageInfo;
 	};
 }

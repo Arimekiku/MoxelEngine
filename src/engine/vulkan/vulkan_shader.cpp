@@ -59,7 +59,28 @@ namespace SDLarria
 		createInfo.codeSize = buffer.size() * sizeof(uint32_t);
 		createInfo.pCode = buffer.data();
 
-		auto result = vkCreateShaderModule(device, &createInfo, nullptr, &m_ShaderModule);
+		auto module = VkShaderModule();
+		auto result = vkCreateShaderModule(device, &createInfo, nullptr, &module);
 		VULKAN_CHECK(result);
+
+		auto stageinfo = VkPipelineShaderStageCreateInfo();
+		stageinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stageinfo.pNext = nullptr;
+		stageinfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+		stageinfo.module = module;
+		stageinfo.pName = "main";
+
+		m_PipelineShaderStageInfo = stageinfo;
+	}
+
+	void VulkanShader::Unload(VkDevice device) const
+	{
+		if (m_PipelineShaderStageInfo.module) 
+		{
+			vkDestroyShaderModule(device, m_PipelineShaderStageInfo.module, nullptr);
+			return;
+		}
+
+		LOG_WARN("Shader was already unloaded!");
 	}
 }

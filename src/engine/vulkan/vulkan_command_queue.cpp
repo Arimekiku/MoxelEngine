@@ -3,7 +3,7 @@
 
 namespace SDLarria 
 {
-	void VulkanCommandPool::Initialize(const VulkanInstance& toolset)
+	void VulkanCommandBuffer::Initialize(const VulkanInstance& toolset, const int frameCount)
 	{
 		m_DeviceInstance = toolset.GetLogicalDevice();
 		m_GraphicsQueue = toolset.GetRenderQueue();
@@ -16,24 +16,26 @@ namespace SDLarria
 		commandPoolInfo.queueFamilyIndex = m_QueueFamily;
 
 		// Allocate buffers
-		for (auto& m_Frame : m_Frames)
+		m_Buffers.resize(frameCount);
+		for (auto& frame : m_Buffers)
 		{
-			m_Frame = FrameData();
+			frame = CommandBufferData();
 
-			auto result = vkCreateCommandPool(m_DeviceInstance, &commandPoolInfo, nullptr, &m_Frame.CommandPool);
+			auto result = vkCreateCommandPool(m_DeviceInstance, &commandPoolInfo, nullptr, &frame.CommandPool);
 			VULKAN_CHECK(result);
 
 			auto cmdAllocInfo = VkCommandBufferAllocateInfo();
 			cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			cmdAllocInfo.pNext = nullptr;
-			cmdAllocInfo.commandPool = m_Frame.CommandPool;
+			cmdAllocInfo.commandPool = frame.CommandPool;
 			cmdAllocInfo.commandBufferCount = 1;
 			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-			result = vkAllocateCommandBuffers(m_DeviceInstance, &cmdAllocInfo, &m_Frame.CommandBuffer);
+			result = vkAllocateCommandBuffers(m_DeviceInstance, &cmdAllocInfo, &frame.CommandBuffer);
 			VULKAN_CHECK(result);
 		}
 
+		// Allocate fences and semaphores
 		auto fenceCreateInfo = VkFenceCreateInfo();
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.pNext = nullptr;
@@ -43,30 +45,27 @@ namespace SDLarria
 		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		semaphoreCreateInfo.pNext = nullptr;
 
-		// Allocate fences and semaphores
-		for (auto& m_Frame : m_Frames)
+		for (auto& frame : m_Buffers)
 		{
-			auto result = vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &m_Frame.RenderFence);
+			auto result = vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &frame.RenderFence);
 			VULKAN_CHECK(result);
 
-			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frame.SwapchainSemaphore);
+			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &frame.SwapchainSemaphore);
 			VULKAN_CHECK(result);
 
-			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &m_Frame.RenderSemaphore);
+			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &frame.RenderSemaphore);
 			VULKAN_CHECK(result);
 		}
 	}
 
-	void VulkanCommandPool::Destroy() const 
+	void VulkanCommandBuffer::Destroy() const 
 	{
-		vkDeviceWaitIdle(m_DeviceInstance);
-
-		for (const auto& m_Frame : m_Frames)
+		for (const auto& frame : m_Buffers)
 		{
-			vkDestroyCommandPool(m_DeviceInstance, m_Frame.CommandPool, nullptr);
-			vkDestroyFence(m_DeviceInstance, m_Frame.RenderFence, nullptr);
-			vkDestroySemaphore(m_DeviceInstance, m_Frame.RenderSemaphore, nullptr);
-			vkDestroySemaphore(m_DeviceInstance, m_Frame.SwapchainSemaphore, nullptr);
+			vkDestroyCommandPool(m_DeviceInstance, frame.CommandPool, nullptr);
+			vkDestroyFence(m_DeviceInstance, frame.RenderFence, nullptr);
+			vkDestroySemaphore(m_DeviceInstance, frame.RenderSemaphore, nullptr);
+			vkDestroySemaphore(m_DeviceInstance, frame.SwapchainSemaphore, nullptr);
 		}
 	}
 }

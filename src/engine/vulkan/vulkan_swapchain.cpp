@@ -1,4 +1,5 @@
 #include "vulkan_swapchain.h"
+#include "vulkan.h"
 
 #include <VkBootstrap.h>
 
@@ -6,6 +7,7 @@ namespace SDLarria
 {
 	void VulkanSwapchain::Initialize(const VulkanInstance& toolset, const VkExtent2D& windowSize)
 	{
+		// Create actual swapchain
 		m_DeviceInstance = toolset.GetLogicalDevice();
 
 		VkSurfaceKHR windowSurface = toolset.GetWindowSurface();
@@ -27,8 +29,16 @@ namespace SDLarria
 		m_SwapchainInstance = vkbSwapchain.swapchain;
 		m_SwapchainImageFormat = swapchainFormat.format;
 
-		m_Images = vkbSwapchain.get_images().value();
-		m_ImageViews = vkbSwapchain.get_image_views().value();
+		// Create frames
+		m_Frames.resize(vkbSwapchain.image_count);
+		for (int i = 0; i < vkbSwapchain.image_count; i++)
+		{
+			auto& frame = m_Frames[i];
+
+			frame.ImageData = vkbSwapchain.get_images().value()[i];
+			frame.ImageViewData = vkbSwapchain.get_image_views().value()[i];
+		}
+
 		m_SwapchainExtent = vkbSwapchain.extent;
 	}
 
@@ -36,9 +46,9 @@ namespace SDLarria
 	{
 		vkDestroySwapchainKHR(m_DeviceInstance, m_SwapchainInstance, nullptr);
 
-		for (const auto& view : m_ImageViews)
+		for (const auto& frame : m_Frames)
 		{
-			vkDestroyImageView(m_DeviceInstance, view, nullptr);
+			vkDestroyImageView(m_DeviceInstance, frame.ImageViewData, nullptr);
 		}
 	}
 }

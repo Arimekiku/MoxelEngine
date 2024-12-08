@@ -3,36 +3,36 @@
 #include "vulkan_instance.h"
 
 #include <vulkan/vulkan_core.h>
+#include <vector>
 
 namespace SDLarria 
 {
-	struct FrameData 
+	struct CommandBufferData 
 	{
 		VkCommandPool CommandPool = nullptr;
 		VkCommandBuffer CommandBuffer = nullptr;
 
-		VkSemaphore SwapchainSemaphore = nullptr; 
+		VkSemaphore SwapchainSemaphore = nullptr;
 		VkSemaphore RenderSemaphore = nullptr;
 		VkFence RenderFence = nullptr;
 
-		FrameData() = default;
+		CommandBufferData() = default;
 	};
 
-	constexpr unsigned int FRAME_OVERLAP = 2;
-
-	class VulkanCommandPool 
+	class VulkanCommandBuffer 
 	{
 	public:
-		VulkanCommandPool() = default;
+		VulkanCommandBuffer() = default;
 		
-		void Initialize(const VulkanInstance& toolset);
+		void Initialize(const VulkanInstance& toolset, const int bufferCount);
 		void Destroy() const;
 
-		FrameData& GetLastFrame() { return m_Frames[m_CurrentFrame % FRAME_OVERLAP]; };
+		CommandBufferData& GetCurrentFrame() { return m_CurrentBuffer; }
+		CommandBufferData& GetFrame(int index) { return m_Buffers[index]; }
 
 	private:
-		FrameData m_Frames[FRAME_OVERLAP];
-		int m_CurrentFrame = 0;
+		std::vector<CommandBufferData> m_Buffers = std::vector<CommandBufferData>();
+		CommandBufferData m_CurrentBuffer;
 
 		VkDevice m_DeviceInstance = nullptr;
 		VkQueue m_GraphicsQueue = nullptr;

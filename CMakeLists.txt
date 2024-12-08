@@ -26,25 +26,8 @@ file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/**.h")
 # define source
 file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/**.cpp")
 
-# vulkan
-find_package(Vulkan REQUIRED)
-
-# vma 
-set(VMA_DIR "vendor/VulkanMemoryAllocator")
-add_subdirectory(${VMA_DIR} EXCLUDE_FROM_ALL)
-
-# vk-bootstrap
-set(VK_BOOT_DIR "vendor/vk-bootstrap")
-add_subdirectory(${VK_BOOT_DIR} EXCLUDE_FROM_ALL)
-
-# SDL
-set(SDL_DIR "vendor/SDL")
-set(SDL_STATIC ON)
-add_subdirectory(${SDL_DIR} EXCLUDE_FROM_ALL)
-
-# spdlog
-set(SPDLOG_DIR "vendor/spdlog")
-add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
+# three party
+add_subdirectory("vendor" EXCLUDE_FROM_ALL)
 
 ################################# Executable ####################################
 
@@ -58,13 +41,8 @@ target_compile_definitions("${CMAKE_PROJECT_NAME}"
         $<$<CONFIG:Release>:RELEASE>
         $<$<CONFIG:MinSizeRel>:RELEASE>)
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        "${Vulkan_INCLUDE_DIRS}"
-    PRIVATE
-        "${PROJECT_SOURCE_DIR}")
-
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static vk-bootstrap::vk-bootstrap ${Vulkan_LIBRARIES} GPUOpen::VulkanMemoryAllocator spdlog PRIVATE ${CMAKE_DL_LIBS})
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
+target_link_libraries(${PROJECT_NAME} PUBLIC libs PRIVATE ${CMAKE_DL_LIBS})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
