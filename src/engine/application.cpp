@@ -9,7 +9,7 @@ namespace SDLarria
 	{
 		Log::Initialize();
 		
-		m_Engine = VulkanEngine();
+		m_Engine = VulkanRenderer();
 
 		constexpr auto initialSize = VkExtent2D(1600, 900);
 		m_Window = new GameWindow(initialSize.width, initialSize.height);
@@ -19,7 +19,6 @@ namespace SDLarria
 		s_Instance = this;
 
 		m_LayerStack = LayerStack();
-		
 	}
 
 	Application::~Application()

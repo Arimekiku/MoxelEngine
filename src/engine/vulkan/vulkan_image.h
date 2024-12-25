@@ -12,7 +12,7 @@ namespace SDLarria
 		~VulkanImage() = default;
 
 		void Copy(VkCommandBuffer cmd, VulkanImage& target) const;
-		void Copy(VkCommandBuffer cmd, VkImage target, VkExtent2D imageSize);
+		void Copy(VkCommandBuffer cmd, VkImage target, VkExtent2D imageSize) const;
 		void Transit(VkCommandBuffer cmd, VkImageLayout newLayout);
 		static void Transit(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
@@ -26,7 +26,7 @@ namespace SDLarria
 		VkImage m_Image = nullptr;
 		VkImageView m_ImageView = nullptr;
 		VkFormat m_ImageFormat;
-		VkExtent3D m_ImageExtent;
+		VkExtent3D m_ImageExtent = VkExtent3D();
 		VmaAllocation m_Allocation = nullptr;
 	};
 }

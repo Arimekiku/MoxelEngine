@@ -1,4 +1,5 @@
 #include "vulkan_command_queue.h"
+#include "vulkan_renderer.h"
 #include "vulkan.h"
 
 namespace SDLarria 
@@ -67,5 +68,83 @@ namespace SDLarria
 			vkDestroySemaphore(m_DeviceInstance, frame.RenderSemaphore, nullptr);
 			vkDestroySemaphore(m_DeviceInstance, frame.SwapchainSemaphore, nullptr);
 		}
+	}
+
+	void VulkanCommandBuffer::BeginCommandQueue() const
+	{
+		// update fences
+		auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
+
+		auto result = vkWaitForFences(device, 1, &m_CurrentBuffer.RenderFence, true, 1000000000);
+		VULKAN_CHECK(result);
+
+		result = vkResetFences(device, 1, &m_CurrentBuffer.RenderFence);
+		VULKAN_CHECK(result);
+
+		// prepare current command buffer
+		auto currentCommandBuffer = m_CurrentBuffer.CommandBuffer;
+		result = vkResetCommandBuffer(currentCommandBuffer, 0);
+		VULKAN_CHECK(result);
+
+		auto cmdBeginInfo = VkCommandBufferBeginInfo();
+		cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmdBeginInfo.pNext = nullptr;
+		cmdBeginInfo.pInheritanceInfo = nullptr;
+		cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		result = vkBeginCommandBuffer(currentCommandBuffer, &cmdBeginInfo);
+		VULKAN_CHECK(result);
+	}
+
+	void VulkanCommandBuffer::EndCommandQueue() const
+	{
+		// we can no longer add commands, but it can now be executed
+		auto result = vkEndCommandBuffer(m_CurrentBuffer.CommandBuffer);
+		VULKAN_CHECK(result);
+
+		// prepare the submission to the queue.
+		auto cmdInfo = VkCommandBufferSubmitInfo();
+		cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+		cmdInfo.pNext = nullptr;
+		cmdInfo.commandBuffer = m_CurrentBuffer.CommandBuffer;
+		cmdInfo.deviceMask = 0;
+
+		auto waitInfo = VkSemaphoreSubmitInfo();
+		waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitInfo.pNext = nullptr;
+		waitInfo.semaphore = m_CurrentBuffer.SwapchainSemaphore;
+		waitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR;
+		waitInfo.deviceIndex = 0;
+		waitInfo.value = 1;
+
+		auto signalInfo = VkSemaphoreSubmitInfo();
+		signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalInfo.pNext = nullptr;
+		signalInfo.semaphore = m_CurrentBuffer.RenderSemaphore;
+		signalInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
+		signalInfo.deviceIndex = 0;
+		signalInfo.value = 1;
+
+		auto submit = VkSubmitInfo2();
+		submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+		submit.pNext = nullptr;
+		submit.waitSemaphoreInfoCount = 1;
+		submit.pWaitSemaphoreInfos = &waitInfo;
+		submit.signalSemaphoreInfoCount = 1;
+		submit.pSignalSemaphoreInfos = &signalInfo;
+		submit.commandBufferInfoCount = 1;
+		submit.pCommandBufferInfos = &cmdInfo;
+
+		// submit command buffer to the queue and execute it.
+		result = vkQueueSubmit2(m_GraphicsQueue, 1, &submit, m_CurrentBuffer.RenderFence);
+		VULKAN_CHECK(result);
+	}
+
+	CommandBufferData& VulkanCommandBuffer::GetNextFrame()
+	{
+		auto frameIndex = VulkanRenderer::Get().GetCurrentFrameIndex();
+		m_CurrentBuffer = m_Buffers[frameIndex];
+
+		return m_CurrentBuffer;
 	}
 }

@@ -5,14 +5,13 @@ namespace SDLarria
 {
     VulkanImage::VulkanImage(VkDevice device, VmaAllocator allocator, VkExtent2D& size)
     {
-        VkExtent3D drawImageExtent = {
+        m_ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+        m_ImageExtent =
+        {
             size.width,
             size.height,
             1
         };
-
-        m_ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-        m_ImageExtent = drawImageExtent;
 
         auto drawImageUsages = VkImageUsageFlags();
         drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -38,7 +37,7 @@ namespace SDLarria
 
         vmaCreateImage(allocator, &rimg_info, &rimg_allocinfo, &m_Image, &m_Allocation, nullptr);
 
-        VkImageViewCreateInfo rview_info = VkImageViewCreateInfo();
+        auto rview_info = VkImageViewCreateInfo();
         rview_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         rview_info.pNext = nullptr;
         rview_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -92,7 +91,7 @@ namespace SDLarria
         vkCmdBlitImage2(cmd, &blitInfo);
     }
 
-    void VulkanImage::Copy(VkCommandBuffer cmd, VkImage target, VkExtent2D imageSize)
+    void VulkanImage::Copy(VkCommandBuffer cmd, VkImage target, VkExtent2D imageSize) const
     {
         auto blitRegion = VkImageBlit2();
         blitRegion.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2;

@@ -2,14 +2,17 @@
 
 #include "vulkan_allocator.h"
 #include "vulkan_swapchain.h"
-#include "vulkan_command_queue.h"
-#include "vulkan_shader.h"
 
 #include <SDL3/SDL.h>
 
 namespace SDLarria 
 {
-	class VulkanEngine 
+	struct VulkanRendererSpecs 
+	{
+		int FRAMES_IN_FLIGHT = 2;
+	};
+
+	class VulkanRenderer 
 	{
 	public:
 		void Initialize(SDL_Window* window, VkExtent2D windowSize);
@@ -17,20 +20,22 @@ namespace SDLarria
 		void Draw();
 		void Shutdown();
 
-		static VulkanEngine& Get() { return *s_Instance; }
+		static VulkanRenderer& Get() { return *s_Instance; }
 
 		VulkanInstance GetInstance() const { return m_Instance; }
 		VulkanSwapchain GetSwapchain() const { return m_Swapchain; }
 		VulkanCommandBuffer GetCommandPool() const { return m_CommandPool; }
+		VulkanRendererSpecs GetSpecifications() const { return m_Specs; }
 
 		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
 
 	private:
 		void ComputePipelineTest();
 
-		static VulkanEngine* s_Instance;
+		static VulkanRenderer* s_Instance;
 		int m_CurrentFrameIndex = 0;
 
+		VulkanRendererSpecs m_Specs = VulkanRendererSpecs();
 		VulkanInstance m_Instance = VulkanInstance();
 		DescriptorAllocator m_DescriptorAllocator = DescriptorAllocator();
 		BufferAllocator m_BufferAllocator = BufferAllocator();

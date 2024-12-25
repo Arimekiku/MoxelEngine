@@ -1,15 +1,15 @@
-#include "vulkan_engine.h"
+#include "vulkan_renderer.h"
+#include "vulkan_shader.h"
 #include "vulkan.h"
 
-#include <cmath>
 #include <VkBootstrap.h>
 #include <backends/imgui_impl_vulkan.h>
 
 namespace SDLarria 
 {
-    VulkanEngine* VulkanEngine::s_Instance;
+    VulkanRenderer* VulkanRenderer::s_Instance;
 
-	void VulkanEngine::Initialize(SDL_Window* window, VkExtent2D windowSize) 
+	void VulkanRenderer::Initialize(SDL_Window* window, VkExtent2D windowSize) 
     {
         m_Instance.Initialize(window);
 
@@ -24,37 +24,19 @@ namespace SDLarria
         s_Instance = this;
 	}
 
-	 void VulkanEngine::Draw() 
-     {
+	void VulkanRenderer::Draw() 
+    {
         const auto& logicalDevice = m_Instance.GetLogicalDevice();
-        const auto& currentBuffer = m_CommandPool.GetFrame(m_CurrentFrameIndex % 2);
+        const auto& currentBuffer = m_CommandPool.GetNextFrame();
 
-        // Update fences
-        auto result = vkWaitForFences(logicalDevice, 1, &currentBuffer.RenderFence, true, 1000000000);
-        VULKAN_CHECK(result);
+        // begin render queue
+        m_CommandPool.BeginCommandQueue();
+        VkCommandBuffer cmd = currentBuffer.CommandBuffer;
 
-        result = vkResetFences(logicalDevice, 1, &currentBuffer.RenderFence);
-        VULKAN_CHECK(result);
+        // prepare swapchain
+        auto& swapchainImage = m_Swapchain.GetCurrentFrame(currentBuffer);
 
-        uint32_t swapchainImageIndex;
-        result = vkAcquireNextImageKHR(logicalDevice, m_Swapchain.m_SwapchainInstance, 1000000000, currentBuffer.SwapchainSemaphore, nullptr, &swapchainImageIndex);
-        VULKAN_CHECK(result);
-
-        VkCommandBuffer cmd = m_CommandPool.GetFrame(m_CurrentFrameIndex % 2).CommandBuffer;
-
-        // Render commands
-        result = vkResetCommandBuffer(cmd, 0);
-        VULKAN_CHECK(result);
-
-        auto cmdBeginInfo = VkCommandBufferBeginInfo();
-        cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        cmdBeginInfo.pNext = nullptr;
-        cmdBeginInfo.pInheritanceInfo = nullptr;
-        cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        result = vkBeginCommandBuffer(cmd, &cmdBeginInfo);
-        VULKAN_CHECK(result);
-
+        // render commands
         // make the swapchain image into writeable mode before rendering
         VulkanImage::Transit(cmd, m_Framebuffer.GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
@@ -70,7 +52,7 @@ namespace SDLarria
         //transition the draw image and the swapchain image into their correct transfer layouts
         VulkanImage::Transit(cmd, m_Framebuffer.GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-        auto& image = m_Swapchain.GetFrame(swapchainImageIndex).ImageData;
+        auto& image = swapchainImage.ImageData;
         VulkanImage::Transit(cmd, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         // execute a copy from the draw image into the swapchain
@@ -82,9 +64,9 @@ namespace SDLarria
         auto colorAttachment = VkRenderingAttachmentInfo();
         colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         colorAttachment.pNext = nullptr;
-        colorAttachment.imageView = m_Swapchain.GetFrame(swapchainImageIndex).ImageViewData;
+        colorAttachment.imageView = swapchainImage.ImageViewData;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
         VkRenderingInfo renderInfo = VkRenderingInfo();
@@ -106,90 +88,33 @@ namespace SDLarria
         // set swapchain image layout to Present so we can draw it
         VulkanImage::Transit(cmd, image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-        // finalize the command buffer (we can no longer add commands, but it can now be executed)
-        result = vkEndCommandBuffer(cmd);
-        VULKAN_CHECK(result);
+        // end render queue
+        m_CommandPool.EndCommandQueue();
+        m_Swapchain.ShowSwapchain(currentBuffer);
 
-        // prepare the submission to the queue.
-        // we want to wait on the _presentSemaphore, as that semaphore is signaled when the swapchain is ready
-        // we will signal the _renderSemaphore, to signal that rendering has finished
-        auto cmdInfo = VkCommandBufferSubmitInfo();
-        cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
-        cmdInfo.pNext = nullptr;
-        cmdInfo.commandBuffer = cmd;
-        cmdInfo.deviceMask = 0;
+        // prepare next frame index
+        m_CurrentFrameIndex = std::max(m_CurrentFrameIndex + 1, m_Specs.FRAMES_IN_FLIGHT);
+	}
 
-        auto waitInfo = VkSemaphoreSubmitInfo();
-        waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-        waitInfo.pNext = nullptr;
-        waitInfo.semaphore = currentBuffer.SwapchainSemaphore;
-        waitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR;
-        waitInfo.deviceIndex = 0;
-        waitInfo.value = 1;
-
-        auto signalInfo = VkSemaphoreSubmitInfo();
-        signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-        signalInfo.pNext = nullptr;
-        signalInfo.semaphore = currentBuffer.RenderSemaphore;
-        signalInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
-        signalInfo.deviceIndex = 0;
-        signalInfo.value = 1;
-
-        auto submit = VkSubmitInfo2();
-        submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
-        submit.pNext = nullptr;
-        submit.waitSemaphoreInfoCount = 1;
-        submit.pWaitSemaphoreInfos = &waitInfo;
-        submit.signalSemaphoreInfoCount = 1;
-        submit.pSignalSemaphoreInfos = &signalInfo;
-        submit.commandBufferInfoCount = 1;
-        submit.pCommandBufferInfos = &cmdInfo;
-
-        // submit command buffer to the queue and execute it.
-        // Fence will now block until the graphic commands finish execution
-        result = vkQueueSubmit2(m_CommandPool.m_GraphicsQueue, 1, &submit, currentBuffer.RenderFence);
-        VULKAN_CHECK(result);
-
-        // prepare present
-        // this will put the image we just rendered to into the visible window.
-        // we want to wait on the _renderSemaphore for that,
-        // as its necessary that drawing commands have finished before the image is displayed to the user
-        auto presentInfo = VkPresentInfoKHR();
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.pNext = nullptr;
-        presentInfo.pSwapchains = &m_Swapchain.m_SwapchainInstance;
-        presentInfo.swapchainCount = 1;
-
-        presentInfo.pWaitSemaphores = &currentBuffer.RenderSemaphore;
-        presentInfo.waitSemaphoreCount = 1;
-
-        presentInfo.pImageIndices = &swapchainImageIndex;
-
-        result = vkQueuePresentKHR(m_CommandPool.m_GraphicsQueue, &presentInfo);
-        VULKAN_CHECK(result);
-
-        //increase the number of frames drawn
-        m_CurrentFrameIndex++;
-	 }
-
-	void VulkanEngine::Shutdown() 
+	void VulkanRenderer::Shutdown() 
     {
         vkDeviceWaitIdle(m_Instance.GetLogicalDevice());
 
-        m_Swapchain.Destroy();
         m_CommandPool.Destroy();
-        m_BufferAllocator.DestroyVulkanImage(m_Framebuffer);
-        m_BufferAllocator.Destroy();
+        m_Swapchain.Destroy();
 
         m_DescriptorAllocator.Destroy();
         vkDestroyDescriptorSetLayout(m_Instance.GetLogicalDevice(), Test_drawImageDescriptorLayout, nullptr);
         vkDestroyPipelineLayout(m_Instance.GetLogicalDevice(), Test_gradientPipelineLayout, nullptr);
         vkDestroyPipeline(m_Instance.GetLogicalDevice(), Test_gradientPipeline, nullptr);
 
+        m_BufferAllocator.DestroyVulkanImage(m_Framebuffer);
+        m_BufferAllocator.Destroy();
+
         m_Instance.Destroy();
 	}
 
-    void VulkanEngine::ComputePipelineTest()
+    void VulkanRenderer::ComputePipelineTest()
     {
         //create a descriptor pool that will hold 10 sets with 1 image each
         std::vector<PoolSizeRatio> sizes =

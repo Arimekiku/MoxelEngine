@@ -22,7 +22,7 @@ namespace SDLarria
 		static Application* s_Instance;
 
 		GameWindow* m_Window;
-		VulkanEngine m_Engine;
+		VulkanRenderer m_Engine;
 		LayerStack m_LayerStack;
 	};
 }

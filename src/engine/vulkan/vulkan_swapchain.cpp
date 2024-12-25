@@ -7,7 +7,7 @@ namespace SDLarria
 {
 	void VulkanSwapchain::Initialize(const VulkanInstance& toolset, const VkExtent2D& windowSize)
 	{
-		// Create actual swapchain
+		// build swapchain
 		m_DeviceInstance = toolset.GetLogicalDevice();
 
 		VkSurfaceKHR windowSurface = toolset.GetWindowSurface();
@@ -29,7 +29,7 @@ namespace SDLarria
 		m_SwapchainInstance = vkbSwapchain.swapchain;
 		m_SwapchainImageFormat = swapchainFormat.format;
 
-		// Create frames
+		// create frames
 		m_Frames.resize(vkbSwapchain.image_count);
 		for (int i = 0; i < vkbSwapchain.image_count; i++)
 		{
@@ -50,5 +50,36 @@ namespace SDLarria
 		{
 			vkDestroyImageView(m_DeviceInstance, frame.ImageViewData, nullptr);
 		}
+	}
+
+	FrameData& VulkanSwapchain::GetCurrentFrame(const CommandBufferData& reservedBuffer)
+	{
+		auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
+
+		auto result = vkAcquireNextImageKHR(device, m_SwapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_CurrentFrameIndex);
+		VULKAN_CHECK(result);
+
+		m_CurrentFrame = m_Frames[m_CurrentFrameIndex];
+		return m_CurrentFrame;
+	}
+
+	void VulkanSwapchain::ShowSwapchain(const CommandBufferData& reservedBuffer) const
+	{
+		auto queue = VulkanRenderer::Get().GetInstance().GetRenderQueue();
+
+		// prepare present
+		auto presentInfo = VkPresentInfoKHR();
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = nullptr;
+		presentInfo.pSwapchains = &m_SwapchainInstance;
+		presentInfo.swapchainCount = 1;
+
+		presentInfo.pWaitSemaphores = &reservedBuffer.RenderSemaphore;
+		presentInfo.waitSemaphoreCount = 1;
+
+		presentInfo.pImageIndices = &m_CurrentFrameIndex;
+
+		auto result = vkQueuePresentKHR(queue, &presentInfo);
+		VULKAN_CHECK(result);
 	}
 }

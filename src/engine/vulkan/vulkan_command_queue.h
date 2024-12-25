@@ -27,8 +27,10 @@ namespace SDLarria
 		void Initialize(const VulkanInstance& toolset, const int bufferCount);
 		void Destroy() const;
 
-		CommandBufferData& GetCurrentFrame() { return m_CurrentBuffer; }
-		CommandBufferData& GetFrame(int index) { return m_Buffers[index]; }
+		void BeginCommandQueue() const;
+		void EndCommandQueue() const;
+
+		CommandBufferData& GetNextFrame();
 
 	private:
 		std::vector<CommandBufferData> m_Buffers = std::vector<CommandBufferData>();
@@ -38,6 +40,6 @@ namespace SDLarria
 		VkQueue m_GraphicsQueue = nullptr;
 		uint32_t m_QueueFamily = 0;
 
-		friend class VulkanEngine;
+		friend class VulkanRenderer;
 	};
 }

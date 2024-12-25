@@ -2,7 +2,6 @@
 #include "engine/ui/gui_layer.h"
 
 #include <iostream>
-#include <backends/imgui_impl_sdl3.h>
 
 namespace SDLarria 
 {
@@ -24,7 +23,7 @@ namespace SDLarria
         SDL_Quit();
     }
 
-    void GameWindow::Update(VulkanEngine& engine, LayerStack layers)
+    void GameWindow::Update(VulkanRenderer& renderer, LayerStack layers)
     {
         bool is_open = true;
 
@@ -63,10 +62,11 @@ namespace SDLarria
                 layer->OnGuiUpdate();
             }
 
+            ImGui::ShowDemoWindow();
+
             GuiLayer::End();
 
-            // TODO : change it to layer
-            engine.Draw();
+            renderer.Draw();
         }
     }
 }

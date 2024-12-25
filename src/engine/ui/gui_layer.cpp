@@ -1,18 +1,21 @@
 #include "gui_layer.h"
-#include "engine/vulkan/vulkan_engine.h"
+#include "engine/vulkan/vulkan.h"
+#include "engine/vulkan/vulkan_renderer.h"
 #include "engine/application.h"
 
 #include <backends/imgui_impl_vulkan.cpp>
 #include <backends/imgui_impl_sdl3.cpp> 
-#include <engine/vulkan/vulkan.h>
 
 namespace SDLarria
 {
+    static VkDescriptorPool s_Test;
+
     void GuiLayer::Attach()
     {
-        auto vulkan = VulkanEngine::Get().GetInstance();
+        auto vulkan = VulkanRenderer::Get().GetInstance();
 
-;       VkDescriptorPoolSize pool_sizes[] = { 
+;       VkDescriptorPoolSize pool_sizes[] =
+        { 
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
             { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
@@ -26,15 +29,14 @@ namespace SDLarria
             { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 } 
         };
 
-        VkDescriptorPoolCreateInfo pool_info = {};
+        auto pool_info = VkDescriptorPoolCreateInfo();
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         pool_info.maxSets = 1000;
         pool_info.poolSizeCount = (uint32_t)std::size(pool_sizes);
         pool_info.pPoolSizes = pool_sizes;
 
-        VkDescriptorPool imguiPool;
-        auto result = vkCreateDescriptorPool(vulkan.GetLogicalDevice(), &pool_info, nullptr, &imguiPool);
+        auto result = vkCreateDescriptorPool(vulkan.GetLogicalDevice(), &pool_info, nullptr, &s_Test);
         VULKAN_CHECK(result);
 
         IMGUI_CHECKVERSION();
@@ -50,16 +52,14 @@ namespace SDLarria
         init_info.Instance = vulkan.GetInstance();
         init_info.PhysicalDevice = vulkan.GetPhysicalDevice();
         init_info.Device = vulkan.GetLogicalDevice();
-        init_info.QueueFamily = vulkan.GetQueueFamilyIndex();
         init_info.Queue = vulkan.GetRenderQueue();
-        init_info.DescriptorPool = imguiPool;
-        init_info.Subpass = 0;
+        init_info.DescriptorPool = s_Test;
         init_info.MinImageCount = 3;
         init_info.ImageCount = 3;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         init_info.CheckVkResultFn = VulkanUtils::VulkanCheck;
 
-        auto swapchain = VulkanEngine::Get().GetSwapchain();
+        auto swapchain = VulkanRenderer::Get().GetSwapchain();
         auto createInfo = VkPipelineRenderingCreateInfo();
         createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         createInfo.colorAttachmentCount = 1;
@@ -76,10 +76,14 @@ namespace SDLarria
 
     void GuiLayer::Detach()
     {
-        vkDeviceWaitIdle(VulkanEngine::Get().GetInstance().GetLogicalDevice());
+        auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
+
+        vkDeviceWaitIdle(device);
 
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplSDL3_Shutdown();
+
+        vkDestroyDescriptorPool(device, s_Test, nullptr);
         ImGui::DestroyContext();
     }
 
@@ -88,8 +92,6 @@ namespace SDLarria
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
-        
-        ImGui::ShowDemoWindow();
     }
 
     void GuiLayer::End()
