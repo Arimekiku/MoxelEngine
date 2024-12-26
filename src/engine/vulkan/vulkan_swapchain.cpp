@@ -44,28 +44,27 @@ namespace SDLarria
 
 	void VulkanSwapchain::Destroy() 
 	{
-		vkDestroySwapchainKHR(m_DeviceInstance, m_SwapchainInstance, nullptr);
-
 		for (const auto& frame : m_Frames)
 		{
 			vkDestroyImageView(m_DeviceInstance, frame.ImageViewData, nullptr);
 		}
+
+		vkDestroySwapchainKHR(m_DeviceInstance, m_SwapchainInstance, nullptr);
 	}
 
-	FrameData& VulkanSwapchain::GetCurrentFrame(const CommandBufferData& reservedBuffer)
+	VkResult VulkanSwapchain::TryUpdateFrame(const CommandBufferData& reservedBuffer)
 	{
-		auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
+		const auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
 
-		auto result = vkAcquireNextImageKHR(device, m_SwapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_CurrentFrameIndex);
-		VULKAN_CHECK(result);
+		const auto result = vkAcquireNextImageKHR(device, m_SwapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_CurrentFrameIndex);
 
 		m_CurrentFrame = m_Frames[m_CurrentFrameIndex];
-		return m_CurrentFrame;
+		return result;
 	}
 
-	void VulkanSwapchain::ShowSwapchain(const CommandBufferData& reservedBuffer) const
+	VkResult VulkanSwapchain::TryShowSwapchain(const CommandBufferData& reservedBuffer) const
 	{
-		auto queue = VulkanRenderer::Get().GetInstance().GetRenderQueue();
+		const auto queue = VulkanRenderer::Get().GetInstance().GetRenderQueue();
 
 		// prepare present
 		auto presentInfo = VkPresentInfoKHR();
@@ -79,7 +78,7 @@ namespace SDLarria
 
 		presentInfo.pImageIndices = &m_CurrentFrameIndex;
 
-		auto result = vkQueuePresentKHR(queue, &presentInfo);
-		VULKAN_CHECK(result);
+		const auto result = vkQueuePresentKHR(queue, &presentInfo);
+		return result;
 	}
 }

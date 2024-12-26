@@ -29,6 +29,7 @@ namespace SDLarria
 
 		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
 
+		void ResizeTest();
 	private:
 		void ComputePipelineTest();
 

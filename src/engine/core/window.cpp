@@ -2,6 +2,7 @@
 #include "engine/ui/gui_layer.h"
 
 #include <iostream>
+#include <backends/imgui_impl_sdl3.h>
 
 namespace SDLarria 
 {

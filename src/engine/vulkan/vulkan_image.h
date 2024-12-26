@@ -26,7 +26,7 @@ namespace SDLarria
 		VkImage m_Image = nullptr;
 		VkImageView m_ImageView = nullptr;
 		VkFormat m_ImageFormat;
-		VkExtent3D m_ImageExtent = VkExtent3D();
+		VkExtent3D m_ImageExtent;
 		VmaAllocation m_Allocation = nullptr;
 	};
 }

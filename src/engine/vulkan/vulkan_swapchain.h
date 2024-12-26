@@ -24,8 +24,9 @@ namespace SDLarria
 		VkExtent2D& GetSwapchainSize() { return m_SwapchainExtent; }
 		VkFormat& GetImageFormat() { return m_SwapchainImageFormat; }
 
-		FrameData& GetCurrentFrame(const CommandBufferData& reservedBuffer);
-		void ShowSwapchain(const CommandBufferData& reservedBuffer) const;
+		VkResult TryUpdateFrame(const CommandBufferData& reservedBuffer);
+		FrameData& GetCurrentFrame() { return m_CurrentFrame; }
+		VkResult TryShowSwapchain(const CommandBufferData& reservedBuffer) const;
 
 	private:
 		std::vector<FrameData> m_Frames = std::vector<FrameData>();

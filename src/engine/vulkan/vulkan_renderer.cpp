@@ -1,6 +1,7 @@
 #include "vulkan_renderer.h"
 #include "vulkan_shader.h"
 #include "vulkan.h"
+#include "engine/application.h"
 
 #include <VkBootstrap.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -34,7 +35,13 @@ namespace SDLarria
         VkCommandBuffer cmd = currentBuffer.CommandBuffer;
 
         // prepare swapchain
-        auto& swapchainImage = m_Swapchain.GetCurrentFrame(currentBuffer);
+        auto result = m_Swapchain.TryUpdateFrame(currentBuffer);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) 
+        {
+            ResizeTest();
+            return;
+        }
+        auto& swapchainImage = m_Swapchain.GetCurrentFrame();
 
         // render commands
         // make the swapchain image into writeable mode before rendering
@@ -90,11 +97,50 @@ namespace SDLarria
 
         // end render queue
         m_CommandPool.EndCommandQueue();
-        m_Swapchain.ShowSwapchain(currentBuffer);
 
-        // prepare next frame index
+        // render swapchain image
+        result = m_Swapchain.TryShowSwapchain(currentBuffer);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            ResizeTest();
+        }
         m_CurrentFrameIndex = std::max(m_CurrentFrameIndex + 1, m_Specs.FRAMES_IN_FLIGHT);
 	}
+
+    void VulkanRenderer::ResizeTest() 
+    {
+        auto queue = m_Instance.GetRenderQueue();
+        auto device = m_Instance.GetLogicalDevice();
+        auto window = Application::Get().GetWindow().GetNativeWindow();
+
+        vkQueueWaitIdle(queue);
+
+        SDL_GetWindowSizeInPixels(window, (int*)&m_WindowSize.width, (int*)&m_WindowSize.height);
+
+        m_Swapchain.Destroy();
+        m_Swapchain.Initialize(m_Instance, m_WindowSize);
+
+        // recreate framebuffer
+        m_BufferAllocator.DestroyVulkanImage(m_Framebuffer);
+        m_Framebuffer = VulkanImage(device, m_BufferAllocator.GetAllocator(), m_WindowSize);
+
+        // recreate descriptors
+        VkDescriptorImageInfo imgInfo{};
+        imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        imgInfo.imageView = m_Framebuffer.GetImageView();
+
+        auto drawImageWrite = VkWriteDescriptorSet();
+        drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        drawImageWrite.pNext = nullptr;
+
+        drawImageWrite.dstBinding = 0;
+        drawImageWrite.dstSet = Test_drawImageDescriptors;
+        drawImageWrite.descriptorCount = 1;
+        drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        drawImageWrite.pImageInfo = &imgInfo;
+
+        vkUpdateDescriptorSets(m_Instance.GetLogicalDevice(), 1, &drawImageWrite, 0, nullptr);
+    }
 
 	void VulkanRenderer::Shutdown() 
     {
