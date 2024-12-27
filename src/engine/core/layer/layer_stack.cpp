@@ -1,5 +1,7 @@
 #include "layer_stack.h"
 
+#include <algorithm>
+
 namespace SDLarria
 {
     void LayerStack::Push(Layer* layer)
@@ -9,7 +11,7 @@ namespace SDLarria
 
     void LayerStack::Pop(const Layer* layer)
     {
-        const auto iterator = std::find(m_Layers.begin(), m_Layers.end(), layer);
+        const auto iterator = std::ranges::find(m_Layers, layer);
 
         if (iterator != m_Layers.end())
         {

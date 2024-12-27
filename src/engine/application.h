@@ -16,7 +16,7 @@ namespace SDLarria
 
 		void Run();
 
-		GameWindow& GetWindow() { return *m_Window; }
+		GameWindow& GetWindow() const { return *m_Window; }
 
 	private:
 		static Application* s_Instance;

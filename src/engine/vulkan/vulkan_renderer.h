@@ -1,9 +1,12 @@
 #pragma once
 
+#include "vulkan_context.h"
 #include "vulkan_allocator.h"
 #include "vulkan_swapchain.h"
 
 #include <SDL3/SDL.h>
+
+#include "vulkan_shader.h"
 
 namespace SDLarria 
 {
@@ -15,21 +18,20 @@ namespace SDLarria
 	class VulkanRenderer 
 	{
 	public:
-		void Initialize(SDL_Window* window, VkExtent2D windowSize);
+		void Initialize(SDL_Window* window, const VkExtent2D& windowSize);
 
 		void Draw();
 		void Shutdown();
 
 		static VulkanRenderer& Get() { return *s_Instance; }
 
-		VulkanInstance GetInstance() const { return m_Instance; }
+		VulkanContext GetContext() const { return m_Context; }
 		VulkanSwapchain GetSwapchain() const { return m_Swapchain; }
 		VulkanCommandBuffer GetCommandPool() const { return m_CommandPool; }
 		VulkanRendererSpecs GetSpecifications() const { return m_Specs; }
+		VulkanImage GetFramebuffer() const { return m_Framebuffer; }
 
 		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
-
-		void ResizeTest();
 	private:
 		void ComputePipelineTest();
 
@@ -37,18 +39,13 @@ namespace SDLarria
 		int m_CurrentFrameIndex = 0;
 
 		VulkanRendererSpecs m_Specs = VulkanRendererSpecs();
-		VulkanInstance m_Instance = VulkanInstance();
+		VulkanContext m_Context = VulkanContext();
 		DescriptorAllocator m_DescriptorAllocator = DescriptorAllocator();
 		BufferAllocator m_BufferAllocator = BufferAllocator();
 		VulkanSwapchain m_Swapchain = VulkanSwapchain();
 		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
 
-		VkDescriptorSet Test_drawImageDescriptors;
-		VkDescriptorSetLayout Test_drawImageDescriptorLayout;
-		VkPipeline Test_gradientPipeline;
-		VkPipelineLayout Test_gradientPipelineLayout;
-
-		VkExtent2D m_WindowSize = VkExtent2D(0, 0);
+		VulkanShader m_GradientShader;
 		VulkanImage m_Framebuffer;
 	};
 }

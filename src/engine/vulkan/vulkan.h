@@ -9,14 +9,14 @@ namespace SDLarria
 	class VulkanUtils 
 	{
 	public: 
-		static void VulkanCheck(VkResult x) 
+		static void VulkanCheck(const VkResult result)
 		{
-			if (x != VK_SUCCESS) 
+			if (result != VK_SUCCESS)
 			{
-				LOG_CRITICAL("Vulkan error: {0}", string_VkResult(x));
+				LOG_CRITICAL("Vulkan error: {0}", string_VkResult(result));
 			}
 
-			LOG_ASSERT(x == VK_SUCCESS, "Vulkan");
+			LOG_ASSERT(result == VK_SUCCESS, "Vulkan");
 		}
 	};
 }

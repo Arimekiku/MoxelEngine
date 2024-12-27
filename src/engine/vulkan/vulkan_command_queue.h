@@ -1,7 +1,5 @@
 #pragma once
 
-#include "vulkan_instance.h"
-
 #include <vulkan/vulkan_core.h>
 #include <vector>
 
@@ -24,12 +22,13 @@ namespace SDLarria
 	public:
 		VulkanCommandBuffer() = default;
 		
-		void Initialize(const VulkanInstance& toolset, const int bufferCount);
+		void Initialize(int bufferCount);
 		void Destroy() const;
 
 		void BeginCommandQueue() const;
 		void EndCommandQueue() const;
 
+		VkCommandBuffer GetOperatingBuffer() const { return m_CurrentBuffer.CommandBuffer; }
 		CommandBufferData& GetNextFrame();
 
 	private:

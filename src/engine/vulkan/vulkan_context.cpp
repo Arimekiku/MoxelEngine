@@ -1,11 +1,11 @@
-#include "vulkan_instance.h"
+#include "vulkan_context.h"
 
 #include <VkBootstrap.h>
 #include <SDL3/SDL_vulkan.h>
 
 namespace SDLarria 
 {
-	void VulkanInstance::Initialize(SDL_Window* window) 
+	void VulkanContext::Initialize(SDL_Window* window) 
     {
         auto builder = vkb::InstanceBuilder();
         auto vkbInstance = builder
@@ -52,7 +52,7 @@ namespace SDLarria
         m_FamilyIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 	}
 
-    void VulkanInstance::Destroy() const 
+    void VulkanContext::Destroy() const
     {
         vkDestroySurfaceKHR(m_Instance, m_WindowSurface, nullptr);
         vkDestroyDevice(m_LogicalDevice, nullptr);

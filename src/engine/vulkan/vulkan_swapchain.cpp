@@ -1,13 +1,15 @@
 #include "vulkan_swapchain.h"
-#include "vulkan.h"
+#include "engine/application.h"
 
 #include <VkBootstrap.h>
+#include <ranges>
 
 namespace SDLarria 
 {
-	void VulkanSwapchain::Initialize(const VulkanInstance& toolset, const VkExtent2D& windowSize)
+	void VulkanSwapchain::Initialize(const VkExtent2D& windowSize)
 	{
 		// build swapchain
+		const auto& toolset = VulkanRenderer::Get().GetContext();
 		m_DeviceInstance = toolset.GetLogicalDevice();
 
 		VkSurfaceKHR windowSurface = toolset.GetWindowSurface();
@@ -42,6 +44,23 @@ namespace SDLarria
 		m_SwapchainExtent = vkbSwapchain.extent;
 	}
 
+	void VulkanSwapchain::Resize()
+	{
+		const auto queue = VulkanRenderer::Get().GetContext().GetRenderQueue();
+		auto& window = Application::Get().GetWindow();
+
+		vkQueueWaitIdle(queue);
+		window.Resize();
+
+		Destroy();
+		Initialize(window.GetWindowSize());
+
+		for (auto& function : std::ranges::reverse_view(m_ResizeQueue))
+		{
+			function();
+		}
+	}
+
 	void VulkanSwapchain::Destroy() 
 	{
 		for (const auto& frame : m_Frames)
@@ -52,19 +71,22 @@ namespace SDLarria
 		vkDestroySwapchainKHR(m_DeviceInstance, m_SwapchainInstance, nullptr);
 	}
 
-	VkResult VulkanSwapchain::TryUpdateFrame(const CommandBufferData& reservedBuffer)
+	void VulkanSwapchain::UpdateFrame(const CommandBufferData& reservedBuffer)
 	{
-		const auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
+		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
 		const auto result = vkAcquireNextImageKHR(device, m_SwapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_CurrentFrameIndex);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			Resize();
+		}
 
 		m_CurrentFrame = m_Frames[m_CurrentFrameIndex];
-		return result;
 	}
 
-	VkResult VulkanSwapchain::TryShowSwapchain(const CommandBufferData& reservedBuffer) const
+	void VulkanSwapchain::ShowSwapchain(const CommandBufferData& reservedBuffer)
 	{
-		const auto queue = VulkanRenderer::Get().GetInstance().GetRenderQueue();
+		const auto queue = VulkanRenderer::Get().GetContext().GetRenderQueue();
 
 		// prepare present
 		auto presentInfo = VkPresentInfoKHR();
@@ -79,6 +101,9 @@ namespace SDLarria
 		presentInfo.pImageIndices = &m_CurrentFrameIndex;
 
 		const auto result = vkQueuePresentKHR(queue, &presentInfo);
-		return result;
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			Resize();
+		}
 	}
 }

@@ -11,12 +11,16 @@ namespace SDLarria
 		GameWindow(int width, int height);
 		~GameWindow();
 
+		VkExtent2D GetWindowSize() const { return m_WindowSize; }
 		const SDL_Surface* GetWindowSurface() const { return m_WindowSurface; }
 		SDL_Window* GetNativeWindow() const { return m_NativeWindow; }
 
 		void Update(VulkanRenderer& renderer, LayerStack layers);
+		void Resize();
 
 	private:
+		VkExtent2D m_WindowSize = VkExtent2D(0, 0);
+
 		SDL_Window* m_NativeWindow = nullptr;
 		SDL_Surface* m_WindowSurface = nullptr;
 	};

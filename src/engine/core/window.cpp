@@ -2,7 +2,7 @@
 #include "engine/ui/gui_layer.h"
 
 #include <iostream>
-#include <backends/imgui_impl_sdl3.h>
+#include <imgui.h>
 
 namespace SDLarria 
 {
@@ -11,7 +11,9 @@ namespace SDLarria
         SDL_Init(SDL_INIT_VIDEO);
 
         constexpr SDL_WindowFlags window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
-        m_NativeWindow = SDL_CreateWindow("Vulkan Engine", width, height, window_flags);
+
+	    m_WindowSize = VkExtent2D(width, height);
+        m_NativeWindow = SDL_CreateWindow("Vulkan Engine", m_WindowSize.width, m_WindowSize.height, window_flags);
         if (m_NativeWindow == nullptr) 
         {
             SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window: %s\n", SDL_GetError());
@@ -48,7 +50,7 @@ namespace SDLarria
                     }
                 }
 
-                ImGui_ImplSDL3_ProcessEvent(&event);
+                GuiLayer::ProcessEvents(event);
             }
 
             for (const auto layer : layers)
@@ -69,5 +71,10 @@ namespace SDLarria
 
             renderer.Draw();
         }
+    }
+
+    void GameWindow::Resize()
+    {
+	    SDL_GetWindowSizeInPixels(m_NativeWindow, (int*)&m_WindowSize.width, (int*)&m_WindowSize.height);
     }
 }

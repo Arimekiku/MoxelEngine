@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vulkan_allocator.h"
+
 #include <vulkan/vulkan_core.h>
 #include <vector>
 
@@ -12,7 +14,7 @@ namespace SDLarria
 
 		void AddBinding(uint32_t binding, VkDescriptorType type);
 		void Clear();
-		VkDescriptorSetLayout Build(VkDevice device, VkShaderStageFlags shaderStages, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags flags = 0);
+		VkDescriptorSetLayout Build(VkDevice device, VkShaderStageFlags shaderStages, VkDescriptorSetLayoutCreateFlags flags = 0);
 
 	private:
 		std::vector<VkDescriptorSetLayoutBinding> m_Bindings;
@@ -21,13 +23,21 @@ namespace SDLarria
 	class VulkanShader 
 	{
 	public:
-		VulkanShader(const char* filePath, VkDevice device);
-		
-		void Unload(VkDevice device) const;
+		VulkanShader() = default;
+		VulkanShader(const char* filePath, DescriptorAllocator& allocator);
 
-		VkPipelineShaderStageCreateInfo GetRawShader() const { return m_PipelineShaderStageInfo; }
+		void Reload() const;
+		void Destroy() const;
+
+		const VkDescriptorSet* GetDescriptors() const { return &m_DescriptorSet; }
+		VkPipeline GetShaderPipeline() const { return m_ShaderPipeline; }
+		VkPipelineLayout GetShaderPipelineLayout() const { return m_ShaderPipelineLayout; }
 
 	private:
-		VkPipelineShaderStageCreateInfo m_PipelineShaderStageInfo;
+		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
+		VkDescriptorSet m_DescriptorSet = nullptr;
+
+		VkPipeline m_ShaderPipeline = nullptr;
+		VkPipelineLayout m_ShaderPipelineLayout = nullptr;
 	};
 }

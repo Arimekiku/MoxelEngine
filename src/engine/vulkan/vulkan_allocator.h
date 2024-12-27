@@ -1,6 +1,5 @@
 #pragma once
 
-#include "vulkan_instance.h"
 #include "vulkan_image.h"
 
 #include <span>
@@ -18,7 +17,7 @@ namespace SDLarria
 	public:
 		DescriptorAllocator() = default;
 
-		void Initialize(VulkanInstance& instance, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios);
+		void Initialize(uint32_t maxSets, std::span<PoolSizeRatio> poolRatios);
 		void Destroy() const;
 
 		VkDescriptorSet AllocateSet(VkDescriptorSetLayout layout) const;
@@ -34,7 +33,7 @@ namespace SDLarria
 	public:
 		BufferAllocator() = default;
 
-		void Initialize(VulkanInstance& instance);
+		void Initialize();
 		void Destroy() const;
 
 		VmaAllocator GetAllocator() const { return m_Allocator; }

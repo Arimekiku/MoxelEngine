@@ -5,8 +5,10 @@
 
 namespace SDLarria 
 {
-    void DescriptorAllocator::Initialize(VulkanInstance& instance, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+    void DescriptorAllocator::Initialize(uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
     {
+        const auto& instance = VulkanRenderer::Get().GetContext();
+
         std::vector<VkDescriptorPoolSize> poolSizes;
         for (PoolSizeRatio ratio : poolRatios) 
         {
@@ -54,8 +56,10 @@ namespace SDLarria
         return set;
     }
 
-	void BufferAllocator::Initialize(VulkanInstance& instance) 
+	void BufferAllocator::Initialize()
 	{
+        const auto& instance = VulkanRenderer::Get().GetContext();
+
         auto allocatorInfo = VmaAllocatorCreateInfo();
         allocatorInfo.physicalDevice = instance.GetPhysicalDevice();
         allocatorInfo.device = instance.GetLogicalDevice();

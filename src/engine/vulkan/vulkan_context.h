@@ -5,10 +5,10 @@
 
 namespace SDLarria 
 {
-	class VulkanInstance 
+	class VulkanContext
 	{
 	public:
-		VulkanInstance() = default;
+		VulkanContext() = default;
 
 		void Initialize(SDL_Window* window);
 		void Destroy() const;

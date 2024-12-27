@@ -4,8 +4,10 @@
 
 namespace SDLarria 
 {
-	void VulkanCommandBuffer::Initialize(const VulkanInstance& toolset, const int frameCount)
+	void VulkanCommandBuffer::Initialize(const int bufferCount)
 	{
+		const auto& toolset = VulkanRenderer::Get().GetContext();
+
 		m_DeviceInstance = toolset.GetLogicalDevice();
 		m_GraphicsQueue = toolset.GetRenderQueue();
 		m_QueueFamily = toolset.GetQueueFamilyIndex();
@@ -17,7 +19,7 @@ namespace SDLarria
 		commandPoolInfo.queueFamilyIndex = m_QueueFamily;
 
 		// Allocate buffers
-		m_Buffers.resize(frameCount);
+		m_Buffers.resize(bufferCount);
 		for (auto& frame : m_Buffers)
 		{
 			frame = CommandBufferData();
@@ -73,7 +75,7 @@ namespace SDLarria
 	void VulkanCommandBuffer::BeginCommandQueue() const
 	{
 		// update fences
-		auto device = VulkanRenderer::Get().GetInstance().GetLogicalDevice();
+		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
 		auto result = vkWaitForFences(device, 1, &m_CurrentBuffer.RenderFence, true, 1000000000);
 		VULKAN_CHECK(result);
@@ -82,7 +84,7 @@ namespace SDLarria
 		VULKAN_CHECK(result);
 
 		// prepare current command buffer
-		auto currentCommandBuffer = m_CurrentBuffer.CommandBuffer;
+		const auto currentCommandBuffer = m_CurrentBuffer.CommandBuffer;
 		result = vkResetCommandBuffer(currentCommandBuffer, 0);
 		VULKAN_CHECK(result);
 
@@ -142,7 +144,7 @@ namespace SDLarria
 
 	CommandBufferData& VulkanCommandBuffer::GetNextFrame()
 	{
-		auto frameIndex = VulkanRenderer::Get().GetCurrentFrameIndex();
+		const auto frameIndex = VulkanRenderer::Get().GetCurrentFrameIndex();
 		m_CurrentBuffer = m_Buffers[frameIndex];
 
 		return m_CurrentBuffer;

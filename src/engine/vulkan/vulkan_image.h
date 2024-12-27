@@ -8,16 +8,17 @@ namespace SDLarria
 	{
 	public:
 		VulkanImage() = default;
-		VulkanImage(VkDevice device, VmaAllocator allocator, VkExtent2D& size);
+		VulkanImage(VkDevice device, VmaAllocator allocator, const VkExtent2D& size);
 		~VulkanImage() = default;
 
-		void Copy(VkCommandBuffer cmd, VulkanImage& target) const;
-		void Copy(VkCommandBuffer cmd, VkImage target, VkExtent2D imageSize) const;
-		void Transit(VkCommandBuffer cmd, VkImageLayout newLayout);
-		static void Transit(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CopyInto(const VulkanImage& target) const;
+		void CopyRaw(VkImage target, const VkExtent2D& imageSize) const;
+		void Transit(VkImageLayout newLayout);
+		static void Transit(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		VkImage GetRawImage() const { return m_Image; }
 		VkImageView GetImageView() const { return m_ImageView; }
+		VkExtent3D GetImageSize() const { return m_ImageExtent; }
 		VmaAllocation GetAllocation() const { return m_Allocation; }
 
 	private:

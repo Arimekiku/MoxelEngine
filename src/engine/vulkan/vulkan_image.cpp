@@ -3,7 +3,7 @@
 
 namespace SDLarria 
 {
-    VulkanImage::VulkanImage(VkDevice device, VmaAllocator allocator, VkExtent2D& size)
+    VulkanImage::VulkanImage(VkDevice device, VmaAllocator allocator, const VkExtent2D& size)
     {
         m_ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
         m_ImageExtent =
@@ -19,41 +19,41 @@ namespace SDLarria
         drawImageUsages |= VK_IMAGE_USAGE_STORAGE_BIT;
         drawImageUsages |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        auto rimg_info = VkImageCreateInfo();
-        rimg_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        rimg_info.pNext = nullptr;
-        rimg_info.imageType = VK_IMAGE_TYPE_2D;
-        rimg_info.format = m_ImageFormat;
-        rimg_info.extent = m_ImageExtent;
-        rimg_info.mipLevels = 1;
-        rimg_info.arrayLayers = 1;
-        rimg_info.samples = VK_SAMPLE_COUNT_1_BIT;
-        rimg_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-        rimg_info.usage = drawImageUsages;
+        auto imageInfo = VkImageCreateInfo();
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.pNext = nullptr;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.format = m_ImageFormat;
+        imageInfo.extent = m_ImageExtent;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.usage = drawImageUsages;
 
-        auto rimg_allocinfo = VmaAllocationCreateInfo();
-        rimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        rimg_allocinfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto allocationInfo = VmaAllocationCreateInfo();
+        allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        allocationInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-        vmaCreateImage(allocator, &rimg_info, &rimg_allocinfo, &m_Image, &m_Allocation, nullptr);
+        vmaCreateImage(allocator, &imageInfo, &allocationInfo, &m_Image, &m_Allocation, nullptr);
 
-        auto rview_info = VkImageViewCreateInfo();
-        rview_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        rview_info.pNext = nullptr;
-        rview_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        rview_info.image = m_Image;
-        rview_info.format = m_ImageFormat;
-        rview_info.subresourceRange.baseMipLevel = 0;
-        rview_info.subresourceRange.levelCount = 1;
-        rview_info.subresourceRange.baseArrayLayer = 0;
-        rview_info.subresourceRange.layerCount = 1;
-        rview_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        auto imageViewInfo = VkImageViewCreateInfo();
+        imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewInfo.pNext = nullptr;
+        imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewInfo.image = m_Image;
+        imageViewInfo.format = m_ImageFormat;
+        imageViewInfo.subresourceRange.baseMipLevel = 0;
+        imageViewInfo.subresourceRange.levelCount = 1;
+        imageViewInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewInfo.subresourceRange.layerCount = 1;
+        imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        auto result = vkCreateImageView(device, &rview_info, nullptr, &m_ImageView);
+        const auto result = vkCreateImageView(device, &imageViewInfo, nullptr, &m_ImageView);
         VULKAN_CHECK(result);
     }
 
-    void VulkanImage::Copy(VkCommandBuffer cmd, VulkanImage& target) const
+    void VulkanImage::CopyInto(const VulkanImage& target) const
     {
         auto blitRegion = VkImageBlit2();
         blitRegion.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2;
@@ -88,10 +88,11 @@ namespace SDLarria
         blitInfo.regionCount = 1;
         blitInfo.pRegions = &blitRegion;
 
-        vkCmdBlitImage2(cmd, &blitInfo);
+        const auto currentCommandBuffer = VulkanRenderer::Get().GetCommandPool().GetOperatingBuffer();
+        vkCmdBlitImage2(currentCommandBuffer, &blitInfo);
     }
 
-    void VulkanImage::Copy(VkCommandBuffer cmd, VkImage target, VkExtent2D imageSize) const
+    void VulkanImage::CopyRaw(VkImage target, const VkExtent2D& imageSize) const
     {
         auto blitRegion = VkImageBlit2();
         blitRegion.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2;
@@ -126,10 +127,11 @@ namespace SDLarria
         blitInfo.regionCount = 1;
         blitInfo.pRegions = &blitRegion;
 
-        vkCmdBlitImage2(cmd, &blitInfo);
+        const auto currentCommandBuffer = VulkanRenderer::Get().GetCommandPool().GetOperatingBuffer();
+        vkCmdBlitImage2(currentCommandBuffer, &blitInfo);
     }
 
-    void VulkanImage::Transit(VkCommandBuffer cmd, VkImageLayout newLayout)
+    void VulkanImage::Transit(const VkImageLayout newLayout)
     {
         auto imageBarrier = VkImageMemoryBarrier2();
         imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
@@ -157,12 +159,13 @@ namespace SDLarria
         depInfo.imageMemoryBarrierCount = 1;
         depInfo.pImageMemoryBarriers = &imageBarrier;
 
-        vkCmdPipelineBarrier2(cmd, &depInfo);
+        const auto currentCommandBuffer = VulkanRenderer::Get().GetCommandPool().GetOperatingBuffer();
+        vkCmdPipelineBarrier2(currentCommandBuffer, &depInfo);
 
         m_Layout = newLayout;
 	}
 
-    void VulkanImage::Transit(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+    void VulkanImage::Transit(VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout)
     {
         auto imageBarrier = VkImageMemoryBarrier2();
         imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
@@ -190,6 +193,7 @@ namespace SDLarria
         depInfo.imageMemoryBarrierCount = 1;
         depInfo.pImageMemoryBarriers = &imageBarrier;
 
-        vkCmdPipelineBarrier2(cmd, &depInfo);
+        const auto currentCommandBuffer = VulkanRenderer::Get().GetCommandPool().GetOperatingBuffer();
+        vkCmdPipelineBarrier2(currentCommandBuffer, &depInfo);
     }
 }
