@@ -14,14 +14,27 @@ namespace SDLarria
     {
         s_Instance = this;
 
+		// initialize vulkan
         m_Context.Initialize(window);
-
         m_BufferAllocator.Initialize();
         m_Swapchain.Initialize(windowSize);
         m_CommandPool.Initialize(m_Specs.FRAMES_IN_FLIGHT);
 
         m_Framebuffer = VulkanImage(m_Context.GetLogicalDevice(), m_BufferAllocator.GetAllocator(), windowSize);
 
+		// create a descriptor pool that will hold 10 sets with 1 image each
+		std::vector<PoolSizeRatio> sizes =
+		{
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
+		};
+
+		m_DescriptorAllocator.Initialize(10, sizes);
+		m_GradientShader = VulkanShader(RESOURCES_PATH "sky.comp.spv", m_DescriptorAllocator);
+
+		auto& pushConst = m_GradientShader.GetPushConstants();
+		pushConst.data1 = glm::vec4(0.1, 0.2, 0.4 ,0.97);
+
+		// bind resize function
 	    m_Swapchain.QueueResize([&]
 	    {
 	        const auto device = m_Context.GetLogicalDevice();
@@ -34,8 +47,6 @@ namespace SDLarria
             // recreate shaders
             m_GradientShader.Reload();
 	    });
-
-        ComputePipelineTest();
 	}
 
 	void VulkanRenderer::Draw() 
@@ -59,6 +70,10 @@ namespace SDLarria
 
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientShader.GetShaderPipeline());
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientShader.GetShaderPipelineLayout(), 0, 1, m_GradientShader.GetDescriptors(), 0, nullptr);
+
+		const auto& pc = m_GradientShader.GetPushConstants();
+		vkCmdPushConstants(cmd, m_GradientShader.GetShaderPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstants), &pc);
+
         vkCmdDispatch(cmd, std::ceil(imageSize.width / 16.0), std::ceil(imageSize.height / 16.0), 1);
 
         // transit framebuffer into transfer source mode
@@ -122,17 +137,4 @@ namespace SDLarria
 
         m_Context.Destroy();
 	}
-
-    void VulkanRenderer::ComputePipelineTest()
-    {
-        //create a descriptor pool that will hold 10 sets with 1 image each
-        std::vector<PoolSizeRatio> sizes =
-        {
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
-        };
-
-        m_DescriptorAllocator.Initialize(10, sizes);
-
-        m_GradientShader = VulkanShader(RESOURCES_PATH "test.comp.spv", m_DescriptorAllocator);
-    }
 }

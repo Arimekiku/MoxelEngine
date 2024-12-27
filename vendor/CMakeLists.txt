@@ -13,6 +13,10 @@ add_subdirectory(${VMA_DIR} EXCLUDE_FROM_ALL)
 set(VK_BOOT_DIR "vk-bootstrap")
 add_subdirectory(${VK_BOOT_DIR} EXCLUDE_FROM_ALL)
 
+# glm
+set(GLM_DIR "glm")
+add_subdirectory(${GLM_DIR} EXCLUDE_FROM_ALL)
+
 # SDL
 set(SDL_DIR "SDL")
 set(SDL_STATIC ON)
@@ -47,4 +51,4 @@ target_include_directories(${PROJECT_NAME}
 		"${Vulkan_INCLUDE_DIRS}"
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES} GPUOpen::VulkanMemoryAllocator vk-bootstrap::vk-bootstrap spdlog SDL3::SDL3-static )
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES} GPUOpen::VulkanMemoryAllocator vk-bootstrap::vk-bootstrap spdlog SDL3::SDL3-static glm::glm)

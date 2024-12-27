@@ -101,6 +101,14 @@ namespace SDLarria
 		computeLayout.pSetLayouts = &m_DescriptorSetLayout;
 		computeLayout.setLayoutCount = 1;
 
+		auto pushConstant = VkPushConstantRange();
+		pushConstant.offset = 0;
+		pushConstant.size = sizeof(ComputePushConstants);
+		pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+		computeLayout.pPushConstantRanges = &pushConstant;
+		computeLayout.pushConstantRangeCount = 1;
+
 		result = vkCreatePipelineLayout(device, &computeLayout, nullptr, &m_ShaderPipelineLayout);
 		VULKAN_CHECK(result);
 

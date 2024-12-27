@@ -47,30 +47,33 @@ target_link_libraries(${PROJECT_NAME} PUBLIC libs PRIVATE ${CMAKE_DL_LIBS})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
-
 file(GLOB_RECURSE GLSL_SOURCE_FILES
     "${RESOURCE_DIR}**.frag"
     "${RESOURCE_DIR}**.vert"
     "${RESOURCE_DIR}**.comp"
     )
 
+# compile shaders
 foreach(GLSL ${GLSL_SOURCE_FILES})
-  message(STATUS "BUILDING SHADER")
-  get_filename_component(FILE_NAME ${GLSL} NAME)
-  set(SPIRV "Resources/${FILE_NAME}.spv")
-  message(STATUS ${GLSL})
-  message(STATUS COMMAND " ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}")
-  add_custom_command(
-    OUTPUT ${SPIRV}
-    COMMAND "${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}"
-    DEPENDS ${GLSL})
-  list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+    get_filename_component(FILE_NAME ${GLSL} NAME)
+    set(SPIRV "${PROJECT_BINARY_DIR}/Resources/${FILE_NAME}.spv")
+    add_custom_command(
+            OUTPUT ${SPIRV}
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/Resources/"
+            COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+            DEPENDS ${GLSL})
+    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
 
-add_custom_target(
-    Shaders 
-    DEPENDS ${SPIRV_BINARY_FILES}
-    )
+add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
+add_dependencies(SDLarria Shaders)
+
+add_custom_command(TARGET SDLarria POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:SDLarria>/Resources/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_BINARY_DIR}/Resources"
+        "$<TARGET_FILE_DIR:SDLarria>/Resources"
+)
 
 # define resources in binaries
 file(COPY ${RESOURCE_DIR} DESTINATION "${CMAKE_BINARY_DIR}/Resources/")

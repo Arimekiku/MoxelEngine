@@ -1,12 +1,21 @@
 #pragma once
 
 #include "vulkan_allocator.h"
+#include "glm/glm.hpp"
 
 #include <vulkan/vulkan_core.h>
 #include <vector>
 
 namespace SDLarria
 {
+	struct ComputePushConstants
+	{
+		glm::vec4 data1;
+		glm::vec4 data2;
+		glm::vec4 data3;
+		glm::vec4 data4;
+	};
+
 	class DescriptorLayoutBuilder 
 	{
 	public:
@@ -29,6 +38,7 @@ namespace SDLarria
 		void Reload() const;
 		void Destroy() const;
 
+		ComputePushConstants& GetPushConstants() { return m_PushConstants; }
 		const VkDescriptorSet* GetDescriptors() const { return &m_DescriptorSet; }
 		VkPipeline GetShaderPipeline() const { return m_ShaderPipeline; }
 		VkPipelineLayout GetShaderPipelineLayout() const { return m_ShaderPipelineLayout; }
@@ -39,5 +49,7 @@ namespace SDLarria
 
 		VkPipeline m_ShaderPipeline = nullptr;
 		VkPipelineLayout m_ShaderPipelineLayout = nullptr;
+
+		ComputePushConstants m_PushConstants = ComputePushConstants();
 	};
 }

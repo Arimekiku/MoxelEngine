@@ -25,6 +25,7 @@ namespace SDLarria
 
 		static VulkanRenderer& Get() { return *s_Instance; }
 
+		VulkanShader& GetShader_TEST() { return m_GradientShader; }
 		VulkanContext GetContext() const { return m_Context; }
 		VulkanSwapchain GetSwapchain() const { return m_Swapchain; }
 		VulkanCommandBuffer GetCommandPool() const { return m_CommandPool; }
@@ -33,8 +34,6 @@ namespace SDLarria
 
 		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
 	private:
-		void ComputePipelineTest();
-
 		static VulkanRenderer* s_Instance;
 		int m_CurrentFrameIndex = 0;
 
