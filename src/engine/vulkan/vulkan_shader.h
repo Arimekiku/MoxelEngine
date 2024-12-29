@@ -8,12 +8,19 @@
 
 namespace SDLarria
 {
-	struct ComputePushConstants
+	struct ComputePushConstants_TEST
 	{
 		glm::vec4 data1;
 		glm::vec4 data2;
 		glm::vec4 data3;
 		glm::vec4 data4;
+	};
+
+	enum class ShaderType
+	{
+		VERTEX,
+		FRAGMENT,
+		COMPUTE,
 	};
 
 	class DescriptorLayoutBuilder 
@@ -33,23 +40,23 @@ namespace SDLarria
 	{
 	public:
 		VulkanShader() = default;
-		VulkanShader(const char* filePath, DescriptorAllocator& allocator);
+		VulkanShader(const char* filePath, DescriptorAllocator& allocator, ShaderType shaderType);
 
-		void Reload() const;
 		void Destroy() const;
 
-		ComputePushConstants& GetPushConstants() { return m_PushConstants; }
-		const VkDescriptorSet* GetDescriptors() const { return &m_DescriptorSet; }
-		VkPipeline GetShaderPipeline() const { return m_ShaderPipeline; }
-		VkPipelineLayout GetShaderPipelineLayout() const { return m_ShaderPipelineLayout; }
+		const VkPipelineShaderStageCreateInfo& GetPipelineCreateInfo() const { return m_CreateInfo; }
+		const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
+		const VkDescriptorSet GetDescriptors() const { return m_DescriptorSet; }
+		VkDescriptorSet GetDescriptors() { return m_DescriptorSet; }
+
+		ComputePushConstants_TEST& GetPushConstants() { return m_PushConstants; }
 
 	private:
+		VkPipelineShaderStageCreateInfo m_CreateInfo;
+
 		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 		VkDescriptorSet m_DescriptorSet = nullptr;
 
-		VkPipeline m_ShaderPipeline = nullptr;
-		VkPipelineLayout m_ShaderPipelineLayout = nullptr;
-
-		ComputePushConstants m_PushConstants = ComputePushConstants();
+		ComputePushConstants_TEST m_PushConstants = ComputePushConstants_TEST();
 	};
 }

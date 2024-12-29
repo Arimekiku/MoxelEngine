@@ -5,7 +5,7 @@ namespace SDLarria
 {
 	Application* Application::s_Instance;
 
-	Application::Application() 
+	Application::Application()
 	{
 		s_Instance = this;
 

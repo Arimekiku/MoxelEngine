@@ -16,6 +16,7 @@ namespace SDLarria
 		void Transit(VkImageLayout newLayout);
 		static void Transit(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
+		const VkFormat* GetImageFormat() const { return &m_ImageFormat; }
 		VkImage GetRawImage() const { return m_Image; }
 		VkImageView GetImageView() const { return m_ImageView; }
 		VkExtent3D GetImageSize() const { return m_ImageExtent; }

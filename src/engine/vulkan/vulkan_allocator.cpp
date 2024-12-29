@@ -5,16 +5,16 @@
 
 namespace SDLarria 
 {
-    void DescriptorAllocator::Initialize(uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+    void DescriptorAllocator::Initialize(const uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
     {
         const auto& instance = VulkanRenderer::Get().GetContext();
 
         std::vector<VkDescriptorPoolSize> poolSizes;
-        for (PoolSizeRatio ratio : poolRatios) 
+        for (auto [type, ratio] : poolRatios)
         {
             auto poolSize = VkDescriptorPoolSize();
-            poolSize.type = ratio.Type;
-            poolSize.descriptorCount = uint32_t(ratio.Ratio * maxSets);
+            poolSize.type = type;
+            poolSize.descriptorCount = uint32_t(ratio * maxSets);
 
             poolSizes.push_back(poolSize);
         }
@@ -40,7 +40,7 @@ namespace SDLarria
         vkResetDescriptorPool(m_Device, m_Pool, 0);
     }
 
-    VkDescriptorSet DescriptorAllocator::AllocateSet(VkDescriptorSetLayout layout) const 
+    VkDescriptorSet DescriptorAllocator::AllocateSet(const VkDescriptorSetLayout layout) const
     {
         auto allocInfo = VkDescriptorSetAllocateInfo();
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -50,7 +50,8 @@ namespace SDLarria
         allocInfo.pSetLayouts = &layout;
 
         auto set = VkDescriptorSet();
-        auto result = vkAllocateDescriptorSets(m_Device, &allocInfo, &set);
+
+        const auto result = vkAllocateDescriptorSets(m_Device, &allocInfo, &set);
         VULKAN_CHECK(result);
 
         return set;
@@ -75,9 +76,9 @@ namespace SDLarria
         vmaDestroyAllocator(m_Allocator);
     }
 
-    void BufferAllocator::DestroyVulkanImage(VulkanImage& image) const
+    void BufferAllocator::DestroyVulkanImage(const std::shared_ptr<VulkanImage>& image) const
     {
-        vkDestroyImageView(m_Device, image.GetImageView(), nullptr);
-        vmaDestroyImage(m_Allocator, image.GetRawImage(), image.GetAllocation());
+        vkDestroyImageView(m_Device, image->GetImageView(), nullptr);
+        vmaDestroyImage(m_Allocator, image->GetRawImage(), image->GetAllocation());
     }
 }

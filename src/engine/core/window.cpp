@@ -69,7 +69,7 @@ namespace SDLarria
 
             if (ImGui::Begin("background"))
             {
-                auto& [data1, data2, data3, data4] = VulkanRenderer::Get().GetShader_TEST().GetPushConstants();
+                auto& [data1, data2, data3, data4] = VulkanRenderer::Get().GetShader_TEST()->GetPushConstants();
 
                 ImGui::InputFloat4("data1",(float*)&data1);
                 ImGui::InputFloat4("data2",(float*)&data2);

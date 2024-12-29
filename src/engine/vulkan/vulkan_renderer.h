@@ -3,10 +3,10 @@
 #include "vulkan_context.h"
 #include "vulkan_allocator.h"
 #include "vulkan_swapchain.h"
+#include "vulkan_pipeline.h"
+#include "vulkan_shader.h"
 
 #include <SDL3/SDL.h>
-
-#include "vulkan_shader.h"
 
 namespace SDLarria 
 {
@@ -18,6 +18,7 @@ namespace SDLarria
 	class VulkanRenderer 
 	{
 	public:
+		VulkanRenderer() = default;
 		void Initialize(SDL_Window* window, const VkExtent2D& windowSize);
 
 		void Draw();
@@ -25,12 +26,12 @@ namespace SDLarria
 
 		static VulkanRenderer& Get() { return *s_Instance; }
 
-		VulkanShader& GetShader_TEST() { return m_GradientShader; }
-		VulkanContext GetContext() const { return m_Context; }
-		VulkanSwapchain GetSwapchain() const { return m_Swapchain; }
-		VulkanCommandBuffer GetCommandPool() const { return m_CommandPool; }
-		VulkanRendererSpecs GetSpecifications() const { return m_Specs; }
-		VulkanImage GetFramebuffer() const { return m_Framebuffer; }
+		const std::shared_ptr<VulkanShader>& GetShader_TEST() { return m_GradientShader; }
+		VulkanContext& GetContext() { return m_Context; }
+		VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
+		VulkanCommandBuffer& GetCommandPool() { return m_CommandPool; }
+		VulkanRendererSpecs& GetSpecifications() { return m_Specs; }
+		const std::shared_ptr<VulkanImage>& GetFramebuffer() { return m_Framebuffer; }
 
 		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
 	private:
@@ -44,7 +45,12 @@ namespace SDLarria
 		VulkanSwapchain m_Swapchain = VulkanSwapchain();
 		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
 
-		VulkanShader m_GradientShader;
-		VulkanImage m_Framebuffer;
+		VulkanGraphicsPipeline m_GraphicsPipeline;
+		std::shared_ptr<VulkanShader> m_FragmentShader;
+		std::shared_ptr<VulkanShader> m_VertexShader;
+
+		VulkanComputePipeline m_GradientPipeline;
+		std::shared_ptr<VulkanShader> m_GradientShader;
+		std::shared_ptr<VulkanImage> m_Framebuffer;
 	};
 }

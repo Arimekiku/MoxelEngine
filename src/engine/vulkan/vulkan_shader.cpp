@@ -5,7 +5,22 @@
 
 namespace SDLarria 
 {
-	void DescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType type)
+	static std::vector<uint32_t> ReadFile(const char* filePath)
+	{
+		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
+		LOG_ASSERT(file.is_open(), "Couldn't open file for shader!");
+
+		const uint32_t fileSize = file.tellg();
+		auto buffer = std::vector<uint32_t>(fileSize / sizeof(uint32_t));
+
+		file.seekg(0);
+		file.read((char*)buffer.data(), fileSize);
+		file.close();
+
+		return buffer;
+	}
+
+	void DescriptorLayoutBuilder::AddBinding(const uint32_t binding, const VkDescriptorType type)
 	{
 		auto bind = VkDescriptorSetLayoutBinding();
 		bind.binding = binding;
@@ -41,20 +56,10 @@ namespace SDLarria
 		return layout;
 	}
 
-	VulkanShader::VulkanShader(const char* filePath, DescriptorAllocator& allocator)
+	VulkanShader::VulkanShader(const char* filePath, DescriptorAllocator& allocator, ShaderType shaderType)
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
-		const auto framebuffer = VulkanRenderer::Get().GetFramebuffer();
-
-		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
-		LOG_ASSERT(file.is_open(), "Couldn't open file for shader!");
-
-		const size_t fileSize = file.tellg();
-		auto buffer = std::vector<uint32_t>(fileSize / sizeof(uint32_t));
-
-		file.seekg(0);
-		file.read((char*)buffer.data(), fileSize);
-		file.close();
+		const auto buffer = ReadFile(filePath);
 
 		auto createInfo = VkShaderModuleCreateInfo();
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -66,91 +71,37 @@ namespace SDLarria
 		auto result = vkCreateShaderModule(device, &createInfo, nullptr, &module);
 		VULKAN_CHECK(result);
 
-		// create shader pipeline
-		auto stageInfo = VkPipelineShaderStageCreateInfo();
-		stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stageInfo.pNext = nullptr;
-		stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-		stageInfo.module = module;
-		stageInfo.pName = "main";
+		// create shader pipeline info
+		auto shaderStageFlag = VkShaderStageFlagBits();
+		switch (shaderType)
+		{
+			case ShaderType::VERTEX: shaderStageFlag = VK_SHADER_STAGE_VERTEX_BIT; break;
+			case ShaderType::FRAGMENT: shaderStageFlag = VK_SHADER_STAGE_FRAGMENT_BIT; break;
+			case ShaderType::COMPUTE: shaderStageFlag = VK_SHADER_STAGE_COMPUTE_BIT; break;
+		}
+
+		m_CreateInfo = VkPipelineShaderStageCreateInfo();
+		m_CreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		m_CreateInfo.pNext = nullptr;
+		m_CreateInfo.stage = shaderStageFlag;
+		m_CreateInfo.module = module;
+		m_CreateInfo.pName = "main";
 
 		auto builder = DescriptorLayoutBuilder();
 		builder.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-		m_DescriptorSetLayout = builder.Build(device, VK_SHADER_STAGE_COMPUTE_BIT);
+		m_DescriptorSetLayout = builder.Build(device, shaderStageFlag);
 		m_DescriptorSet = allocator.AllocateSet(m_DescriptorSetLayout);
-
-		auto imgInfo = VkDescriptorImageInfo();
-		imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imgInfo.imageView = framebuffer.GetImageView();
-
-		auto drawImageWrite = VkWriteDescriptorSet();
-		drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		drawImageWrite.pNext = nullptr;
-
-		drawImageWrite.dstBinding = 0;
-		drawImageWrite.dstSet = m_DescriptorSet;
-		drawImageWrite.descriptorCount = 1;
-		drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		drawImageWrite.pImageInfo = &imgInfo;
-
-		vkUpdateDescriptorSets(device, 1, &drawImageWrite, 0, nullptr);
-
-		auto computeLayout = VkPipelineLayoutCreateInfo();
-		computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		computeLayout.pNext = nullptr;
-		computeLayout.pSetLayouts = &m_DescriptorSetLayout;
-		computeLayout.setLayoutCount = 1;
-
-		auto pushConstant = VkPushConstantRange();
-		pushConstant.offset = 0;
-		pushConstant.size = sizeof(ComputePushConstants);
-		pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-		computeLayout.pPushConstantRanges = &pushConstant;
-		computeLayout.pushConstantRangeCount = 1;
-
-		result = vkCreatePipelineLayout(device, &computeLayout, nullptr, &m_ShaderPipelineLayout);
-		VULKAN_CHECK(result);
-
-		auto computePipelineCreateInfo = VkComputePipelineCreateInfo();
-		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-		computePipelineCreateInfo.pNext = nullptr;
-		computePipelineCreateInfo.layout = m_ShaderPipelineLayout;
-		computePipelineCreateInfo.stage = stageInfo;
-
-		result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_ShaderPipeline);
-		VULKAN_CHECK(result);
-
-		vkDestroyShaderModule(device, stageInfo.module, nullptr);
-	}
-
-	void VulkanShader::Reload() const
-	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
-		const auto framebuffer = VulkanRenderer::Get().GetFramebuffer();
-
-		auto imgInfo = VkDescriptorImageInfo();
-		imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imgInfo.imageView = framebuffer.GetImageView();
-
-		auto drawImageWrite = VkWriteDescriptorSet();
-		drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		drawImageWrite.pNext = nullptr;
-		drawImageWrite.dstBinding = 0;
-		drawImageWrite.dstSet = m_DescriptorSet;
-		drawImageWrite.descriptorCount = 1;
-		drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		drawImageWrite.pImageInfo = &imgInfo;
-
-		vkUpdateDescriptorSets(device, 1, &drawImageWrite, 0, nullptr);
 	}
 
 	void VulkanShader::Destroy() const
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
+		if (m_CreateInfo.module)
+		{
+			vkDestroyShaderModule(device, m_CreateInfo.module, nullptr);
+		}
+
 		vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
-		vkDestroyPipelineLayout(device, m_ShaderPipelineLayout, nullptr);
-		vkDestroyPipeline(device, m_ShaderPipeline, nullptr);
 	}
 }
