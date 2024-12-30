@@ -5,6 +5,7 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_shader.h"
+#include "vulkan_vertex_array.h"
 
 #include <SDL3/SDL.h>
 
@@ -20,6 +21,8 @@ namespace SDLarria
 	public:
 		VulkanRenderer() = default;
 		void Initialize(SDL_Window* window, const VkExtent2D& windowSize);
+
+		void ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function) const;
 
 		void Draw();
 		void Shutdown();
@@ -46,8 +49,9 @@ namespace SDLarria
 		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
 
 		VulkanGraphicsPipeline m_GraphicsPipeline;
-		std::shared_ptr<VulkanShader> m_FragmentShader;
-		std::shared_ptr<VulkanShader> m_VertexShader;
+
+		VulkanGraphicsPipeline m_MeshedPipeline;
+		VulkanVertexArray m_Rectangle;
 
 		VulkanComputePipeline m_GradientPipeline;
 		std::shared_ptr<VulkanShader> m_GradientShader;

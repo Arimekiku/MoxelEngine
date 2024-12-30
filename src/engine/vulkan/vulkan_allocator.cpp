@@ -23,7 +23,7 @@ namespace SDLarria
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags = 0;
         pool_info.maxSets = maxSets;
-        pool_info.poolSizeCount = (uint32_t)poolSizes.size();
+        pool_info.poolSizeCount = poolSizes.size();
         pool_info.pPoolSizes = poolSizes.data();
 
         m_Device = instance.GetLogicalDevice();
@@ -49,12 +49,12 @@ namespace SDLarria
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts = &layout;
 
-        auto set = VkDescriptorSet();
+        auto descriptorSet = VkDescriptorSet();
 
-        const auto result = vkAllocateDescriptorSets(m_Device, &allocInfo, &set);
+        const auto result = vkAllocateDescriptorSets(m_Device, &allocInfo, &descriptorSet);
         VULKAN_CHECK(result);
 
-        return set;
+        return descriptorSet;
     }
 
 	void BufferAllocator::Initialize()
@@ -81,4 +81,10 @@ namespace SDLarria
         vkDestroyImageView(m_Device, image->GetImageView(), nullptr);
         vmaDestroyImage(m_Allocator, image->GetRawImage(), image->GetAllocation());
     }
+
+	void BufferAllocator::DestroyBuffer(const BufferArray& buffer) const
+	{
+		vmaDestroyBuffer(m_Allocator, buffer.Buffer, nullptr);
+	}
+
 }

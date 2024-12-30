@@ -21,13 +21,13 @@ namespace SDLarria
 
         SDL_Vulkan_CreateSurface(window, m_Instance, nullptr, &m_WindowSurface);
 
-        //vulkan 1.3 features
+        // vulkan 1.3 features
         auto features13 = VkPhysicalDeviceVulkan13Features();
         features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
         features13.dynamicRendering = true;
         features13.synchronization2 = true;
 
-        //vulkan 1.2 features
+        // vulkan 1.2 features
         auto features12 = VkPhysicalDeviceVulkan12Features();
         features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         features12.bufferDeviceAddress = true;

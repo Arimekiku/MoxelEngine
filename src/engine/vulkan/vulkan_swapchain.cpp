@@ -12,8 +12,8 @@ namespace SDLarria
 		const auto& toolset = VulkanRenderer::Get().GetContext();
 		m_DeviceInstance = toolset.GetLogicalDevice();
 
-		VkSurfaceKHR windowSurface = toolset.GetWindowSurface();
-		VkPhysicalDevice physicalDevice = toolset.GetPhysicalDevice();
+		const auto windowSurface = toolset.GetWindowSurface();
+		const auto physicalDevice = toolset.GetPhysicalDevice();
 		auto swapchainBuilder = vkb::SwapchainBuilder(physicalDevice, m_DeviceInstance, windowSurface);
 
 		auto swapchainFormat = VkSurfaceFormatKHR();

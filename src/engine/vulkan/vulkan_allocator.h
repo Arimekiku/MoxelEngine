@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
-
-#include "vulkan_image.h"
-
 #include <span>
+
+#include "vulkan_vertex_array.h"
+#include "vulkan_image.h"
 
 namespace SDLarria 
 {
@@ -41,6 +41,7 @@ namespace SDLarria
 		VmaAllocator GetAllocator() const { return m_Allocator; }
 
 		void DestroyVulkanImage(const std::shared_ptr<VulkanImage>& image) const;
+		void DestroyBuffer(const BufferArray& buffer) const;
 
 	private:
 		VkDevice m_Device;

@@ -18,6 +18,12 @@ namespace SDLarria
 		graphicsInfo.pushConstantRangeCount = 0;
 		graphicsInfo.pPushConstantRanges = nullptr;
 
+		if (specs.PushConstants.size > 0)
+		{
+			graphicsInfo.pushConstantRangeCount = 1;
+			graphicsInfo.pPushConstantRanges = &specs.PushConstants;
+		}
+
 		auto result = vkCreatePipelineLayout(device, &graphicsInfo, nullptr, &m_Layout);
 		VULKAN_CHECK(result);
 
@@ -135,14 +141,19 @@ namespace SDLarria
 
 		result = vkCreateGraphicsPipelines(device, nullptr, 1, &pipelineInfo, nullptr, &m_Pipeline);
 		VULKAN_CHECK(result);
-
-		specs.Fragment->Destroy();
-		specs.Vertex->Destroy();
 	}
 
 	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 	{
 
+	}
+
+	void VulkanGraphicsPipeline::Destroy() const
+	{
+		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+
+		vkDestroyPipelineLayout(device, m_Layout, nullptr);
+		vkDestroyPipeline(device, m_Pipeline, nullptr);
 	}
 
 	VulkanComputePipeline::VulkanComputePipeline(const VulkanComputePipelineSpecs& specs)
@@ -170,14 +181,14 @@ namespace SDLarria
 		computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		computeLayout.pSetLayouts = &specs.Compute->GetDescriptorSetLayout();
 		computeLayout.setLayoutCount = 1;
+		computeLayout.pPushConstantRanges = nullptr;
+		computeLayout.pushConstantRangeCount = 0;
 
-		auto pushConstant = VkPushConstantRange();
-		pushConstant.offset = 0;
-		pushConstant.size = sizeof(ComputePushConstants_TEST);
-		pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-		computeLayout.pPushConstantRanges = &pushConstant;
-		computeLayout.pushConstantRangeCount = 1;
+		if (specs.PushConstants.size > 0)
+		{
+			computeLayout.pPushConstantRanges = &specs.PushConstants;
+			computeLayout.pushConstantRangeCount = 1;
+		}
 
 		auto result = vkCreatePipelineLayout(device, &computeLayout, nullptr, &m_Layout);
 		VULKAN_CHECK(result);
@@ -190,8 +201,6 @@ namespace SDLarria
 
 		result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_Pipeline);
 		VULKAN_CHECK(result);
-
-		specs.Compute->Destroy();
 	}
 
 	void VulkanComputePipeline::Reload() const

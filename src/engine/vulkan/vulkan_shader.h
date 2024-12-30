@@ -41,8 +41,9 @@ namespace SDLarria
 	public:
 		VulkanShader() = default;
 		VulkanShader(const char* filePath, DescriptorAllocator& allocator, ShaderType shaderType);
+		~VulkanShader();
 
-		void Destroy() const;
+		void Release() const;
 
 		const VkPipelineShaderStageCreateInfo& GetPipelineCreateInfo() const { return m_CreateInfo; }
 		const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }

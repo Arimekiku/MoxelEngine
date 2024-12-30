@@ -25,15 +25,23 @@ namespace SDLarria
 		void Initialize(int bufferCount);
 		void Destroy() const;
 
+		void BeginImmediateQueue() const;
+		void EndImmediateQueue() const;
+
 		void BeginCommandQueue() const;
 		void EndCommandQueue() const;
 
+		VkCommandBuffer GetImmediateBuffer() const { return  m_ImmediateBuffer;}
 		VkCommandBuffer GetOperatingBuffer() const { return m_CurrentBuffer.CommandBuffer; }
 		CommandBufferData& GetNextFrame();
 
 	private:
 		std::vector<CommandBufferData> m_Buffers = std::vector<CommandBufferData>();
 		CommandBufferData m_CurrentBuffer;
+
+		VkFence m_ImmediateFence = nullptr;
+		VkCommandPool m_ImmediatePool = nullptr;
+		VkCommandBuffer m_ImmediateBuffer = nullptr;
 
 		VkDevice m_DeviceInstance = nullptr;
 		VkQueue m_GraphicsQueue = nullptr;

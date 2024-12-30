@@ -93,7 +93,7 @@ namespace SDLarria
 		m_DescriptorSet = allocator.AllocateSet(m_DescriptorSetLayout);
 	}
 
-	void VulkanShader::Destroy() const
+	VulkanShader::~VulkanShader()
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
@@ -104,4 +104,15 @@ namespace SDLarria
 
 		vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 	}
+
+	void VulkanShader::Release() const
+	{
+		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+
+		if (m_CreateInfo.module)
+		{
+			vkDestroyShaderModule(device, m_CreateInfo.module, nullptr);
+		}
+	}
+
 }

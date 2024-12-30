@@ -19,7 +19,7 @@ namespace SDLarria
 		VkSurfaceKHR GetWindowSurface() const { return m_WindowSurface; }
 
 		VkQueue GetRenderQueue() const { return m_Queue; }
-		const uint32_t GetQueueFamilyIndex() const { return m_FamilyIndex; }
+		uint32_t GetQueueFamilyIndex() const { return m_FamilyIndex; }
 
 	private:
 		VkSurfaceKHR m_WindowSurface = nullptr;

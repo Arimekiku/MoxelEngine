@@ -3,8 +3,10 @@
 
 namespace SDLarria 
 {
-    VulkanImage::VulkanImage(VkDevice device, VmaAllocator allocator, const VkExtent2D& size)
+    VulkanImage::VulkanImage(VmaAllocator allocator, const VkExtent2D& size)
     {
+		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+
         m_ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
         m_ImageExtent =
         {
