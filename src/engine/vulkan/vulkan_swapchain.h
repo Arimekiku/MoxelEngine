@@ -34,7 +34,8 @@ namespace SDLarria
 		FrameData& GetCurrentFrame() { return m_CurrentFrame; }
 
 	private:
-		std::vector<FrameData> m_Frames = std::vector<FrameData>();
+		std::vector<VkImage> m_Images;
+		std::vector<VkImageView> m_ImageViews;
 
 		uint32_t m_CurrentFrameIndex = 0;
 		FrameData m_CurrentFrame;

@@ -206,22 +206,21 @@ namespace SDLarria
 	void VulkanComputePipeline::Reload() const
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
-		const auto framebuffer = VulkanRenderer::Get().GetFramebuffer();
 
-		auto imgInfo = VkDescriptorImageInfo();
-		imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imgInfo.imageView = framebuffer->GetImageView();
+		auto imageInfo = VkDescriptorImageInfo();
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		imageInfo.imageView = m_Specs.Framebuffer->GetImageView();
 
-		auto drawImageWrite = VkWriteDescriptorSet();
-		drawImageWrite.pNext = nullptr;
-		drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		drawImageWrite.dstBinding = 0;
-		drawImageWrite.dstSet = m_Specs.Compute->GetDescriptors();
-		drawImageWrite.descriptorCount = 1;
-		drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		drawImageWrite.pImageInfo = &imgInfo;
+		auto writeSet = VkWriteDescriptorSet();
+		writeSet.pNext = nullptr;
+		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeSet.dstBinding = 0;
+		writeSet.dstSet = m_Specs.Compute->GetDescriptors();
+		writeSet.descriptorCount = 1;
+		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		writeSet.pImageInfo = &imageInfo;
 
-		vkUpdateDescriptorSets(device, 1, &drawImageWrite, 0, nullptr);
+		vkUpdateDescriptorSets(device, 1, &writeSet, 0, nullptr);
 	}
 
 	void VulkanComputePipeline::Destroy() const

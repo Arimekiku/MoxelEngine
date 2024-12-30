@@ -113,8 +113,11 @@ namespace SDLarria
 
 		m_Rectangle = VulkanVertexArray(m_BufferAllocator.GetAllocator(), rect_indices, rect_vertices);
 
+		m_ShaderLibrary.Add(fragment);
 		fragment->Release();
+		m_ShaderLibrary.Add(vertex);
 		vertex->Release();
+		m_ShaderLibrary.Add(triangleVertexShader);
 		triangleVertexShader->Release();
 
 		// setup resize function
@@ -283,8 +286,12 @@ namespace SDLarria
         m_Swapchain.Destroy();
 
         m_DescriptorAllocator.Destroy();
+		m_MeshedPipeline.Destroy();
 		m_GradientPipeline.Destroy();
 		m_GraphicsPipeline.Destroy();
+
+		m_ShaderLibrary.Destroy();
+		m_GradientShader->Destroy();
 
         m_BufferAllocator.DestroyVulkanImage(m_Framebuffer);
 		m_BufferAllocator.DestroyBuffer(m_Rectangle.GetIndexBuffer());

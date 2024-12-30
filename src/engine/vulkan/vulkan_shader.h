@@ -41,9 +41,9 @@ namespace SDLarria
 	public:
 		VulkanShader() = default;
 		VulkanShader(const char* filePath, DescriptorAllocator& allocator, ShaderType shaderType);
-		~VulkanShader();
 
-		void Release() const;
+		void Release();
+		void Destroy() const;
 
 		const VkPipelineShaderStageCreateInfo& GetPipelineCreateInfo() const { return m_CreateInfo; }
 		const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
@@ -59,5 +59,21 @@ namespace SDLarria
 		VkDescriptorSet m_DescriptorSet = nullptr;
 
 		ComputePushConstants_TEST m_PushConstants = ComputePushConstants_TEST();
+
+		friend class VulkanShaderLibrary;
+	};
+
+	class VulkanShaderLibrary
+	{
+	public:
+		VulkanShaderLibrary() = default;
+		~VulkanShaderLibrary() = default;
+
+		void Destroy();
+
+		void Add(std::shared_ptr<VulkanShader> shader);
+
+	private:
+		std::vector<std::shared_ptr<VulkanShader>> m_Shaders;
 	};
 }

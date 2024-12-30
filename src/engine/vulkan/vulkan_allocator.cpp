@@ -84,7 +84,7 @@ namespace SDLarria
 
 	void BufferAllocator::DestroyBuffer(const BufferArray& buffer) const
 	{
-		vmaDestroyBuffer(m_Allocator, buffer.Buffer, nullptr);
+		vmaDestroyBuffer(m_Allocator, buffer.Buffer, buffer.Allocation);
 	}
 
 }

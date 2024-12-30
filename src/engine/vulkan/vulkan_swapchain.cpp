@@ -19,6 +19,7 @@ namespace SDLarria
 		auto swapchainFormat = VkSurfaceFormatKHR();
 		swapchainFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
 		swapchainFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+		m_SwapchainImageFormat = swapchainFormat.format;
 
 		vkb::Swapchain vkbSwapchain = swapchainBuilder
 			.set_desired_format(swapchainFormat)
@@ -28,19 +29,9 @@ namespace SDLarria
 			.build()
 			.value();
 
+		m_Images = vkbSwapchain.get_images().value();
+		m_ImageViews = vkbSwapchain.get_image_views().value();
 		m_SwapchainInstance = vkbSwapchain.swapchain;
-		m_SwapchainImageFormat = swapchainFormat.format;
-
-		// create frames
-		m_Frames.resize(vkbSwapchain.image_count);
-		for (int i = 0; i < vkbSwapchain.image_count; i++)
-		{
-			auto& frame = m_Frames[i];
-
-			frame.ImageData = vkbSwapchain.get_images().value()[i];
-			frame.ImageViewData = vkbSwapchain.get_image_views().value()[i];
-		}
-
 		m_SwapchainExtent = vkbSwapchain.extent;
 	}
 
@@ -63,9 +54,9 @@ namespace SDLarria
 
 	void VulkanSwapchain::Destroy() 
 	{
-		for (const auto& frame : m_Frames)
+		for (const auto& view : m_ImageViews)
 		{
-			vkDestroyImageView(m_DeviceInstance, frame.ImageViewData, nullptr);
+			vkDestroyImageView(m_DeviceInstance, view, nullptr);
 		}
 
 		vkDestroySwapchainKHR(m_DeviceInstance, m_SwapchainInstance, nullptr);
@@ -81,7 +72,8 @@ namespace SDLarria
 			Resize();
 		}
 
-		m_CurrentFrame = m_Frames[m_CurrentFrameIndex];
+		m_CurrentFrame.ImageData = m_Images[m_CurrentFrameIndex];
+		m_CurrentFrame.ImageViewData = m_ImageViews[m_CurrentFrameIndex];
 	}
 
 	void VulkanSwapchain::ShowSwapchain(const CommandBufferData& reservedBuffer)

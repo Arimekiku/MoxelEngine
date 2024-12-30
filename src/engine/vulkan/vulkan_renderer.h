@@ -54,6 +54,7 @@ namespace SDLarria
 		VulkanVertexArray m_Rectangle;
 
 		VulkanComputePipeline m_GradientPipeline;
+		VulkanShaderLibrary m_ShaderLibrary = VulkanShaderLibrary();
 		std::shared_ptr<VulkanShader> m_GradientShader;
 		std::shared_ptr<VulkanImage> m_Framebuffer;
 	};

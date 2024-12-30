@@ -2,6 +2,7 @@
 #include "vulkan.h"
 
 #include <fstream>
+#include <ranges>
 
 namespace SDLarria 
 {
@@ -93,7 +94,7 @@ namespace SDLarria
 		m_DescriptorSet = allocator.AllocateSet(m_DescriptorSetLayout);
 	}
 
-	VulkanShader::~VulkanShader()
+	void VulkanShader::Destroy() const
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
@@ -105,14 +106,30 @@ namespace SDLarria
 		vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 	}
 
-	void VulkanShader::Release() const
+	void VulkanShader::Release()
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
 		if (m_CreateInfo.module)
 		{
 			vkDestroyShaderModule(device, m_CreateInfo.module, nullptr);
+
+			m_CreateInfo.module = nullptr;
 		}
 	}
 
+	void VulkanShaderLibrary::Destroy()
+	{
+		for (const auto& shader: m_Shaders)
+		{
+			shader->Destroy();
+		}
+
+		m_Shaders.clear();
+	}
+
+	void VulkanShaderLibrary::Add(std::shared_ptr<VulkanShader> shader)
+	{
+		m_Shaders.emplace_back(shader);
+	}
 }
