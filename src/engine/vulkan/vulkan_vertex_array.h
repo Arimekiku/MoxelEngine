@@ -7,19 +7,10 @@
 
 namespace SDLarria
 {
-	struct GPUDrawPushConstants_TEST
-	{
-		glm::mat4 worldMatrix;
-		VkDeviceAddress vertexBuffer;
-	};
-
 	struct Vertex
 	{
-		glm::vec3 position;
-		float uv_x;
-		glm::vec3 normal;
-		float uv_y;
-		glm::vec4 color;
+		glm::vec3 Position;
+		glm::vec3 Color;
 	};
 
 	struct BufferArray
@@ -35,12 +26,14 @@ namespace SDLarria
 		VulkanVertexArray() = default;
 		VulkanVertexArray(VmaAllocator allocator, std::span<uint32_t> indices, std::span<Vertex> vertices);
 
-		VkDeviceAddress GetRenderingID() const { return m_VertexBufferAddress; }
+		const std::vector<Vertex>& GetVertices() { return m_Vertices; }
+
 		BufferArray GetVertexBuffer() const { return m_VertexBuffer; }
 		BufferArray GetIndexBuffer() const { return m_IndexBuffer; }
 
 	private:
-		VkDeviceAddress m_VertexBufferAddress = 0;
+		std::vector<Vertex> m_Vertices;
+
 		BufferArray m_VertexBuffer;
 		BufferArray m_IndexBuffer;
 	};

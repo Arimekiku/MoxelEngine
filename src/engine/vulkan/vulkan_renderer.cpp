@@ -33,20 +33,6 @@ namespace SDLarria
 		m_GradientShader = std::make_shared<VulkanShader>(RESOURCES_PATH "sky.comp.spv", m_DescriptorAllocator, ShaderType::COMPUTE);
 
 		const auto fragment = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.frag.spv", m_DescriptorAllocator, ShaderType::FRAGMENT);
-		const auto vertex = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.vert.spv", m_DescriptorAllocator, ShaderType::VERTEX);
-
-		const auto graphicSpecs = VulkanGraphicsPipelineSpecs
-		{
-			fragment,
-			vertex,
-			m_Framebuffer,
-
-			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_NONE,
-			VK_FRONT_FACE_CLOCKWISE
-		};
-		m_GraphicsPipeline = VulkanGraphicsPipeline(graphicSpecs);
 
 		auto computePushConstants = VkPushConstantRange();
 		computePushConstants.offset = 0;
@@ -67,11 +53,6 @@ namespace SDLarria
 
 		const auto triangleVertexShader = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle_meshed.vert.spv", m_DescriptorAllocator, ShaderType::VERTEX);
 
-		VkPushConstantRange bufferRange{};
-		bufferRange.offset = 0;
-		bufferRange.size = sizeof(GPUDrawPushConstants_TEST);
-		bufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
 		const auto meshedSpecs = VulkanGraphicsPipelineSpecs
 		{
 			fragment,
@@ -82,7 +63,6 @@ namespace SDLarria
 			VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE,
 			VK_FRONT_FACE_CLOCKWISE,
-			bufferRange
 		};
 		m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs);
 
@@ -90,15 +70,15 @@ namespace SDLarria
 		std::vector<Vertex> rect_vertices;
 		rect_vertices.resize(4);
 
-		rect_vertices[0].position = {0.5,-0.5, 0};
-		rect_vertices[1].position = {0.5,0.5, 0};
-		rect_vertices[2].position = {-0.5,-0.5, 0};
-		rect_vertices[3].position = {-0.5,0.5, 0};
+		rect_vertices[0].Position = {0.5,-0.5, 0 };
+		rect_vertices[1].Position = {0.5,0.5, 0 };
+		rect_vertices[2].Position = {-0.5,-0.5, 0 };
+		rect_vertices[3].Position = {-0.5,0.5, 0 };
 
-		rect_vertices[0].color = {0,0, 0,1};
-		rect_vertices[1].color = { 0.5,0.5,0.5 ,1};
-		rect_vertices[2].color = { 1,0, 0,1 };
-		rect_vertices[3].color = { 0,1, 0,1 };
+		rect_vertices[0].Color = { 0, 0, 0 };
+		rect_vertices[1].Color = { 0.5, 0.5, 0.5 };
+		rect_vertices[2].Color = { 1, 0, 0 };
+		rect_vertices[3].Color = { 0, 1, 0 };
 
 		std::vector<uint32_t> rect_indices;
 		rect_indices.resize(6);
@@ -115,8 +95,6 @@ namespace SDLarria
 
 		m_ShaderLibrary.Add(fragment);
 		fragment->Release();
-		m_ShaderLibrary.Add(vertex);
-		vertex->Release();
 		m_ShaderLibrary.Add(triangleVertexShader);
 		triangleVertexShader->Release();
 
@@ -192,8 +170,6 @@ namespace SDLarria
 		// draw geometry
 		vkCmdBeginRendering(buffer, &renderInfo);
 
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipeline());
-
 		//set dynamic viewport and scissor
 		const auto framebufferSize = m_Framebuffer->GetImageSize();
 
@@ -204,7 +180,6 @@ namespace SDLarria
 		viewport.height = framebufferSize.height;
 		viewport.minDepth = 0.f;
 		viewport.maxDepth = 1.f;
-
 		vkCmdSetViewport(buffer, 0, 1, &viewport);
 
 		auto scissor = VkRect2D();
@@ -212,19 +187,14 @@ namespace SDLarria
 		scissor.offset.y = 0;
 		scissor.extent.width = framebufferSize.width;
 		scissor.extent.height = framebufferSize.height;
-
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-		//launch a draw command to draw 3 vertices
-		vkCmdDraw(buffer, 3, 1, 0, 0);
-
+		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshedPipeline.GetPipeline());
 
-		GPUDrawPushConstants_TEST push_constants{};
-		push_constants.worldMatrix = glm::mat4{ 1.f };
-		push_constants.vertexBuffer = m_Rectangle.GetRenderingID();
-
-		vkCmdPushConstants(buffer, m_MeshedPipeline.GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants_TEST), &push_constants);
+		VkBuffer vertexBuffers[] = { m_Rectangle.GetVertexBuffer().Buffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(buffer, m_Rectangle.GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
 		vkCmdDrawIndexed(buffer, 6, 1, 0, 0, 0);
@@ -288,7 +258,6 @@ namespace SDLarria
         m_DescriptorAllocator.Destroy();
 		m_MeshedPipeline.Destroy();
 		m_GradientPipeline.Destroy();
-		m_GraphicsPipeline.Destroy();
 
 		m_ShaderLibrary.Destroy();
 		m_GradientShader->Destroy();

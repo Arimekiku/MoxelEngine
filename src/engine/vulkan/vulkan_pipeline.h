@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include "vulkan_shader.h"
+
+#include <memory>
 
 namespace SDLarria 
 {

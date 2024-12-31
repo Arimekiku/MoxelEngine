@@ -26,35 +26,25 @@ namespace SDLarria
 	VulkanVertexArray::VulkanVertexArray(VmaAllocator allocator, const std::span<uint32_t> indices, const std::span<Vertex> vertices)
 	{
 		// vertex buffer
-		const size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-		constexpr auto vertexBufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+		const size_t vertexBufferSize = vertices.size() * sizeof(vertices[0]);
+		constexpr auto vertexBufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 		constexpr auto vertexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
 		m_VertexBuffer = CreateBufferArray(allocator, vertexBufferSize, vertexBufferUsage, vertexMemoryUsage);
 
-		// vertex address
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
-
-		auto deviceAddressInfo = VkBufferDeviceAddressInfo();
-		deviceAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-		deviceAddressInfo.buffer = m_VertexBuffer.Buffer;
-
-		m_VertexBufferAddress = vkGetBufferDeviceAddress(device, &deviceAddressInfo);
-
 		// index buffer
-		const size_t indexBufferSize = indices.size() * sizeof(uint32_t);
-		constexpr auto indexBufferUsage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		const size_t indexBufferSize = indices.size() * sizeof(indices[0]);
+		constexpr auto indexBufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 		constexpr auto indexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
 		m_IndexBuffer = CreateBufferArray(allocator, indexBufferSize, indexBufferUsage, indexMemoryUsage);
 
 		// allocate vertex array data
-		BufferArray staging = CreateBufferArray(allocator, vertexBufferSize + indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
-		void* data = staging.AllocationInfo.pMappedData;
+		auto [buffer, allocation, allocationInfo] = CreateBufferArray(allocator, vertexBufferSize + indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+		void* data = allocationInfo.pMappedData;
 
-		// copy vertex buffer
+		// copy buffers
 		memcpy(data, vertices.data(), vertexBufferSize);
-		// copy index buffer
 		memcpy((char*)data + vertexBufferSize, indices.data(), indexBufferSize);
 
 		VulkanRenderer::Get().ImmediateSubmit([&](VkCommandBuffer cmd)
@@ -63,15 +53,15 @@ namespace SDLarria
 			vertexCopy.dstOffset = 0;
 			vertexCopy.srcOffset = 0;
 			vertexCopy.size = vertexBufferSize;
-			vkCmdCopyBuffer(cmd, staging.Buffer, m_VertexBuffer.Buffer, 1, &vertexCopy);
+			vkCmdCopyBuffer(cmd, buffer, m_VertexBuffer.Buffer, 1, &vertexCopy);
 
 			auto indexCopy = VkBufferCopy();
 			indexCopy.dstOffset = 0;
 			indexCopy.srcOffset = vertexBufferSize;
 			indexCopy.size = indexBufferSize;
-			vkCmdCopyBuffer(cmd, staging.Buffer, m_IndexBuffer.Buffer, 1, &indexCopy);
+			vkCmdCopyBuffer(cmd, buffer, m_IndexBuffer.Buffer, 1, &indexCopy);
 		});
 
-		vmaDestroyBuffer(allocator, staging.Buffer, staging.Allocation);
+		vmaDestroyBuffer(allocator, buffer, allocation);
 	}
 }

@@ -35,7 +35,7 @@ namespace SDLarria
 
         auto allocationInfo = VmaAllocationCreateInfo();
         allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocationInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        allocationInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         vmaCreateImage(allocator, &imageInfo, &allocationInfo, &m_Image, &m_Allocation, nullptr);
 

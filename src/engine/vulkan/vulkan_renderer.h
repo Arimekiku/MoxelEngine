@@ -48,8 +48,6 @@ namespace SDLarria
 		VulkanSwapchain m_Swapchain = VulkanSwapchain();
 		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
 
-		VulkanGraphicsPipeline m_GraphicsPipeline;
-
 		VulkanGraphicsPipeline m_MeshedPipeline;
 		VulkanVertexArray m_Rectangle;
 
