@@ -4,6 +4,8 @@
 
 namespace SDLarria
 {
+	struct UniformBufferObject_TEST;
+
 	VulkanBufferUniform::VulkanBufferUniform(const uint32_t bufferSize)
 	{
 		m_Size = bufferSize;
@@ -18,12 +20,10 @@ namespace SDLarria
 		m_DescriptorInfo.buffer = m_Buffer.Buffer;
 		m_DescriptorInfo.offset = 0;
 		m_DescriptorInfo.range = m_Size;
-
-		m_Data = nullptr;
 	}
 
 	void VulkanBufferUniform::WriteData(const void* data, const uint32_t size) const
 	{
-		memcpy(m_Data, &data, size);
+		memcpy(m_Buffer.AllocationInfo.pMappedData, data, size);
 	}
 }

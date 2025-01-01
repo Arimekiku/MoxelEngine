@@ -23,6 +23,7 @@ namespace SDLarria
 
     	auto allocCreateInfo = VmaAllocationCreateInfo();
     	allocCreateInfo.usage = usage;
+		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
     	vmaCreateBuffer(m_Allocator, &bufferCreateInfo, &allocCreateInfo, &buffer.Buffer, &buffer.Allocation, &buffer.AllocationInfo);
 
@@ -36,6 +37,11 @@ namespace SDLarria
 		allocationInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 		vmaCreateImage(m_Allocator, &imageCreateInfo, &allocationInfo, &outImage, &outAllocation, nullptr);
+	}
+
+	void VulkanAllocator::UnmapData(VmaAllocation allocation)
+	{
+		vmaUnmapMemory(m_Allocator, allocation);
 	}
 
     void VulkanAllocator::Destroy()
