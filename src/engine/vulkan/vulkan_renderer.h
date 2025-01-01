@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkan_context.h"
-#include "vulkan_allocator.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_shader.h"
@@ -29,7 +28,6 @@ namespace SDLarria
 
 		static VulkanRenderer& Get() { return *s_Instance; }
 
-		const std::shared_ptr<VulkanShader>& GetShader_TEST() { return m_GradientShader; }
 		VulkanContext& GetContext() { return m_Context; }
 		VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
 		VulkanCommandBuffer& GetCommandPool() { return m_CommandPool; }
@@ -43,17 +41,17 @@ namespace SDLarria
 
 		VulkanRendererSpecs m_Specs = VulkanRendererSpecs();
 		VulkanContext m_Context = VulkanContext();
-		DescriptorAllocator m_DescriptorAllocator = DescriptorAllocator();
-		BufferAllocator m_BufferAllocator = BufferAllocator();
 		VulkanSwapchain m_Swapchain = VulkanSwapchain();
 		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
 
 		VulkanGraphicsPipeline m_MeshedPipeline;
 		VulkanVertexArray m_Rectangle;
 
-		VulkanComputePipeline m_GradientPipeline;
+		std::unique_ptr<VulkanDescriptorPool> m_GlobalDescriptorPool;
+		std::vector<VkDescriptorSet> m_GlobalSets;
+
 		VulkanShaderLibrary m_ShaderLibrary = VulkanShaderLibrary();
-		std::shared_ptr<VulkanShader> m_GradientShader;
 		std::shared_ptr<VulkanImage> m_Framebuffer;
+		std::vector<std::shared_ptr<VulkanBufferUniform>> m_Uniforms;
 	};
 }

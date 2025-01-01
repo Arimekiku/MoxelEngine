@@ -21,43 +21,7 @@ namespace SDLarria
 		return buffer;
 	}
 
-	void DescriptorLayoutBuilder::AddBinding(const uint32_t binding, const VkDescriptorType type)
-	{
-		auto bind = VkDescriptorSetLayoutBinding();
-		bind.binding = binding;
-		bind.descriptorCount = 1;
-		bind.descriptorType = type;
-
-		m_Bindings.push_back(bind);
-	}
-
-	void DescriptorLayoutBuilder::Clear()
-	{
-		m_Bindings.clear();
-	}
-
-	VkDescriptorSetLayout DescriptorLayoutBuilder::Build(VkDevice device, const VkShaderStageFlags shaderStages, const VkDescriptorSetLayoutCreateFlags flags)
-	{
-		for (auto& bind : m_Bindings) 
-		{
-			bind.stageFlags |= shaderStages;
-		}
-
-		auto info = VkDescriptorSetLayoutCreateInfo();
-		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		info.pNext = nullptr;
-		info.pBindings = m_Bindings.data();
-		info.bindingCount = (uint32_t)m_Bindings.size();
-		info.flags = flags;
-
-		auto layout = VkDescriptorSetLayout();
-		const auto result = vkCreateDescriptorSetLayout(device, &info, nullptr, &layout);
-		VULKAN_CHECK(result);
-
-		return layout;
-	}
-
-	VulkanShader::VulkanShader(const char* filePath, DescriptorAllocator& allocator, ShaderType shaderType)
+	VulkanShader::VulkanShader(const char* filePath, const ShaderType shaderType)
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 		const auto buffer = ReadFile(filePath);
@@ -87,11 +51,6 @@ namespace SDLarria
 		m_CreateInfo.stage = shaderStageFlag;
 		m_CreateInfo.module = module;
 		m_CreateInfo.pName = "main";
-
-		auto builder = DescriptorLayoutBuilder();
-		builder.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-		m_DescriptorSetLayout = builder.Build(device, shaderStageFlag);
-		m_DescriptorSet = allocator.AllocateSet(m_DescriptorSetLayout);
 	}
 
 	void VulkanShader::Destroy() const
@@ -102,8 +61,6 @@ namespace SDLarria
 		{
 			vkDestroyShaderModule(device, m_CreateInfo.module, nullptr);
 		}
-
-		vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 	}
 
 	void VulkanShader::Release()
@@ -128,7 +85,7 @@ namespace SDLarria
 		m_Shaders.clear();
 	}
 
-	void VulkanShaderLibrary::Add(std::shared_ptr<VulkanShader> shader)
+	void VulkanShaderLibrary::Add(const std::shared_ptr<VulkanShader>& shader)
 	{
 		m_Shaders.emplace_back(shader);
 	}

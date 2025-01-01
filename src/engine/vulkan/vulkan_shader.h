@@ -1,21 +1,14 @@
 #pragma once
 
 #include "vulkan_allocator.h"
-#include "glm/glm.hpp"
 
 #include <vulkan/vulkan_core.h>
 #include <vector>
 
+#include "vulkan_descriptor_set_builder.h"
+
 namespace SDLarria
 {
-	struct ComputePushConstants_TEST
-	{
-		glm::vec4 data1;
-		glm::vec4 data2;
-		glm::vec4 data3;
-		glm::vec4 data4;
-	};
-
 	enum class ShaderType
 	{
 		VERTEX,
@@ -23,42 +16,19 @@ namespace SDLarria
 		COMPUTE,
 	};
 
-	class DescriptorLayoutBuilder 
-	{
-	public:
-		DescriptorLayoutBuilder() = default;
-
-		void AddBinding(uint32_t binding, VkDescriptorType type);
-		void Clear();
-		VkDescriptorSetLayout Build(VkDevice device, VkShaderStageFlags shaderStages, VkDescriptorSetLayoutCreateFlags flags = 0);
-
-	private:
-		std::vector<VkDescriptorSetLayoutBinding> m_Bindings;
-	};
-
-	class VulkanShader 
+	class VulkanShader
 	{
 	public:
 		VulkanShader() = default;
-		VulkanShader(const char* filePath, DescriptorAllocator& allocator, ShaderType shaderType);
+		VulkanShader(const char* filePath, ShaderType shaderType);
 
 		void Release();
 		void Destroy() const;
 
 		const VkPipelineShaderStageCreateInfo& GetPipelineCreateInfo() const { return m_CreateInfo; }
-		const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
-		const VkDescriptorSet GetDescriptors() const { return m_DescriptorSet; }
-		VkDescriptorSet GetDescriptors() { return m_DescriptorSet; }
-
-		ComputePushConstants_TEST& GetPushConstants() { return m_PushConstants; }
 
 	private:
 		VkPipelineShaderStageCreateInfo m_CreateInfo;
-
-		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
-		VkDescriptorSet m_DescriptorSet = nullptr;
-
-		ComputePushConstants_TEST m_PushConstants = ComputePushConstants_TEST();
 
 		friend class VulkanShaderLibrary;
 	};
@@ -69,9 +39,10 @@ namespace SDLarria
 		VulkanShaderLibrary() = default;
 		~VulkanShaderLibrary() = default;
 
+		const std::shared_ptr<VulkanShader>& GetShader(const int index) { return m_Shaders[index]; }
 		void Destroy();
 
-		void Add(std::shared_ptr<VulkanShader> shader);
+		void Add(const std::shared_ptr<VulkanShader>& shader);
 
 	private:
 		std::vector<std::shared_ptr<VulkanShader>> m_Shaders;

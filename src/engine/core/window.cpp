@@ -65,19 +65,6 @@ namespace SDLarria
                 layer->OnGuiUpdate();
             }
 
-            ImGui::ShowDemoWindow();
-
-            if (ImGui::Begin("background"))
-            {
-                auto& [data1, data2, data3, data4] = VulkanRenderer::Get().GetShader_TEST()->GetPushConstants();
-
-                ImGui::InputFloat4("data1",(float*)&data1);
-                ImGui::InputFloat4("data2",(float*)&data2);
-                ImGui::InputFloat4("data3",(float*)&data3);
-                ImGui::InputFloat4("data4",(float*)&data4);
-            }
-            ImGui::End();
-
             GuiLayer::End();
 
             renderer.Draw();

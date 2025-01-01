@@ -26,8 +26,7 @@ namespace SDLarria
 	{
 	public:
 		VulkanGraphicsPipeline() = default;
-		VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs);
-		~VulkanGraphicsPipeline();
+		VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout);
 
 		void Destroy() const;
 
@@ -56,7 +55,6 @@ namespace SDLarria
 		VulkanComputePipeline(const VulkanComputePipelineSpecs& specs);
 
 		void Destroy() const;
-		void Reload() const;
 
 		VkPipelineLayout GetLayout() const { return m_Layout; }
 		VkPipeline GetPipeline() const { return m_Pipeline; }

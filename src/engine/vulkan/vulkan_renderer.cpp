@@ -7,9 +7,25 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <memory>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
+
+#include "glm/gtx/quaternion.hpp"
+
 namespace SDLarria 
 {
     VulkanRenderer* VulkanRenderer::s_Instance;
+
+	struct UniformBufferObject_TEST
+	{
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 proj;
+	};
 
 	void VulkanRenderer::Initialize(SDL_Window* window, const VkExtent2D& windowSize)
     {
@@ -17,41 +33,40 @@ namespace SDLarria
 
 		// initialize vulkan
         m_Context.Initialize(window);
-        m_BufferAllocator.Initialize();
+        VulkanAllocator::Initialize();
         m_Swapchain.Initialize(windowSize);
         m_CommandPool.Initialize(m_Specs.FRAMES_IN_FLIGHT);
 
-        m_Framebuffer = std::make_shared<VulkanImage>(m_BufferAllocator.GetAllocator(), windowSize);
+        m_Framebuffer = std::make_shared<VulkanImage>(windowSize);
 
 		// setup shaders and pipelines
-		std::vector<PoolSizeRatio> sizes =
+		m_Uniforms.resize(m_Specs.FRAMES_IN_FLIGHT);
+		for (auto& uniform : m_Uniforms)
 		{
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
-		};
+			uniform = std::make_shared<VulkanBufferUniform>(sizeof(UniformBufferObject_TEST));
+		}
 
-        m_DescriptorAllocator.Initialize(10, sizes);
-		m_GradientShader = std::make_shared<VulkanShader>(RESOURCES_PATH "sky.comp.spv", m_DescriptorAllocator, ShaderType::COMPUTE);
+		m_GlobalDescriptorPool = VulkanDescriptorPool::Builder()
+			.SetMaxSets(m_Specs.FRAMES_IN_FLIGHT)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, m_Specs.FRAMES_IN_FLIGHT)
+			.Build();
 
-		const auto fragment = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.frag.spv", m_DescriptorAllocator, ShaderType::FRAGMENT);
+		const auto globalSetLayout = VulkanDescriptorSetLayout::Builder()
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.Build();
 
-		auto computePushConstants = VkPushConstantRange();
-		computePushConstants.offset = 0;
-		computePushConstants.size = sizeof(ComputePushConstants_TEST);
-		computePushConstants.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-		const auto computeSpecs = VulkanComputePipelineSpecs
+		m_GlobalSets = std::vector<VkDescriptorSet>(m_Specs.FRAMES_IN_FLIGHT);
+		for (int i = 0; i < m_GlobalSets.size(); ++i)
 		{
-			m_GradientShader,
-			m_Framebuffer,
+			const auto& bufferInfo = m_Uniforms[i]->GetDescriptorInfo();
 
-			computePushConstants
-		};
-		m_GradientPipeline = VulkanComputePipeline(computeSpecs);
+			DescriptorWriter(*globalSetLayout, *m_GlobalDescriptorPool)
+				.WriteBuffer(0, bufferInfo)
+				.Build(m_GlobalSets[i]);
+		}
 
-		auto& pushConst = m_GradientShader->GetPushConstants();
-		pushConst.data1 = glm::vec4(0.1, 0.2, 0.4 ,0.97);
-
-		const auto triangleVertexShader = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle_meshed.vert.spv", m_DescriptorAllocator, ShaderType::VERTEX);
+		const auto fragment = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.frag.spv", ShaderType::FRAGMENT);
+		const auto triangleVertexShader = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle_meshed.vert.spv", ShaderType::VERTEX);
 
 		const auto meshedSpecs = VulkanGraphicsPipelineSpecs
 		{
@@ -64,16 +79,16 @@ namespace SDLarria
 			VK_CULL_MODE_NONE,
 			VK_FRONT_FACE_CLOCKWISE,
 		};
-		m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs);
+		m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->GetDescriptorSetLayout());
 
 		// setup vertex array
 		std::vector<Vertex> rect_vertices;
 		rect_vertices.resize(4);
 
-		rect_vertices[0].Position = {0.5,-0.5, 0 };
-		rect_vertices[1].Position = {0.5,0.5, 0 };
-		rect_vertices[2].Position = {-0.5,-0.5, 0 };
-		rect_vertices[3].Position = {-0.5,0.5, 0 };
+		rect_vertices[0].Position = { 0.5, -0.5, 0 };
+		rect_vertices[1].Position = { 0.5, 0.5, 0 };
+		rect_vertices[2].Position = { -0.5, -0.5, 0 };
+		rect_vertices[3].Position = { -0.5, 0.5, 0 };
 
 		rect_vertices[0].Color = { 0, 0, 0 };
 		rect_vertices[1].Color = { 0.5, 0.5, 0.5 };
@@ -91,7 +106,7 @@ namespace SDLarria
 		rect_indices[4] = 1;
 		rect_indices[5] = 3;
 
-		m_Rectangle = VulkanVertexArray(m_BufferAllocator.GetAllocator(), rect_indices, rect_vertices);
+		m_Rectangle = VulkanVertexArray(rect_indices, rect_vertices);
 
 		m_ShaderLibrary.Add(fragment);
 		fragment->Release();
@@ -104,11 +119,10 @@ namespace SDLarria
             const auto& framebufferSize = Application::Get().GetWindow().GetWindowSize();
 
             // recreate framebuffer
-            m_BufferAllocator.DestroyVulkanImage(m_Framebuffer);
-            m_Framebuffer = std::make_shared<VulkanImage>(m_BufferAllocator.GetAllocator(), framebufferSize);
+            VulkanAllocator::DestroyVulkanImage(m_Framebuffer);
+            m_Framebuffer = std::make_shared<VulkanImage>(framebufferSize);
 
-            // recreate pipelines
-	    	m_GradientPipeline.Reload();
+            // TODO: recreate pipelines
 	    });
 	}
 
@@ -135,22 +149,8 @@ namespace SDLarria
         const auto& swapchainImage = m_Swapchain.GetCurrentFrame();
 
         // render commands
-        // transit framebuffer into writeable mode
-        VulkanImage::Transit(m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
-
-        // write gradient into framebuffer
-		const auto& imageSize = m_Framebuffer->GetImageSize();
-		const VkDescriptorSet& pSet = m_GradientShader->GetDescriptors();
-
-        vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientPipeline.GetPipeline());
-        vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientPipeline.GetLayout(), 0, 1, &pSet, 0, nullptr);
-
-		const auto& pc = m_GradientShader->GetPushConstants();
-		vkCmdPushConstants(buffer, m_GradientPipeline.GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstants_TEST), &pc);
-
-        vkCmdDispatch(buffer, std::ceil(imageSize.width / 16.0), std::ceil(imageSize.height / 16.0), 1);
-
-		VulkanImage::Transit(m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        // transit framebuffer into writeable mod
+		VulkanImage::Transit(m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		// setup render infos
 		auto colorAttachment = VkRenderingAttachmentInfo();
@@ -189,6 +189,19 @@ namespace SDLarria
 		scissor.extent.height = framebufferSize.height;
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
+		// update uniform data
+		static auto startTime = std::chrono::high_resolution_clock::now();
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float>(currentTime - startTime).count();
+
+		UniformBufferObject_TEST ubo{};
+		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		ubo.proj[1][1] *= -1;
+
+		m_Uniforms[m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
+
 		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshedPipeline.GetPipeline());
 
@@ -197,6 +210,8 @@ namespace SDLarria
 		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(buffer, m_Rectangle.GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
+		auto set = m_GlobalSets[m_CurrentFrameIndex];
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshedPipeline.GetPipelineLayout(), 0, 1, &set, 0, nullptr);
 		vkCmdDrawIndexed(buffer, 6, 1, 0, 0, 0);
 
 		vkCmdEndRendering(buffer);
@@ -244,7 +259,7 @@ namespace SDLarria
 
         // render swapchain image
 		m_Swapchain.ShowSwapchain(currentBuffer);
-        m_CurrentFrameIndex = std::max(m_CurrentFrameIndex + 1, m_Specs.FRAMES_IN_FLIGHT);
+        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_Specs.FRAMES_IN_FLIGHT;
 	}
 
 	void VulkanRenderer::Shutdown() 
@@ -255,17 +270,13 @@ namespace SDLarria
         m_CommandPool.Destroy();
         m_Swapchain.Destroy();
 
-        m_DescriptorAllocator.Destroy();
 		m_MeshedPipeline.Destroy();
-		m_GradientPipeline.Destroy();
-
 		m_ShaderLibrary.Destroy();
-		m_GradientShader->Destroy();
 
-        m_BufferAllocator.DestroyVulkanImage(m_Framebuffer);
-		m_BufferAllocator.DestroyBuffer(m_Rectangle.GetIndexBuffer());
-		m_BufferAllocator.DestroyBuffer(m_Rectangle.GetVertexBuffer());
-        m_BufferAllocator.Destroy();
+        VulkanAllocator::DestroyVulkanImage(m_Framebuffer);
+		VulkanAllocator::DestroyBuffer(m_Rectangle.GetIndexBuffer());
+		VulkanAllocator::DestroyBuffer(m_Rectangle.GetVertexBuffer());
+        VulkanAllocator::Destroy();
 
         m_Context.Destroy();
 	}

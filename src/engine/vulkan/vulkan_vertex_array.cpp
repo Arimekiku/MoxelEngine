@@ -28,7 +28,7 @@ namespace SDLarria
 
 		constexpr auto indexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		m_IndexBuffer =  VulkanAllocator::AllocateBuffer(indexBufferInfo, indexMemoryUsage);
+		m_IndexBuffer = VulkanAllocator::AllocateBuffer(indexBufferInfo, indexMemoryUsage);
 
 		// allocate vertex array data
 		auto stagingBufferInfo = VkBufferCreateInfo();

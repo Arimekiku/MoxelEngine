@@ -3,18 +3,21 @@
 
 namespace SDLarria
 {
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs)
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout)
 	{
 		m_Specs = specs;
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto shaderInfo = std::vector
+		{
+			specs.Fragment->GetPipelineCreateInfo(),
+			specs.Vertex->GetPipelineCreateInfo(),
+		};
 
 		// set layout create info
 		auto graphicsInfo = VkPipelineLayoutCreateInfo();
 		graphicsInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		graphicsInfo.pNext = nullptr;
-		graphicsInfo.flags = 0;
-		graphicsInfo.setLayoutCount = 0;
-		graphicsInfo.pSetLayouts = nullptr;
+		graphicsInfo.setLayoutCount = layout ? 1 : 0;
+		graphicsInfo.pSetLayouts = &layout;
 		graphicsInfo.pushConstantRangeCount = 0;
 		graphicsInfo.pPushConstantRanges = nullptr;
 
@@ -36,7 +39,7 @@ namespace SDLarria
 		renderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
 
 		// set vertex input info
-		VkVertexInputBindingDescription bindingDescription{};
+		auto bindingDescription = VkVertexInputBindingDescription();
 		bindingDescription.binding = 0;
 		bindingDescription.stride = sizeof(Vertex);
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -130,12 +133,6 @@ namespace SDLarria
 		// build the actual pipeline
 		// we now use all the info structs we have been writing into this one
 		// to create the pipeline
-		auto shaderInfo = std::vector
-		{
-			specs.Fragment->GetPipelineCreateInfo(),
-			specs.Vertex->GetPipelineCreateInfo(),
-		};
-
 		auto pipelineInfo = VkGraphicsPipelineCreateInfo();
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.pNext = &renderingInfo;
@@ -163,11 +160,6 @@ namespace SDLarria
 		VULKAN_CHECK(result);
 	}
 
-	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
-	{
-
-	}
-
 	void VulkanGraphicsPipeline::Destroy() const
 	{
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
@@ -185,22 +177,11 @@ namespace SDLarria
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		imageInfo.imageView = specs.Framebuffer->GetImageView();
 
-		auto drawImageWrite = VkWriteDescriptorSet();
-		drawImageWrite.pNext = nullptr;
-		drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		drawImageWrite.dstBinding = 0;
-		drawImageWrite.dstSet = specs.Compute->GetDescriptors();
-		drawImageWrite.descriptorCount = 1;
-		drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		drawImageWrite.pImageInfo = &imageInfo;
-
-		vkUpdateDescriptorSets(device, 1, &drawImageWrite, 0, nullptr);
-
 		auto computeLayout = VkPipelineLayoutCreateInfo();
 		computeLayout.pNext = nullptr;
 		computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		computeLayout.pSetLayouts = &specs.Compute->GetDescriptorSetLayout();
-		computeLayout.setLayoutCount = 1;
+		computeLayout.pSetLayouts = nullptr;
+		computeLayout.setLayoutCount = 0;
 		computeLayout.pPushConstantRanges = nullptr;
 		computeLayout.pushConstantRangeCount = 0;
 
@@ -221,26 +202,6 @@ namespace SDLarria
 
 		result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_Pipeline);
 		VULKAN_CHECK(result);
-	}
-
-	void VulkanComputePipeline::Reload() const
-	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
-
-		auto imageInfo = VkDescriptorImageInfo();
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imageInfo.imageView = m_Specs.Framebuffer->GetImageView();
-
-		auto writeSet = VkWriteDescriptorSet();
-		writeSet.pNext = nullptr;
-		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		writeSet.dstBinding = 0;
-		writeSet.dstSet = m_Specs.Compute->GetDescriptors();
-		writeSet.descriptorCount = 1;
-		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		writeSet.pImageInfo = &imageInfo;
-
-		vkUpdateDescriptorSets(device, 1, &writeSet, 0, nullptr);
 	}
 
 	void VulkanComputePipeline::Destroy() const
