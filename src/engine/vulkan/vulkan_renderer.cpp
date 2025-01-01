@@ -157,7 +157,7 @@ namespace SDLarria
 		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 		colorAttachment.imageView = m_Framebuffer->GetImageView();
 		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
 		auto renderInfo = VkRenderingInfo();
@@ -171,13 +171,13 @@ namespace SDLarria
 		vkCmdBeginRendering(buffer, &renderInfo);
 
 		//set dynamic viewport and scissor
-		const auto framebufferSize = m_Framebuffer->GetImageSize();
+		const auto [width, height] = m_Swapchain.GetSwapchainSize();
 
 		auto viewport = VkViewport();
 		viewport.x = 0;
 		viewport.y = 0;
-		viewport.width = framebufferSize.width;
-		viewport.height = framebufferSize.height;
+		viewport.width = width;
+		viewport.height = height;
 		viewport.minDepth = 0.f;
 		viewport.maxDepth = 1.f;
 		vkCmdSetViewport(buffer, 0, 1, &viewport);
@@ -185,8 +185,8 @@ namespace SDLarria
 		auto scissor = VkRect2D();
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		scissor.extent.width = framebufferSize.width;
-		scissor.extent.height = framebufferSize.height;
+		scissor.extent.width = width;
+		scissor.extent.height = height;
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 		// update uniform data
@@ -216,18 +216,12 @@ namespace SDLarria
 
 		vkCmdEndRendering(buffer);
 
-        // transit framebuffer into transfer source mode
-        VulkanImage::Transit(m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		// copy framebuffer into swapchain
+		VulkanImage::Transit(m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        // transit current swapchain frame into transfer destination mode
-        const auto& image = swapchainImage.ImageData;
-        VulkanImage::Transit(image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-        // write framebuffer into current swapchain image
-        m_Framebuffer->CopyRaw(image, m_Swapchain.GetSwapchainSize());
-
-        // set current frame into rendering mode
-        VulkanImage::Transit(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		m_Framebuffer->CopyRaw(swapchainImage.ImageData, m_Swapchain.GetSwapchainSize());
+		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		// setup render infos
 		colorAttachment = VkRenderingAttachmentInfo();
@@ -252,7 +246,7 @@ namespace SDLarria
         vkCmdEndRendering(buffer);
 
         // set current mode into present so we can draw it on screen
-        VulkanImage::Transit(image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
         // end render queue
         m_CommandPool.EndCommandQueue();
@@ -276,6 +270,11 @@ namespace SDLarria
         VulkanAllocator::DestroyVulkanImage(m_Framebuffer);
 		VulkanAllocator::DestroyBuffer(m_Rectangle.GetIndexBuffer());
 		VulkanAllocator::DestroyBuffer(m_Rectangle.GetVertexBuffer());
+
+		m_GlobalDescriptorPool = nullptr;
+		m_GlobalSets.clear();
+		m_Uniforms.clear();
+
         VulkanAllocator::Destroy();
 
         m_Context.Destroy();

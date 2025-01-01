@@ -22,6 +22,11 @@ namespace SDLarria
 		m_DescriptorInfo.range = m_Size;
 	}
 
+	VulkanBufferUniform::~VulkanBufferUniform()
+	{
+		VulkanAllocator::DestroyBuffer(m_Buffer);
+	}
+
 	void VulkanBufferUniform::WriteData(const void* data, const uint32_t size) const
 	{
 		memcpy(m_Buffer.AllocationInfo.pMappedData, data, size);

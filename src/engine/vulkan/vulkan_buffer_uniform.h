@@ -8,6 +8,7 @@ namespace SDLarria
 	{
 	public:
 		VulkanBufferUniform(uint32_t bufferSize);
+		~VulkanBufferUniform();
 
 		void WriteData(const void* data, uint32_t size) const;
 

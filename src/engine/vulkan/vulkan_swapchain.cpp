@@ -17,7 +17,7 @@ namespace SDLarria
 		auto swapchainBuilder = vkb::SwapchainBuilder(physicalDevice, m_DeviceInstance, windowSurface);
 
 		auto swapchainFormat = VkSurfaceFormatKHR();
-		swapchainFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+		swapchainFormat.format = VK_FORMAT_B8G8R8A8_SRGB;
 		swapchainFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 		m_SwapchainImageFormat = swapchainFormat.format;
 
