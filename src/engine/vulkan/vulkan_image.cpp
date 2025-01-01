@@ -3,7 +3,7 @@
 
 namespace SDLarria 
 {
-    VulkanImage::VulkanImage(VmaAllocator allocator, const VkExtent2D& size)
+    VulkanImage::VulkanImage(const VkExtent2D& size)
     {
 		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
 
@@ -33,11 +33,7 @@ namespace SDLarria
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.usage = drawImageUsages;
 
-        auto allocationInfo = VmaAllocationCreateInfo();
-        allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocationInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        vmaCreateImage(allocator, &imageInfo, &allocationInfo, &m_Image, &m_Allocation, nullptr);
+    	VulkanAllocator::AllocateImage(imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, m_Image, m_Allocation);
 
         auto imageViewInfo = VkImageViewCreateInfo();
         imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

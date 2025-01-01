@@ -8,7 +8,7 @@ namespace SDLarria
 	{
 	public:
 		VulkanImage() = default;
-		VulkanImage(VmaAllocator allocator, const VkExtent2D& size);
+		VulkanImage(const VkExtent2D& size);
 		~VulkanImage() = default;
 
 		void CopyInto(const VulkanImage& target) const;

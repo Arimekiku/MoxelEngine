@@ -1,50 +1,26 @@
 #pragma once
 
 #include <memory>
-#include <span>
 
-#include "vulkan_vertex_array.h"
+#include "vulkan_buffer.h"
 #include "vulkan_image.h"
 
 namespace SDLarria 
 {
-	struct PoolSizeRatio
-	{
-		VkDescriptorType Type;
-		float Ratio;
-	};
-
-	class DescriptorAllocator
+	class VulkanAllocator
 	{
 	public:
-		DescriptorAllocator() = default;
+		VulkanAllocator() = delete;
 
-		void Initialize(uint32_t maxSets, std::span<PoolSizeRatio> poolRatios);
-		void Destroy() const;
+		static void Initialize();
+		static void Destroy();
 
-		VkDescriptorSet AllocateSet(VkDescriptorSetLayout layout) const;
-		void ClearDescriptors() const;
+		static VulkanBuffer AllocateBuffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
+		static void AllocateImage(const VkImageCreateInfo& imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage, VmaAllocation& outAllocation);
 
+		static void DestroyBuffer(const VulkanBuffer& buffer);
+		static void DestroyVulkanImage(const std::shared_ptr<VulkanImage>& image);
 	private:
-		VkDevice m_Device;
-		VkDescriptorPool m_Pool;
-	};
-
-	class BufferAllocator 
-	{
-	public:
-		BufferAllocator() = default;
-
-		void Initialize();
-		void Destroy() const;
-
-		VmaAllocator GetAllocator() const { return m_Allocator; }
-
-		void DestroyVulkanImage(const std::shared_ptr<VulkanImage>& image) const;
-		void DestroyBuffer(const BufferArray& buffer) const;
-
-	private:
-		VkDevice m_Device;
-		VmaAllocator m_Allocator;
+		static VmaAllocator m_Allocator;
 	};
 }

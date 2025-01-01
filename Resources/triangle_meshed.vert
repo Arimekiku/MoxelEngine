@@ -6,9 +6,15 @@ layout (location = 1) in vec3 inColor;
 
 layout (location = 0) out vec3 outColor;
 
+layout (binding = 0) uniform UniformBufferObject {
+    mat4 uModel;
+    mat4 uView;
+    mat4 uProj;
+} ubo;
+
 void main()
 {
-    gl_Position = vec4(inPosition, 1.0f);
-
     outColor = inColor;
+
+    gl_Position = ubo.uView * ubo.uProj * ubo.uModel * vec4(inPosition, 1.0f);
 }
