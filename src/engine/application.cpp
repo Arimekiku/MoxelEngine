@@ -15,20 +15,28 @@ namespace SDLarria
 
 		constexpr auto initialSize = VkExtent2D(1600, 900);
 		m_Window = new GameWindow(initialSize.width, initialSize.height);
-		m_Engine.Initialize(m_Window->GetNativeWindow(), initialSize);
+		m_Context.Initialize(m_Window->GetNativeWindow());
+
+		VulkanRenderer::Initialize(initialSize);
 
 		m_LayerStack = LayerStack();
 	}
 
 	Application::~Application()
 	{
+		vkDeviceWaitIdle(m_Context.GetLogicalDevice());
+
 		m_LayerStack.Clear();
-		m_Engine.Shutdown();
+
+		VulkanRenderer::Shutdown();
+		VulkanAllocator::Destroy();
+
+		m_Context.Destroy();
 	}
 
 	void Application::Run()
 	{
-		m_Window->Update(m_Engine, m_LayerStack);
+		m_Window->Update(m_LayerStack);
 	}
 
 	void Application::AddLayer(Layer* layer)

@@ -4,6 +4,8 @@
 
 #include <ranges>
 
+#include "engine/application.h"
+
 namespace SDLarria
 {
 	VulkanDescriptorPool::Builder &VulkanDescriptorPool::Builder::AddPoolSize(const VkDescriptorType descriptorType, const uint32_t count)
@@ -34,7 +36,7 @@ namespace SDLarria
 
 	VulkanDescriptorPool::VulkanDescriptorPool(const uint32_t maxSets, const VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize> &poolSizes)
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		auto descriptorPoolInfo = VkDescriptorPoolCreateInfo();
 		descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -49,14 +51,14 @@ namespace SDLarria
 
 	VulkanDescriptorPool::~VulkanDescriptorPool()
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
 	}
 
 	bool VulkanDescriptorPool::AllocateDescriptor(VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptorSet) const
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		auto allocationInfo = VkDescriptorSetAllocateInfo();
 		allocationInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -72,14 +74,14 @@ namespace SDLarria
 
 	void VulkanDescriptorPool::FreeDescriptors(const std::vector<VkDescriptorSet>& descriptors) const
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		vkFreeDescriptorSets(device, m_DescriptorPool, static_cast<uint32_t>(descriptors.size()), descriptors.data());
 	}
 
 	void VulkanDescriptorPool::ResetPool() const
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		vkResetDescriptorPool(device, m_DescriptorPool, 0);
 	}
@@ -106,7 +108,7 @@ namespace SDLarria
 
 	VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& bindings)
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		m_Bindings = bindings;
 		auto setLayoutBindings = std::vector<VkDescriptorSetLayoutBinding>();
@@ -126,7 +128,7 @@ namespace SDLarria
 
 	VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout()
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 	}
@@ -183,7 +185,7 @@ namespace SDLarria
 
 	void DescriptorWriter::Overwrite(const VkDescriptorSet& set)
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		for (auto &descriptorSet : m_DescriptorSets)
 		{

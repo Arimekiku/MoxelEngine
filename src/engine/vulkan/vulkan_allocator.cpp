@@ -1,5 +1,6 @@
 #include "vulkan_allocator.h"
 #include "vulkan.h"
+#include "engine/application.h"
 
 namespace SDLarria 
 {
@@ -7,7 +8,7 @@ namespace SDLarria
 
 	void VulkanAllocator::Initialize()
 	{
-        const auto& instance = VulkanRenderer::Get().GetContext();
+        const auto& instance = Application::Get().GetContext();
 
         auto allocatorInfo = VmaAllocatorCreateInfo();
         allocatorInfo.physicalDevice = instance.GetPhysicalDevice();
@@ -39,6 +40,13 @@ namespace SDLarria
 		vmaCreateImage(m_Allocator, &imageCreateInfo, &allocationInfo, &outImage, &outAllocation, nullptr);
 	}
 
+	void* VulkanAllocator::MapData(VmaAllocation allocation)
+	{
+		void* mappedMemory = nullptr;
+		vmaMapMemory(m_Allocator, allocation, &mappedMemory);
+		return mappedMemory;
+	}
+
 	void VulkanAllocator::UnmapData(VmaAllocation allocation)
 	{
 		vmaUnmapMemory(m_Allocator, allocation);
@@ -49,17 +57,16 @@ namespace SDLarria
         vmaDestroyAllocator(m_Allocator);
     }
 
-    void VulkanAllocator::DestroyVulkanImage(const std::shared_ptr<VulkanImage>& image)
+    void VulkanAllocator::DestroyVulkanImage(const VulkanImage& image)
     {
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
-        vkDestroyImageView(device, image->GetImageView(), nullptr);
-        vmaDestroyImage(m_Allocator, image->GetRawImage(), image->GetAllocation());
+        vkDestroyImageView(device, image.GetImageView(), nullptr);
+        vmaDestroyImage(m_Allocator, image.GetRawImage(), image.GetAllocation());
     }
 
 	void VulkanAllocator::DestroyBuffer(const VulkanBuffer& buffer)
 	{
 		vmaDestroyBuffer(m_Allocator, buffer.Buffer, buffer.Allocation);
 	}
-
 }

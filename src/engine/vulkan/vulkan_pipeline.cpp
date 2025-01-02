@@ -1,12 +1,13 @@
 #include "vulkan_pipeline.h"
 #include "vulkan.h"
+#include "engine/application.h"
 
 namespace SDLarria
 {
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout)
 	{
 		m_Specs = specs;
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 		const auto shaderInfo = std::vector
 		{
 			specs.Fragment->GetPipelineCreateInfo(),
@@ -44,7 +45,7 @@ namespace SDLarria
 		bindingDescription.stride = sizeof(Vertex);
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+		auto attributeDescriptions = std::vector<VkVertexInputAttributeDescription>(2);
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
 		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -160,9 +161,11 @@ namespace SDLarria
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanGraphicsPipeline::Destroy() const
+	void VulkanGraphicsPipeline::Destroy()
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
+
+		m_Specs.Clear();
 
 		vkDestroyPipelineLayout(device, m_Layout, nullptr);
 		vkDestroyPipeline(device, m_Pipeline, nullptr);
@@ -171,7 +174,7 @@ namespace SDLarria
 	VulkanComputePipeline::VulkanComputePipeline(const VulkanComputePipelineSpecs& specs)
 	{
 		m_Specs = specs;
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		auto imageInfo = VkDescriptorImageInfo();
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -204,9 +207,11 @@ namespace SDLarria
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanComputePipeline::Destroy() const
+	void VulkanComputePipeline::Destroy()
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
+
+		m_Specs.Clear();
 
 		vkDestroyPipelineLayout(device, m_Layout, nullptr);
 		vkDestroyPipeline(device, m_Pipeline, nullptr);

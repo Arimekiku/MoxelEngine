@@ -4,6 +4,8 @@
 #include <fstream>
 #include <ranges>
 
+#include "engine/application.h"
+
 namespace SDLarria 
 {
 	static std::vector<uint32_t> ReadFile(const char* filePath)
@@ -23,7 +25,7 @@ namespace SDLarria
 
 	VulkanShader::VulkanShader(const char* filePath, const ShaderType shaderType)
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 		const auto buffer = ReadFile(filePath);
 
 		auto createInfo = VkShaderModuleCreateInfo();
@@ -55,7 +57,7 @@ namespace SDLarria
 
 	void VulkanShader::Destroy() const
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		if (m_CreateInfo.module)
 		{
@@ -65,7 +67,7 @@ namespace SDLarria
 
 	void VulkanShader::Release()
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		if (m_CreateInfo.module)
 		{

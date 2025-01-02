@@ -19,14 +19,9 @@ namespace SDLarria
 		static void AllocateImage(const VkImageCreateInfo& imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage, VmaAllocation& outAllocation);
 
 		static void DestroyBuffer(const VulkanBuffer& buffer);
-		static void DestroyVulkanImage(const std::shared_ptr<VulkanImage>& image);
+		static void DestroyVulkanImage(const VulkanImage& image);
 
-		static void* MapData(VmaAllocation allocation)
-		{
-			void* mappedMemory = nullptr;
-			vmaMapMemory(m_Allocator, allocation, &mappedMemory);
-			return mappedMemory;
-		}
+		static void* MapData(VmaAllocation allocation);
 		static void UnmapData(VmaAllocation allocation);
 	private:
 		static VmaAllocator m_Allocator;

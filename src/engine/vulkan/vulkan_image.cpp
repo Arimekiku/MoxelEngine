@@ -1,11 +1,12 @@
 #include "vulkan_image.h"
 #include "vulkan.h"
+#include "engine/application.h"
 
 namespace SDLarria 
 {
     VulkanImage::VulkanImage(const VkExtent2D& size)
     {
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
         m_ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
         m_ImageExtent =
@@ -50,6 +51,11 @@ namespace SDLarria
         const auto result = vkCreateImageView(device, &imageViewInfo, nullptr, &m_ImageView);
         VULKAN_CHECK(result);
     }
+
+	VulkanImage::~VulkanImage()
+	{
+		VulkanAllocator::DestroyVulkanImage(*this);
+	}
 
     void VulkanImage::CopyInto(const VulkanImage& target) const
     {

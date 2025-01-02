@@ -15,7 +15,7 @@ namespace SDLarria
 		const SDL_Surface* GetWindowSurface() const { return m_WindowSurface; }
 		SDL_Window* GetNativeWindow() const { return m_NativeWindow; }
 
-		void Update(VulkanRenderer& renderer, LayerStack layers);
+		void Update(LayerStack layers);
 		void Resize();
 
 	private:

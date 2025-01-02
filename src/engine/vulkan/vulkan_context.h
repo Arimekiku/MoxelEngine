@@ -31,7 +31,5 @@ namespace SDLarria
 
 		VkQueue m_Queue = nullptr;
 		uint32_t m_FamilyIndex = 0;
-
-		friend class VulkanRenderer;
 	};
 }

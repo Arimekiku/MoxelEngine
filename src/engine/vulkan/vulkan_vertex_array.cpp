@@ -19,6 +19,7 @@ namespace SDLarria
 		m_VertexBuffer = VulkanAllocator::AllocateBuffer(vertexBufferInfo, vertexMemoryUsage);
 
 		// index buffer
+		m_Indices = indices.size();
 		const auto indicesSize = indices.size() * sizeof(indices[0]);
 		auto indexBufferInfo = VkBufferCreateInfo();
 		indexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -46,7 +47,7 @@ namespace SDLarria
 		memcpy(data, vertices.data(), verticesSize);
 		memcpy((char*)data + verticesSize, indices.data(), indicesSize);
 
-		VulkanRenderer::Get().ImmediateSubmit([&](VkCommandBuffer cmd)
+		VulkanRenderer::ImmediateSubmit([&](VkCommandBuffer cmd)
 		{
 			auto vertexCopy = VkBufferCopy();
 			vertexCopy.dstOffset = 0;
@@ -62,5 +63,11 @@ namespace SDLarria
 		});
 
 		VulkanAllocator::DestroyBuffer(stagingBuffer);
+	}
+
+	VulkanVertexArray::~VulkanVertexArray()
+	{
+		VulkanAllocator::DestroyBuffer(m_VertexBuffer);
+		VulkanAllocator::DestroyBuffer(m_IndexBuffer);
 	}
 }

@@ -20,6 +20,13 @@ namespace SDLarria
 		VkBool32 MultisampleEnable = VK_FALSE;
 		VkBool32 BlendEnable = VK_FALSE;
 		VkBool32 DepthTest = VK_FALSE;
+
+		void Clear() 
+		{ 
+			Fragment = nullptr;
+			Vertex = nullptr;
+			Framebuffer = nullptr;
+		}
 	};
 
 	class VulkanGraphicsPipeline
@@ -28,7 +35,7 @@ namespace SDLarria
 		VulkanGraphicsPipeline() = default;
 		VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout);
 
-		void Destroy() const;
+		void Destroy();
 
 		const VkPipeline GetPipeline() const { return m_Pipeline; }
 		const VkPipelineLayout GetPipelineLayout() const { return m_Layout; }
@@ -46,6 +53,12 @@ namespace SDLarria
 		std::shared_ptr<VulkanImage> Framebuffer;
 
 		VkPushConstantRange PushConstants;
+
+		void Clear()
+		{
+			Compute = nullptr;
+			Framebuffer = nullptr;
+		}
 	};
 
 	class VulkanComputePipeline
@@ -54,7 +67,7 @@ namespace SDLarria
 		VulkanComputePipeline() = default;
 		VulkanComputePipeline(const VulkanComputePipelineSpecs& specs);
 
-		void Destroy() const;
+		void Destroy();
 
 		VkPipelineLayout GetLayout() const { return m_Layout; }
 		VkPipeline GetPipeline() const { return m_Pipeline; }

@@ -16,12 +16,14 @@ namespace SDLarria
 
 		void Run();
 
+		const VulkanContext& GetContext() const { return m_Context; }
 		GameWindow& GetWindow() const { return *m_Window; }
 
 	private:
 		static Application* s_Instance;
 
 		GameWindow* m_Window;
+		VulkanContext m_Context;
 		VulkanRenderer m_Engine;
 		LayerStack m_LayerStack;
 	};

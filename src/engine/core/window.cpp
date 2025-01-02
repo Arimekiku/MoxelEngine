@@ -26,7 +26,7 @@ namespace SDLarria
         SDL_Quit();
     }
 
-    void GameWindow::Update(VulkanRenderer& renderer, LayerStack layers)
+    void GameWindow::Update(LayerStack layers)
     {
         bool is_open = true;
 
@@ -53,6 +53,8 @@ namespace SDLarria
                 GuiLayer::ProcessEvents(event);
             }
 
+        	VulkanRenderer::PrepareFrame();
+
             for (const auto layer : layers)
             {
                 layer->OnEveryUpdate();
@@ -67,12 +69,12 @@ namespace SDLarria
 
             GuiLayer::End();
 
-            renderer.Draw();
+        	VulkanRenderer::EndFrame();
         }
     }
 
     void GameWindow::Resize()
     {
-	    SDL_GetWindowSizeInPixels(m_NativeWindow, (int*)&m_WindowSize.width, (int*)&m_WindowSize.height);
+	    SDL_GetWindowSizeInPixels(m_NativeWindow, reinterpret_cast<int*>(&m_WindowSize.width), reinterpret_cast<int*>(&m_WindowSize.height));
     }
 }

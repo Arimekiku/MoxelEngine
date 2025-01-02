@@ -9,7 +9,7 @@ namespace SDLarria
 	void VulkanSwapchain::Initialize(const VkExtent2D& windowSize)
 	{
 		// build swapchain
-		const auto& toolset = VulkanRenderer::Get().GetContext();
+		const auto& toolset = Application::Get().GetContext();
 		m_DeviceInstance = toolset.GetLogicalDevice();
 
 		const auto windowSurface = toolset.GetWindowSurface();
@@ -37,7 +37,7 @@ namespace SDLarria
 
 	void VulkanSwapchain::Resize()
 	{
-		const auto queue = VulkanRenderer::Get().GetContext().GetRenderQueue();
+		const auto queue = Application::Get().GetContext().GetRenderQueue();
 		auto& window = Application::Get().GetWindow();
 
 		vkQueueWaitIdle(queue);
@@ -64,7 +64,7 @@ namespace SDLarria
 
 	void VulkanSwapchain::UpdateFrame(const CommandBufferData& reservedBuffer)
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		const auto result = vkAcquireNextImageKHR(device, m_SwapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_CurrentFrameIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -78,7 +78,7 @@ namespace SDLarria
 
 	void VulkanSwapchain::ShowSwapchain(const CommandBufferData& reservedBuffer)
 	{
-		const auto queue = VulkanRenderer::Get().GetContext().GetRenderQueue();
+		const auto queue = Application::Get().GetContext().GetRenderQueue();
 
 		// prepare present
 		auto presentInfo = VkPresentInfoKHR();

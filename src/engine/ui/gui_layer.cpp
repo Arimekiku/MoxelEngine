@@ -11,7 +11,7 @@ namespace SDLarria
 
     void GuiLayer::Attach()
     {
-        const auto vulkan = VulkanRenderer::Get().GetContext();
+		const auto& vulkan = Application::Get().GetContext();
         const VkDescriptorPoolSize pool_sizes[] =
         { 
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -31,7 +31,7 @@ namespace SDLarria
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         pool_info.maxSets = 1000;
-        pool_info.poolSizeCount = (uint32_t)std::size(pool_sizes);
+        pool_info.poolSizeCount = static_cast<uint32_t>(std::size(pool_sizes));
         pool_info.pPoolSizes = pool_sizes;
 
         const auto result = vkCreateDescriptorPool(vulkan.GetLogicalDevice(), &pool_info, nullptr, &s_Test);
@@ -57,7 +57,7 @@ namespace SDLarria
         initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         initInfo.CheckVkResultFn = VulkanUtils::VulkanCheck;
 
-        auto swapchain = VulkanRenderer::Get().GetSwapchain();
+        auto& swapchain = VulkanRenderer::Get().GetSwapchain();
         auto createInfo = VkPipelineRenderingCreateInfo();
         createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         createInfo.colorAttachmentCount = 1;
@@ -74,7 +74,7 @@ namespace SDLarria
 
     void GuiLayer::Detach()
     {
-        const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+        const auto device = Application::Get().GetContext().GetLogicalDevice();
 
         vkDeviceWaitIdle(device);
 

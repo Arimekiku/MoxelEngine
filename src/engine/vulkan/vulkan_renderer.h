@@ -15,43 +15,50 @@ namespace SDLarria
 		int FRAMES_IN_FLIGHT = 2;
 	};
 
-	class VulkanRenderer 
+	class VulkanRenderer
 	{
 	public:
-		VulkanRenderer() = default;
-		void Initialize(SDL_Window* window, const VkExtent2D& windowSize);
+		VulkanRenderer();
 
-		void ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function) const;
+		static void Initialize(const VkExtent2D& windowSize);
+		static void Shutdown();
 
-		void Draw();
-		void Shutdown();
+		static void ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
+
+		static void PrepareFrame();
+		static void EndFrame();
+
+		static void RenderVertexArray(const std::shared_ptr<VulkanVertexArray>& vertexArray);
 
 		static VulkanRenderer& Get() { return *s_Instance; }
 
-		VulkanContext& GetContext() { return m_Context; }
-		VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
-		VulkanCommandBuffer& GetCommandPool() { return m_CommandPool; }
-		VulkanRendererSpecs& GetSpecifications() { return m_Specs; }
-		const std::shared_ptr<VulkanImage>& GetFramebuffer() { return m_Framebuffer; }
+		VulkanSwapchain& GetSwapchain() { return s_RenderData.m_Swapchain; }
+		VulkanCommandBuffer& GetCommandPool() { return s_RenderData.m_CommandPool; }
+		VulkanRendererSpecs& GetSpecifications() { return s_RenderData.m_Specs; }
+		const std::shared_ptr<VulkanImage>& GetFramebuffer() { return s_RenderData.m_Framebuffer; }
 
-		int GetCurrentFrameIndex() const { return m_CurrentFrameIndex % 2; }
+		int GetCurrentFrameIndex() const { return s_RenderData.m_CurrentFrameIndex % 2; }
 	private:
+		struct RenderStaticData
+		{
+			CommandBufferData m_BufferData;
+			int m_CurrentFrameIndex = 0;
+
+			VulkanRendererSpecs m_Specs = VulkanRendererSpecs();
+			VulkanSwapchain m_Swapchain = VulkanSwapchain();
+			VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
+
+			VulkanGraphicsPipeline m_MeshedPipeline;
+
+			std::unique_ptr<VulkanDescriptorPool> m_GlobalDescriptorPool;
+			std::vector<VkDescriptorSet> m_GlobalSets;
+
+			VulkanShaderLibrary m_ShaderLibrary = VulkanShaderLibrary();
+			std::shared_ptr<VulkanImage> m_Framebuffer;
+			std::vector<std::shared_ptr<VulkanBufferUniform>> m_Uniforms;
+		};
+
 		static VulkanRenderer* s_Instance;
-		int m_CurrentFrameIndex = 0;
-
-		VulkanRendererSpecs m_Specs = VulkanRendererSpecs();
-		VulkanContext m_Context = VulkanContext();
-		VulkanSwapchain m_Swapchain = VulkanSwapchain();
-		VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
-
-		VulkanGraphicsPipeline m_MeshedPipeline;
-		VulkanVertexArray m_Rectangle;
-
-		std::unique_ptr<VulkanDescriptorPool> m_GlobalDescriptorPool;
-		std::vector<VkDescriptorSet> m_GlobalSets;
-
-		VulkanShaderLibrary m_ShaderLibrary = VulkanShaderLibrary();
-		std::shared_ptr<VulkanImage> m_Framebuffer;
-		std::vector<std::shared_ptr<VulkanBufferUniform>> m_Uniforms;
+		static RenderStaticData s_RenderData;
 	};
 }

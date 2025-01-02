@@ -1,12 +1,13 @@
 #include "vulkan_command_queue.h"
 #include "vulkan_renderer.h"
 #include "vulkan.h"
+#include "engine/application.h"
 
 namespace SDLarria 
 {
 	void VulkanCommandBuffer::Initialize(const int bufferCount)
 	{
-		const auto& toolset = VulkanRenderer::Get().GetContext();
+		const auto& toolset = Application::Get().GetContext();
 
 		m_DeviceInstance = toolset.GetLogicalDevice();
 		m_GraphicsQueue = toolset.GetRenderQueue();
@@ -94,7 +95,7 @@ namespace SDLarria
 
 	void VulkanCommandBuffer::BeginImmediateQueue() const
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		VULKAN_CHECK(vkResetFences(device, 1, &m_ImmediateFence));
 		VULKAN_CHECK(vkResetCommandBuffer(m_ImmediateBuffer, 0));
@@ -110,8 +111,8 @@ namespace SDLarria
 
 	void VulkanCommandBuffer::EndImmediateQueue() const
 	{
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
-		const auto queue = VulkanRenderer::Get().GetContext().GetRenderQueue();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto queue = Application::Get().GetContext().GetRenderQueue();
 
 		VULKAN_CHECK(vkEndCommandBuffer(m_ImmediateBuffer));
 
@@ -138,7 +139,7 @@ namespace SDLarria
 	void VulkanCommandBuffer::BeginCommandQueue() const
 	{
 		// update fences
-		const auto device = VulkanRenderer::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
 		auto result = vkWaitForFences(device, 1, &m_CurrentBuffer.RenderFence, true, 1000000000);
 		VULKAN_CHECK(result);
