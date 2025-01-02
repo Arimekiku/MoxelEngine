@@ -24,8 +24,7 @@ namespace SDLarria
 	struct UniformBufferObject_TEST
 	{
 		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 proj;
+		glm::mat4 cameraMatrix;
 	};
 
 	VulkanRenderer::VulkanRenderer()
@@ -120,9 +119,7 @@ namespace SDLarria
 
 		// prepare swapchain
 		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
-		const auto& swapchainImage = s_RenderData.m_Swapchain.GetCurrentFrame();
 
-		// render commands
 		// transit framebuffer into writeable mod
 		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
@@ -172,7 +169,7 @@ namespace SDLarria
 		s_RenderData.m_CurrentFrameIndex = (s_RenderData.m_CurrentFrameIndex + 1) % s_RenderData.m_Specs.FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::RenderVertexArray(const std::shared_ptr<VulkanVertexArray>& vertexArray)
+	void VulkanRenderer::RenderVertexArray(const glm::mat4& cameraMat, const std::shared_ptr<VulkanVertexArray>& vertexArray)
 	{
 		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
 
@@ -216,25 +213,24 @@ namespace SDLarria
 		// update uniform data
 		static auto startTime = std::chrono::high_resolution_clock::now();
 
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float>(currentTime - startTime).count();
+		const auto currentTime = std::chrono::high_resolution_clock::now();
+		const float time = std::chrono::duration<float>(currentTime - startTime).count();
 
 		UniformBufferObject_TEST ubo{};
 		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		ubo.proj[1][1] *= -1;
+		ubo.cameraMatrix = cameraMat;
 
 		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
 
 		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
 
-		VkBuffer vertexBuffers[] = { vertexArray->GetVertexBuffer().Buffer };
-		VkDeviceSize offsets[] = { 0 };
+		const VkBuffer vertexBuffers[] = { vertexArray->GetVertexBuffer().Buffer };
+		constexpr VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(buffer, vertexArray->GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		auto set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
+		const auto& set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipelineLayout(), 0, 1, &set, 0, nullptr);
 		vkCmdDrawIndexed(buffer, vertexArray->GetIndexBufferSize(), 1, 0, 0, 0);
 

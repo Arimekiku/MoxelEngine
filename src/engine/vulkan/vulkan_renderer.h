@@ -28,7 +28,7 @@ namespace SDLarria
 		static void PrepareFrame();
 		static void EndFrame();
 
-		static void RenderVertexArray(const std::shared_ptr<VulkanVertexArray>& vertexArray);
+		static void RenderVertexArray(const glm::mat4& cameraMat, const std::shared_ptr<VulkanVertexArray>& vertexArray);
 
 		static VulkanRenderer& Get() { return *s_Instance; }
 

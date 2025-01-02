@@ -8,14 +8,12 @@ layout (location = 0) out vec3 outColor;
 
 layout (binding = 0) uniform UniformBufferObject_TEST {
     mat4 uModel;
-    mat4 uView;
-    mat4 uProj;
+    mat4 uCamera;
 } ubo;
 
 void main()
 {
     outColor = inColor;
 
-    //vec4 result = vec4(ubo.uProj * ubo.uView * ubo.uModel);
-    gl_Position = ubo.uModel * vec4(inPosition, 1.0f);
+    gl_Position = ubo.uModel * ubo.uCamera * vec4(inPosition, 1.0f);
 }

@@ -52,12 +52,14 @@ namespace SDLarria
 		tri_indices[2] = 2;
 
 		m_Triangle = std::make_shared<VulkanVertexArray>(tri_indices, tri_vertices);
+
+		m_renderCam = RenderCamera(glm::vec3(2, 2, 2), glm::vec3(-2, -2, -2));
 	}
 
 	void SceneLayer::OnEveryUpdate()
 	{
-		VulkanRenderer::RenderVertexArray(m_Rectangle);
-		VulkanRenderer::RenderVertexArray(m_Triangle);
+		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Rectangle);
+		//VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Triangle);
 	}
 
 	void SceneLayer::OnGuiUpdate()
