@@ -7,59 +7,54 @@ namespace SDLarria
 {
 	SceneLayer::SceneLayer()
 	{
-		std::vector<Vertex> rect_vertices;
-		rect_vertices.resize(4);
+		auto vertices = std::vector<Vertex>(8);
+		vertices[0].Position = glm::vec3(-0.5f, -0.5f, 0.5f);
+		vertices[1].Position = glm::vec3( 0.5f, -0.5f, 0.5f);
+		vertices[2].Position = glm::vec3( 0.5f,  0.5f, 0.5f);
+		vertices[3].Position = glm::vec3(-0.5f,  0.5f, 0.5f);
+		vertices[4].Position = glm::vec3(-0.5f, -0.5f, -0.5f);
+		vertices[5].Position = glm::vec3( 0.5f, -0.5f, -0.5f);
+		vertices[6].Position = glm::vec3( 0.5f,  0.5f, -0.5f);
+		vertices[7].Position = glm::vec3(-0.5f,  0.5f, -0.5f);
 
-		rect_vertices[0].Position = { 0.5, -0.5, 0 };
-		rect_vertices[1].Position = { 0.5, 0.5, 0 };
-		rect_vertices[2].Position = { -0.5, -0.5, 0 };
-		rect_vertices[3].Position = { -0.5, 0.5, 0 };
+		vertices[0].Color = glm::vec3(1, 1, 1);
+		vertices[1].Color = glm::vec3(1, 1, 1);
+		vertices[2].Color = glm::vec3(1, 1, 1);
+		vertices[3].Color = glm::vec3(1, 1, 1);
+		vertices[4].Color = glm::vec3(1, 1, 1);
+		vertices[5].Color = glm::vec3(1, 1, 1);
+		vertices[6].Color = glm::vec3(1, 1, 1);
+		vertices[7].Color = glm::vec3(1, 1, 1);
 
-		rect_vertices[0].Color = { 0, 0, 0 };
-		rect_vertices[1].Color = { 0.5, 0.5, 0.5 };
-		rect_vertices[2].Color = { 1, 0, 0 };
-		rect_vertices[3].Color = { 0, 1, 0 };
+		/*vertices[0].Normal = glm::vec3(-1.0f, -1.0f,  1.0f);
+		vertices[1].Normal = glm::vec3( 1.0f, -1.0f,  1.0f);
+		vertices[2].Normal = glm::vec3( 1.0f,  1.0f,  1.0f);
+		vertices[3].Normal = glm::vec3(-1.0f,  1.0f,  1.0f);
+		vertices[4].Normal = glm::vec3(-1.0f, -1.0f, -1.0f);
+		vertices[5].Normal = glm::vec3( 1.0f, -1.0f, -1.0f);
+		vertices[6].Normal = glm::vec3( 1.0f,  1.0f, -1.0f);
+		vertices[7].Normal = glm::vec3(-1.0f,  1.0f, -1.0f);*/
 
-		std::vector<uint32_t> rect_indices;
-		rect_indices.resize(6);
+		std::vector<uint32_t> indices =
+		{
+			0, 1, 2, 2, 3, 0,
+			1, 5, 6, 6, 2, 1,
+			7, 6, 5, 5, 4, 7,
+			4, 0, 3, 3, 7, 4,
+			4, 5, 1, 1, 0, 4,
+			3, 2, 6, 6, 7, 3,
+		};
 
-		rect_indices[0] = 0;
-		rect_indices[1] = 1;
-		rect_indices[2] = 2;
+		m_Cube = std::make_shared<VulkanVertexArray>(indices, vertices);
 
-		rect_indices[3] = 2;
-		rect_indices[4] = 1;
-		rect_indices[5] = 3;
-
-		m_Rectangle = std::make_shared<VulkanVertexArray>(rect_indices, rect_vertices);
-
-		std::vector<Vertex> tri_vertices;
-		tri_vertices.resize(3);
-
-		tri_vertices[0].Position = { 1.2, -1.5, 1.5 };
-		tri_vertices[1].Position = { 1.5, 1.5, 1.5 };
-		tri_vertices[2].Position = { -1.5, -1.5, 1.5 };
-
-		tri_vertices[0].Color = { 0, 0, 0 };
-		tri_vertices[1].Color = { 0.5, 0.5, 0.5 };
-		tri_vertices[2].Color = { 1, 0, 0 };
-
-		std::vector<uint32_t> tri_indices;
-		tri_indices.resize(3);
-
-		tri_indices[0] = 0;
-		tri_indices[1] = 1;
-		tri_indices[2] = 2;
-
-		m_Triangle = std::make_shared<VulkanVertexArray>(tri_indices, tri_vertices);
-
-		m_renderCam = RenderCamera(glm::vec3(2, 2, 2), glm::vec3(-2, -2, -2));
+		m_renderCam = RenderCamera(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1));
 	}
 
 	void SceneLayer::OnEveryUpdate()
 	{
-		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Rectangle);
-		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Triangle);
+		m_renderCam.Update();
+
+		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Cube);
 	}
 
 	void SceneLayer::OnGuiUpdate()
@@ -69,6 +64,6 @@ namespace SDLarria
 
 	void SceneLayer::Detach()
 	{
-		m_Rectangle = nullptr;
+		m_Cube = nullptr;
 	}
 }

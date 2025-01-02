@@ -78,7 +78,7 @@ namespace SDLarria
 
 			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_NONE,
+			VK_CULL_MODE_BACK_BIT,
 			VK_FRONT_FACE_CLOCKWISE,
 		};
 		s_RenderData.m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->GetDescriptorSetLayout());
@@ -121,10 +121,9 @@ namespace SDLarria
 		// prepare swapchain
 		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
 
-		// transit framebuffer into writeable mod
+		// clear framebuffer
 		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-		// clear framebuffer
 		auto vulkanSubresourceRange = VkImageSubresourceRange();
 		vulkanSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		vulkanSubresourceRange.levelCount = 1;
@@ -237,13 +236,26 @@ namespace SDLarria
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 		// update uniform data
-		static auto startTime = std::chrono::high_resolution_clock::now();
+		//static auto startTime = std::chrono::high_resolution_clock::now();
 
-		const auto currentTime = std::chrono::high_resolution_clock::now();
-		const float time = std::chrono::duration<float>(currentTime - startTime).count();
+		//const auto currentTime = std::chrono::high_resolution_clock::now();
+		//const float time = std::chrono::duration<float>(currentTime - startTime).count();
+
+		//ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
 
 		UniformBufferObject_TEST ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		auto Position = glm::vec3(0);
+		auto Rotation = glm::vec3(0);
+		auto Scale = glm::vec3(1);
+
+		const glm::mat4 translation = glm::translate(glm::mat4(1.0f), Position);
+		const glm::mat4 rotation = glm::toMat4(glm::quat(glm::radians(Rotation)));
+		const glm::mat4 scaling = glm::scale(glm::mat4(1.0f), Scale);
+
+		ubo.model = translation * rotation * scaling;
+
 		ubo.cameraMatrix = cameraMat;
 
 		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));

@@ -34,7 +34,7 @@ namespace SDLarria
 		m_Context.Destroy();
 	}
 
-	void Application::Run()
+	void Application::Run() const
 	{
 		m_Window->Update(m_LayerStack);
 	}

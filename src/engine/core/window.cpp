@@ -1,5 +1,6 @@
 #include "window.h"
 #include "engine/ui/gui_layer.h"
+#include "engine/core/input.h"
 
 #include <iostream>
 #include <imgui.h>
@@ -41,14 +42,26 @@ namespace SDLarria
                     break;
                 }
 
-                if (event.type == SDL_EVENT_KEY_DOWN) 
+                if (event.type == SDL_EVENT_KEY_DOWN)
                 {
                     if (event.key.key == SDLK_ESCAPE) 
                     {
                         is_open = false;
                         break;
                     }
+
+                	Input::Key::SetKeyValue(event.key.key, true);
                 }
+
+            	if (event.type == SDL_EVENT_KEY_UP)
+            	{
+            		Input::Key::SetKeyValue(event.key.key, false);
+            	}
+
+            	if (event.type == SDL_EVENT_MOUSE_MOTION)
+            	{
+            		Input::Mouse::SetMouseRelative(event.motion.xrel, event.motion.yrel);
+            	}
 
                 GuiLayer::ProcessEvents(event);
             }
@@ -70,6 +83,8 @@ namespace SDLarria
             GuiLayer::End();
 
         	VulkanRenderer::EndFrame();
+
+        	Input::Key::CopyNewLayout();
         }
     }
 

@@ -21,7 +21,6 @@ namespace SDLarria
 	private:
 		RenderCamera m_renderCam;
 
-		std::shared_ptr<VulkanVertexArray> m_Rectangle;
-		std::shared_ptr<VulkanVertexArray> m_Triangle;
+		std::shared_ptr<VulkanVertexArray> m_Cube;
 	};
 }

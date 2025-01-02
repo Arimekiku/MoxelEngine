@@ -14,7 +14,7 @@ namespace SDLarria
 
 		void AddLayer(Layer* layer);
 
-		void Run();
+		void Run() const;
 
 		const VulkanContext& GetContext() const { return m_Context; }
 		GameWindow& GetWindow() const { return *m_Window; }
