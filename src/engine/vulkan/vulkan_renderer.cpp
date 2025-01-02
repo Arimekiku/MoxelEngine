@@ -113,6 +113,7 @@ namespace SDLarria
 	void VulkanRenderer::PrepareFrame()
 	{
 		s_RenderData.m_BufferData = s_RenderData.m_CommandPool.GetNextFrame();
+		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
 
 		// begin render queue
 		s_RenderData.m_CommandPool.BeginCommandQueue();
@@ -121,7 +122,32 @@ namespace SDLarria
 		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
 
 		// transit framebuffer into writeable mod
-		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+
+		// clear framebuffer
+		auto vulkanSubresourceRange = VkImageSubresourceRange();
+		vulkanSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		vulkanSubresourceRange.levelCount = 1;
+		vulkanSubresourceRange.layerCount = 1;
+
+		constexpr auto clearColor = VkClearColorValue
+		{
+			164.0f / 256.0f,
+			30.0f / 256.0f,
+			34.0f / 256.0f,
+			0.0f
+		};
+		auto clearValue = VkClearValue();
+		clearValue.color = clearColor;
+
+		vkCmdClearColorImage(buffer,
+			s_RenderData.m_Framebuffer->GetRawImage(),
+			VK_IMAGE_LAYOUT_GENERAL,
+			reinterpret_cast<VkClearColorValue*>(&clearValue),
+			1,
+			&vulkanSubresourceRange);
+
+		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
 
 	void VulkanRenderer::EndFrame()
@@ -178,7 +204,7 @@ namespace SDLarria
 		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 		colorAttachment.imageView = s_RenderData.m_Framebuffer->GetImageView();
 		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
 		auto renderInfo = VkRenderingInfo();

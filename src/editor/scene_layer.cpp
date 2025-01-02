@@ -36,9 +36,9 @@ namespace SDLarria
 		std::vector<Vertex> tri_vertices;
 		tri_vertices.resize(3);
 
-		tri_vertices[0].Position = { 0.2, -0.5, 0 };
-		tri_vertices[1].Position = { 0.5, 0.5, 0 };
-		tri_vertices[2].Position = { -0.5, -0.5, 0 };
+		tri_vertices[0].Position = { 1.2, -1.5, 1.5 };
+		tri_vertices[1].Position = { 1.5, 1.5, 1.5 };
+		tri_vertices[2].Position = { -1.5, -1.5, 1.5 };
 
 		tri_vertices[0].Color = { 0, 0, 0 };
 		tri_vertices[1].Color = { 0.5, 0.5, 0.5 };
@@ -59,7 +59,7 @@ namespace SDLarria
 	void SceneLayer::OnEveryUpdate()
 	{
 		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Rectangle);
-		//VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Triangle);
+		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Triangle);
 	}
 
 	void SceneLayer::OnGuiUpdate()
