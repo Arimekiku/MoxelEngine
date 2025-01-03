@@ -37,7 +37,7 @@ namespace SDLarria
 
 	void RenderCamera::Resize(const uint16_t width, const uint16_t height)
 	{
-		m_Aspect = (float)width / (float)height;
+		m_Aspect = static_cast<float>(width) / static_cast<float>(height);
 
 		m_Proj = glm::perspective(glm::radians(m_FOV), m_Aspect, m_MinRenderDist, m_MaxRenderDist);
 		m_Proj[1][1] *= -1;

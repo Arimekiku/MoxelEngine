@@ -4,7 +4,7 @@
 
 namespace SDLarria
 {
-	struct UniformBufferObject_TEST;
+	struct GlobalRenderData;
 
 	VulkanBufferUniform::VulkanBufferUniform(const uint32_t bufferSize)
 	{

@@ -4,6 +4,7 @@
 #include "vulkan_pipeline.h"
 #include "vulkan_shader.h"
 #include "vulkan_buffer_vertex_array.h"
+#include "engine/renderer/render_mesh.h"
 
 namespace SDLarria 
 {
@@ -25,7 +26,7 @@ namespace SDLarria
 		static void PrepareFrame();
 		static void EndFrame();
 
-		static void RenderVertexArray(const glm::mat4& cameraMat, const std::shared_ptr<VulkanVertexArray>& vertexArray);
+		static void RenderVertexArray(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat);
 
 		static VulkanSwapchain& GetSwapchain() { return s_RenderData.m_Swapchain; }
 		static VulkanCommandBuffer& GetCommandPool() { return s_RenderData.m_CommandPool; }

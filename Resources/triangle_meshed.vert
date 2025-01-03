@@ -6,7 +6,8 @@ layout (location = 1) in vec3 inColor;
 
 layout (location = 0) out vec3 outColor;
 
-layout (binding = 0) uniform UniformBufferObject_TEST {
+layout (binding = 0) uniform RenderData
+{
     mat4 uModel;
     mat4 uCamera;
 } ubo;
@@ -15,5 +16,5 @@ void main()
 {
     outColor = inColor;
 
-    gl_Position = ubo.uModel * ubo.uCamera * vec4(inPosition, 1.0f);
+    gl_Position = ubo.uCamera * ubo.uModel * vec4(inPosition, 1.0f);
 }

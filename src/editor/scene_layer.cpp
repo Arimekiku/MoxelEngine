@@ -1,7 +1,13 @@
 #include "scene_layer.h"
-#include "engine/vulkan/vulkan_renderer.h"
 
 #include <imgui.h>
+#include <chrono>
+
+#include "engine/vulkan/vulkan_renderer.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_RADIANS
+#include <glm/ext/matrix_transform.hpp>
 
 namespace SDLarria
 {
@@ -45,16 +51,23 @@ namespace SDLarria
 			3, 2, 6, 6, 7, 3,
 		};
 
-		m_Cube = std::make_shared<VulkanVertexArray>(indices, vertices);
+		const auto vertexArray = std::make_shared<VulkanVertexArray>(indices, vertices);
+		m_Cube = std::make_shared<RenderMesh>(vertexArray);
+		m_Cube->SetPosition(glm::vec3(1, 0, 0));
 
-		m_RenderCam = RenderCamera(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1));
+		m_RenderCam = RenderCamera(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1));
 	}
 
 	void SceneLayer::OnEveryUpdate()
 	{
 		m_RenderCam.Update();
 
-		VulkanRenderer::RenderVertexArray(m_RenderCam.GetProjViewMat(), m_Cube);
+		static auto startTime = std::chrono::high_resolution_clock::now();
+		const auto currentTime = std::chrono::high_resolution_clock::now();
+		const float time = std::chrono::duration<float>(currentTime - startTime).count();
+		m_Cube->SetRotation(time * glm::vec3(0, 90, 0));
+
+		VulkanRenderer::RenderVertexArray(m_Cube, m_RenderCam.GetProjViewMat());
 	}
 
 	void SceneLayer::OnGuiUpdate()

@@ -4,19 +4,13 @@
 
 #include <backends/imgui_impl_vulkan.h>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 namespace SDLarria 
 {
 	VulkanRenderer::RenderStaticData VulkanRenderer::s_RenderData;
 
-	struct UniformBufferObject_TEST
+	struct GlobalRenderData
 	{
-		glm::mat4 model;
+		glm::mat4 meshTRS;
 		glm::mat4 cameraMatrix;
 	};
 
@@ -30,7 +24,7 @@ namespace SDLarria
 		s_RenderData.m_Uniforms.resize(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
 		for (auto& uniform : s_RenderData.m_Uniforms)
 		{
-			uniform = std::make_shared<VulkanBufferUniform>(sizeof(UniformBufferObject_TEST));
+			uniform = std::make_shared<VulkanBufferUniform>(sizeof(GlobalRenderData));
 		}
 
 		s_RenderData.m_GlobalDescriptorPool = VulkanDescriptorPool::Builder()
@@ -171,7 +165,7 @@ namespace SDLarria
 		s_RenderData.m_CurrentFrameIndex = (s_RenderData.m_CurrentFrameIndex + 1) % s_RenderData.m_Specs.FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::RenderVertexArray(const glm::mat4& cameraMat, const std::shared_ptr<VulkanVertexArray>& vertexArray)
+	void VulkanRenderer::RenderVertexArray(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat)
 	{
 		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
 
@@ -213,35 +207,18 @@ namespace SDLarria
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 		// update uniform data
-		//static auto startTime = std::chrono::high_resolution_clock::now();
-
-		//const auto currentTime = std::chrono::high_resolution_clock::now();
-		//const float time = std::chrono::duration<float>(currentTime - startTime).count();
-
-		//ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-
-		UniformBufferObject_TEST ubo{};
-
-		auto Position = glm::vec3(0);
-		auto Rotation = glm::vec3(0);
-		auto Scale = glm::vec3(1);
-
-		const glm::mat4 translation = translate(glm::mat4(1.0f), Position);
-		const glm::mat4 rotation = toMat4(glm::quat(glm::radians(Rotation)));
-		const glm::mat4 scaling = scale(glm::mat4(1.0f), Scale);
-
-		ubo.model = translation * rotation * scaling;
-
+		auto ubo = GlobalRenderData();
+		ubo.meshTRS = mesh->GetTRSMatrix();
 		ubo.cameraMatrix = cameraMat;
-
 		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
 
 		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
 
+		const auto& vertexArray = mesh->GetVertexArray();
 		const VkBuffer vertexBuffer = vertexArray->GetVertexBuffer().Buffer;
 		constexpr VkDeviceSize offsets[] = { 0 };
+
 		vkCmdBindVertexBuffers(buffer, 0, 1, &vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(buffer, vertexArray->GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 

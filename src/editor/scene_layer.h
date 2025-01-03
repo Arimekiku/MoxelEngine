@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/core/layer/layer.h"
-#include "engine/vulkan/vulkan_buffer_vertex_array.h"
+#include "engine/renderer/render_mesh.h"
 #include "engine/renderer/render_camera.h"
 
 #include <memory>
@@ -21,6 +21,6 @@ namespace SDLarria
 	private:
 		RenderCamera m_RenderCam;
 
-		std::shared_ptr<VulkanVertexArray> m_Cube;
+		std::shared_ptr<RenderMesh> m_Cube;
 	};
 }
