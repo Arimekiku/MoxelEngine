@@ -1,9 +1,11 @@
 #include "gui_layer.h"
 #include "engine/vulkan/vulkan.h"
 #include "engine/application.h"
+#include "engine/vulkan/vulkan_renderer.h"
 
 #include <backends/imgui_impl_vulkan.cpp>
-#include <backends/imgui_impl_sdl3.cpp> 
+#include <backends/imgui_impl_sdl3.cpp>
+
 
 namespace SDLarria
 {
@@ -57,7 +59,7 @@ namespace SDLarria
         initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         initInfo.CheckVkResultFn = VulkanUtils::VulkanCheck;
 
-        auto& swapchain = VulkanRenderer::Get().GetSwapchain();
+        auto& swapchain = VulkanRenderer::GetSwapchain();
         auto createInfo = VkPipelineRenderingCreateInfo();
         createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         createInfo.colorAttachmentCount = 1;

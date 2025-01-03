@@ -1,12 +1,9 @@
 #pragma once
 
-#include "vulkan_context.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_shader.h"
-#include "vulkan_vertex_array.h"
-
-#include <SDL3/SDL.h>
+#include "vulkan_buffer_vertex_array.h"
 
 namespace SDLarria 
 {
@@ -18,7 +15,7 @@ namespace SDLarria
 	class VulkanRenderer
 	{
 	public:
-		VulkanRenderer();
+		VulkanRenderer() = delete;
 
 		static void Initialize(const VkExtent2D& windowSize);
 		static void Shutdown();
@@ -30,14 +27,11 @@ namespace SDLarria
 
 		static void RenderVertexArray(const glm::mat4& cameraMat, const std::shared_ptr<VulkanVertexArray>& vertexArray);
 
-		static VulkanRenderer& Get() { return *s_Instance; }
+		static VulkanSwapchain& GetSwapchain() { return s_RenderData.m_Swapchain; }
+		static VulkanCommandBuffer& GetCommandPool() { return s_RenderData.m_CommandPool; }
+		static VulkanRendererSpecs& GetSpecifications() { return s_RenderData.m_Specs; }
 
-		VulkanSwapchain& GetSwapchain() { return s_RenderData.m_Swapchain; }
-		VulkanCommandBuffer& GetCommandPool() { return s_RenderData.m_CommandPool; }
-		VulkanRendererSpecs& GetSpecifications() { return s_RenderData.m_Specs; }
-		const std::shared_ptr<VulkanImage>& GetFramebuffer() { return s_RenderData.m_Framebuffer; }
-
-		int GetCurrentFrameIndex() const { return s_RenderData.m_CurrentFrameIndex % 2; }
+		static int GetCurrentFrameIndex() { return s_RenderData.m_CurrentFrameIndex % 2; }
 	private:
 		struct RenderStaticData
 		{
@@ -54,11 +48,9 @@ namespace SDLarria
 			std::vector<VkDescriptorSet> m_GlobalSets;
 
 			VulkanShaderLibrary m_ShaderLibrary = VulkanShaderLibrary();
-			std::shared_ptr<VulkanImage> m_Framebuffer;
 			std::vector<std::shared_ptr<VulkanBufferUniform>> m_Uniforms;
 		};
 
-		static VulkanRenderer* s_Instance;
 		static RenderStaticData s_RenderData;
 	};
 }

@@ -1,5 +1,5 @@
+#define VMA_IMPLEMENTATION
 #include "vulkan_allocator.h"
-#include "vulkan.h"
 #include "engine/application.h"
 
 namespace SDLarria 
@@ -8,27 +8,27 @@ namespace SDLarria
 
 	void VulkanAllocator::Initialize()
 	{
-        const auto& instance = Application::Get().GetContext();
+		const auto& instance = Application::Get().GetContext();
 
-        auto allocatorInfo = VmaAllocatorCreateInfo();
-        allocatorInfo.physicalDevice = instance.GetPhysicalDevice();
-        allocatorInfo.device = instance.GetLogicalDevice();
-        allocatorInfo.instance = instance.GetInstance();
-        allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
-        vmaCreateAllocator(&allocatorInfo, &m_Allocator);
+		auto allocatorInfo = VmaAllocatorCreateInfo();
+		allocatorInfo.physicalDevice = instance.GetPhysicalDevice();
+		allocatorInfo.device = instance.GetLogicalDevice();
+		allocatorInfo.instance = instance.GetInstance();
+		allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+		vmaCreateAllocator(&allocatorInfo, &m_Allocator);
 	}
 
 	VulkanBuffer VulkanAllocator::AllocateBuffer(const VkBufferCreateInfo& bufferCreateInfo, const VmaMemoryUsage usage)
 	{
-    	auto buffer = VulkanBuffer();
+		auto buffer = VulkanBuffer();
 
-    	auto allocCreateInfo = VmaAllocationCreateInfo();
-    	allocCreateInfo.usage = usage;
+		auto allocCreateInfo = VmaAllocationCreateInfo();
+		allocCreateInfo.usage = usage;
 		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-    	vmaCreateBuffer(m_Allocator, &bufferCreateInfo, &allocCreateInfo, &buffer.Buffer, &buffer.Allocation, &buffer.AllocationInfo);
+		vmaCreateBuffer(m_Allocator, &bufferCreateInfo, &allocCreateInfo, &buffer.Buffer, &buffer.Allocation, &buffer.AllocationInfo);
 
-    	return buffer;
+		return buffer;
 	}
 
 	void VulkanAllocator::AllocateImage(const VkImageCreateInfo& imageCreateInfo, const VmaMemoryUsage usage, VkImage& outImage, VmaAllocation& outAllocation)
@@ -52,18 +52,18 @@ namespace SDLarria
 		vmaUnmapMemory(m_Allocator, allocation);
 	}
 
-    void VulkanAllocator::Destroy()
+	void VulkanAllocator::Destroy()
 	{
-        vmaDestroyAllocator(m_Allocator);
-    }
+		vmaDestroyAllocator(m_Allocator);
+	}
 
-    void VulkanAllocator::DestroyVulkanImage(const VulkanImage& image)
-    {
+	void VulkanAllocator::DestroyVulkanImage(const VulkanImage& image)
+	{
 		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
-        vkDestroyImageView(device, image.GetImageView(), nullptr);
-        vmaDestroyImage(m_Allocator, image.GetRawImage(), image.GetAllocation());
-    }
+		vkDestroyImageView(device, image.GetImageView(), nullptr);
+		vmaDestroyImage(m_Allocator, image.GetRawImage(), image.GetAllocation());
+	}
 
 	void VulkanAllocator::DestroyBuffer(const VulkanBuffer& buffer)
 	{

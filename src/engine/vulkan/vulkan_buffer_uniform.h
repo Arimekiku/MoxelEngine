@@ -15,11 +15,11 @@ namespace SDLarria
 		const VkDescriptorBufferInfo& GetDescriptorInfo() const { return m_DescriptorInfo; }
 
 	private:
-		uint32_t m_Size;
+		uint32_t m_Size = 0;
 
 		VulkanBuffer m_Buffer;
 		VkDescriptorBufferInfo m_DescriptorInfo;
 
-		void* m_Data;
+		void* m_Data = nullptr;
 	};
 }

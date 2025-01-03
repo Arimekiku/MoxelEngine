@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace SDLarria
 {
     class Layer

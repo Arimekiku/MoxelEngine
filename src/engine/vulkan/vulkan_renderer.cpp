@@ -1,24 +1,17 @@
 #include "vulkan_renderer.h"
-#include "vulkan_shader.h"
 #include "engine/application.h"
 #include "vulkan.h"
 
-#include <VkBootstrap.h>
 #include <backends/imgui_impl_vulkan.h>
-#include <memory>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include <chrono>
-
-#include "glm/gtx/quaternion.hpp"
+#include <glm/gtx/quaternion.hpp>
 
 namespace SDLarria 
 {
-    VulkanRenderer* VulkanRenderer::s_Instance;
 	VulkanRenderer::RenderStaticData VulkanRenderer::s_RenderData;
 
 	struct UniformBufferObject_TEST
@@ -27,19 +20,11 @@ namespace SDLarria
 		glm::mat4 cameraMatrix;
 	};
 
-	VulkanRenderer::VulkanRenderer()
-	{
-		s_Instance = this;
-	}
-
 	void VulkanRenderer::Initialize(const VkExtent2D& windowSize)
-    {
+	{
 		// initialize renderer
-        VulkanAllocator::Initialize();
-        s_RenderData.m_Swapchain.Initialize(windowSize);
-        s_RenderData.m_CommandPool.Initialize(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
-
-        s_RenderData.m_Framebuffer = std::make_shared<VulkanImage>(windowSize);
+		s_RenderData.m_Swapchain.Initialize(windowSize);
+		s_RenderData.m_CommandPool.Initialize(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
 
 		// setup shaders and pipelines
 		s_RenderData.m_Uniforms.resize(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
@@ -74,7 +59,7 @@ namespace SDLarria
 		{
 			fragment,
 			triangleVertexShader,
-			s_RenderData.m_Framebuffer,
+			s_RenderData.m_Swapchain.GetFramebuffer(),
 
 			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			VK_POLYGON_MODE_FILL,
@@ -83,21 +68,11 @@ namespace SDLarria
 		};
 		s_RenderData.m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->GetDescriptorSetLayout());
 
+		// release shaders
 		s_RenderData.m_ShaderLibrary.Add(fragment);
 		fragment->Release();
 		s_RenderData.m_ShaderLibrary.Add(triangleVertexShader);
 		triangleVertexShader->Release();
-
-		// setup resize function
-	    s_RenderData.m_Swapchain.QueueResize([&]
-	    {
-            const auto& framebufferSize = Application::Get().GetWindow().GetWindowSize();
-
-            // recreate framebuffer
-            s_RenderData.m_Framebuffer = std::make_shared<VulkanImage>(framebufferSize);
-
-            // TODO: recreate pipelines
-	    });
 	}
 
 	void VulkanRenderer::ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function)
@@ -114,6 +89,7 @@ namespace SDLarria
 	{
 		s_RenderData.m_BufferData = s_RenderData.m_CommandPool.GetNextFrame();
 		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
+		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
 
 		// begin render queue
 		s_RenderData.m_CommandPool.BeginCommandQueue();
@@ -122,7 +98,7 @@ namespace SDLarria
 		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
 
 		// clear framebuffer
-		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		VulkanImage::Transit(framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		auto vulkanSubresourceRange = VkImageSubresourceRange();
 		vulkanSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -140,25 +116,26 @@ namespace SDLarria
 		clearValue.color = clearColor;
 
 		vkCmdClearColorImage(buffer,
-			s_RenderData.m_Framebuffer->GetRawImage(),
+			framebuffer->GetRawImage(),
 			VK_IMAGE_LAYOUT_GENERAL,
 			reinterpret_cast<VkClearColorValue*>(&clearValue),
 			1,
 			&vulkanSubresourceRange);
 
-		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VulkanImage::Transit(framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
 
 	void VulkanRenderer::EndFrame()
 	{
 		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
 		const auto& swapchainImage = s_RenderData.m_Swapchain.GetCurrentFrame();
+		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
 
 		// copy framebuffer into swapchain
-		VulkanImage::Transit(s_RenderData.m_Framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		VulkanImage::Transit(framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-		s_RenderData.m_Framebuffer->CopyRaw(swapchainImage.ImageData, s_RenderData.m_Swapchain.GetSwapchainSize());
+		framebuffer->CopyRaw(swapchainImage.ImageData, s_RenderData.m_Swapchain.GetSwapchainSize());
 		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		// setup render infos
@@ -201,7 +178,7 @@ namespace SDLarria
 		// setup render infos
 		auto colorAttachment = VkRenderingAttachmentInfo();
 		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		colorAttachment.imageView = s_RenderData.m_Framebuffer->GetImageView();
+		colorAttachment.imageView = s_RenderData.m_Swapchain.GetFramebuffer()->GetImageView();
 		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -250,9 +227,9 @@ namespace SDLarria
 		auto Rotation = glm::vec3(0);
 		auto Scale = glm::vec3(1);
 
-		const glm::mat4 translation = glm::translate(glm::mat4(1.0f), Position);
-		const glm::mat4 rotation = glm::toMat4(glm::quat(glm::radians(Rotation)));
-		const glm::mat4 scaling = glm::scale(glm::mat4(1.0f), Scale);
+		const glm::mat4 translation = translate(glm::mat4(1.0f), Position);
+		const glm::mat4 rotation = toMat4(glm::quat(glm::radians(Rotation)));
+		const glm::mat4 scaling = scale(glm::mat4(1.0f), Scale);
 
 		ubo.model = translation * rotation * scaling;
 
@@ -263,9 +240,9 @@ namespace SDLarria
 		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
 
-		const VkBuffer vertexBuffers[] = { vertexArray->GetVertexBuffer().Buffer };
+		const VkBuffer vertexBuffer = vertexArray->GetVertexBuffer().Buffer;
 		constexpr VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+		vkCmdBindVertexBuffers(buffer, 0, 1, &vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(buffer, vertexArray->GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
 		const auto& set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
@@ -276,7 +253,7 @@ namespace SDLarria
 	}
 
 	void VulkanRenderer::Shutdown() 
-    {
+	{
 		s_RenderData.m_CommandPool.Destroy();
 		s_RenderData.m_Swapchain.Destroy();
 
@@ -284,7 +261,6 @@ namespace SDLarria
 		s_RenderData.m_ShaderLibrary.Destroy();
 
 		// clear resources
-		s_RenderData.m_Framebuffer = nullptr;
 		s_RenderData.m_GlobalDescriptorPool = nullptr;
 		s_RenderData.m_GlobalSets.clear();
 		s_RenderData.m_Uniforms.clear();

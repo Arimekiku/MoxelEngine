@@ -1,5 +1,7 @@
 #include "application.h"
 #include "engine/ui/gui_layer.h"
+#include "vulkan/vulkan_allocator.h"
+#include "vulkan/vulkan_renderer.h"
 
 namespace SDLarria 
 {
@@ -10,13 +12,12 @@ namespace SDLarria
 		s_Instance = this;
 
 		Log::Initialize();
-		
-		m_Engine = VulkanRenderer();
 
 		constexpr auto initialSize = VkExtent2D(1600, 900);
 		m_Window = new GameWindow(initialSize.width, initialSize.height);
 		m_Context.Initialize(m_Window->GetNativeWindow());
 
+		VulkanAllocator::Initialize();
 		VulkanRenderer::Initialize(initialSize);
 
 		m_LayerStack = LayerStack();

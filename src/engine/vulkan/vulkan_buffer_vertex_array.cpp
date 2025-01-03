@@ -1,10 +1,11 @@
-#include "vulkan_vertex_array.h"
+#include "vulkan_buffer_vertex_array.h"
 #include "vulkan.h"
 #include "vulkan_allocator.h"
+#include "vulkan_renderer.h"
 
 namespace SDLarria
 {
-	VulkanVertexArray::VulkanVertexArray(const std::span<uint32_t> indices, const std::span<Vertex> vertices)
+	VulkanVertexArray::VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<Vertex>& vertices)
 	{
 		// vertex buffer
 		const auto verticesSize = vertices.size() * sizeof(vertices[0]);
@@ -45,7 +46,7 @@ namespace SDLarria
 		// copy buffers
 		void* data = stagingBuffer.AllocationInfo.pMappedData;
 		memcpy(data, vertices.data(), verticesSize);
-		memcpy((char*)data + verticesSize, indices.data(), indicesSize);
+		memcpy(static_cast<char*>(data) + verticesSize, indices.data(), indicesSize);
 
 		VulkanRenderer::ImmediateSubmit([&](VkCommandBuffer cmd)
 		{

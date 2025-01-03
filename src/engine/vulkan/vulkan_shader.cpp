@@ -17,7 +17,7 @@ namespace SDLarria
 		auto buffer = std::vector<uint32_t>(fileSize / sizeof(uint32_t));
 
 		file.seekg(0);
-		file.read((char*)buffer.data(), fileSize);
+		file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
 		file.close();
 
 		return buffer;
@@ -35,7 +35,7 @@ namespace SDLarria
 		createInfo.pCode = buffer.data();
 
 		auto module = VkShaderModule();
-		auto result = vkCreateShaderModule(device, &createInfo, nullptr, &module);
+		const auto result = vkCreateShaderModule(device, &createInfo, nullptr, &module);
 		VULKAN_CHECK(result);
 
 		// create shader pipeline info

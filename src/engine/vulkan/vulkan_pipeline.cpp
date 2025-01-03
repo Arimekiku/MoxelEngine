@@ -1,5 +1,6 @@
 #include "vulkan_pipeline.h"
 #include "vulkan.h"
+#include "vulkan_buffer_vertex_array.h"
 #include "engine/application.h"
 
 namespace SDLarria

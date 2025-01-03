@@ -1,9 +1,9 @@
 #pragma once
 
 #include "vulkan_command_queue.h"
+#include "vulkan_image.h"
 
-#include <deque>
-#include <functional>
+#include <memory>
 
 namespace SDLarria 
 {
@@ -20,8 +20,6 @@ namespace SDLarria
 	public:
 		VulkanSwapchain() = default;
 
-		void QueueResize(std::function<void()>&& function) { m_ResizeQueue.push_back(function); }
-
 		void Initialize(const VkExtent2D& windowSize);
 		void Resize();
 		void Destroy();
@@ -32,6 +30,7 @@ namespace SDLarria
 		void UpdateFrame(const CommandBufferData& reservedBuffer);
 		void ShowSwapchain(const CommandBufferData& reservedBuffer);
 		FrameData& GetCurrentFrame() { return m_CurrentFrame; }
+		const std::shared_ptr<VulkanImage>& GetFramebuffer() { return m_Framebuffer; }
 
 	private:
 		std::vector<VkImage> m_Images;
@@ -39,14 +38,13 @@ namespace SDLarria
 
 		uint32_t m_CurrentFrameIndex = 0;
 		FrameData m_CurrentFrame;
+		std::shared_ptr<VulkanImage> m_Framebuffer;
 
 		VkDevice m_DeviceInstance = nullptr;
 		VkSwapchainKHR m_SwapchainInstance = nullptr;
 		VkFormat m_SwapchainImageFormat = VK_FORMAT_UNDEFINED;
 
 		VkExtent2D m_SwapchainExtent = VkExtent2D(0, 0);
-
-		std::deque<std::function<void()>> m_ResizeQueue;
 
 		friend class VulkanRenderer;
 	};

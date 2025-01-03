@@ -8,6 +8,9 @@ namespace SDLarria
 {
 	void VulkanSwapchain::Initialize(const VkExtent2D& windowSize)
 	{
+		// build framebuffer
+		m_Framebuffer = std::make_shared<VulkanImage>(windowSize);
+
 		// build swapchain
 		const auto& toolset = Application::Get().GetContext();
 		m_DeviceInstance = toolset.GetLogicalDevice();
@@ -41,19 +44,18 @@ namespace SDLarria
 		auto& window = Application::Get().GetWindow();
 
 		vkQueueWaitIdle(queue);
-		window.Resize();
+		window.UpdateWindowSize();
 
 		Destroy();
-		Initialize(window.GetWindowSize());
 
-		for (auto& function : std::ranges::reverse_view(m_ResizeQueue))
-		{
-			function();
-		}
+		const auto windowSize = window.GetWindowSize();
+		Initialize(windowSize);
 	}
 
 	void VulkanSwapchain::Destroy() 
 	{
+		m_Framebuffer = nullptr;
+
 		for (const auto& view : m_ImageViews)
 		{
 			vkDestroyImageView(m_DeviceInstance, view, nullptr);

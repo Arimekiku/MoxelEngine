@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkan_shader.h"
+#include "vulkan_image.h"
 
 #include <memory>
 
@@ -37,8 +38,8 @@ namespace SDLarria
 
 		void Destroy();
 
-		const VkPipeline GetPipeline() const { return m_Pipeline; }
-		const VkPipelineLayout GetPipelineLayout() const { return m_Layout; }
+		VkPipeline GetPipeline() const { return m_Pipeline; }
+		VkPipelineLayout GetPipelineLayout() const { return m_Layout; }
 
 	private:
 		VulkanGraphicsPipelineSpecs m_Specs;

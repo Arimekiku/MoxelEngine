@@ -1,10 +1,8 @@
-#include "vulkan_descriptor_set_builder.h"
+#include "vulkan_descriptors.h"
 #include "vulkan.h"
-#include "vulkan_renderer.h"
+#include "engine/application.h"
 
 #include <ranges>
-
-#include "engine/application.h"
 
 namespace SDLarria
 {
@@ -34,7 +32,7 @@ namespace SDLarria
 		return std::make_unique<VulkanDescriptorPool>(m_MaxSets, m_PoolFlags, m_PoolSizes);
 	}
 
-	VulkanDescriptorPool::VulkanDescriptorPool(const uint32_t maxSets, const VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize> &poolSizes)
+	VulkanDescriptorPool::VulkanDescriptorPool(const uint32_t maxSets, const VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes)
 	{
 		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
@@ -56,7 +54,7 @@ namespace SDLarria
 		vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
 	}
 
-	bool VulkanDescriptorPool::AllocateDescriptor(VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptorSet) const
+	bool VulkanDescriptorPool::AllocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptorSet) const
 	{
 		const auto device = Application::Get().GetContext().GetLogicalDevice();
 

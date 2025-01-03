@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "vulkan_buffer.h"
 #include "vulkan_image.h"
 
@@ -23,6 +21,7 @@ namespace SDLarria
 
 		static void* MapData(VmaAllocation allocation);
 		static void UnmapData(VmaAllocation allocation);
+
 	private:
 		static VmaAllocator m_Allocator;
 	};

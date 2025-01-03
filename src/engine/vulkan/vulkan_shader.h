@@ -1,11 +1,9 @@
 #pragma once
 
-#include "vulkan_allocator.h"
-
 #include <vulkan/vulkan_core.h>
 #include <vector>
 
-#include "vulkan_descriptor_set_builder.h"
+#include "vulkan_descriptors.h"
 
 namespace SDLarria
 {

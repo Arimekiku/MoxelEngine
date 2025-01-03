@@ -47,14 +47,14 @@ namespace SDLarria
 
 		m_Cube = std::make_shared<VulkanVertexArray>(indices, vertices);
 
-		m_renderCam = RenderCamera(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1));
+		m_RenderCam = RenderCamera(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1));
 	}
 
 	void SceneLayer::OnEveryUpdate()
 	{
-		m_renderCam.Update();
+		m_RenderCam.Update();
 
-		VulkanRenderer::RenderVertexArray(m_renderCam.GetProjViewMat(), m_Cube);
+		VulkanRenderer::RenderVertexArray(m_RenderCam.GetProjViewMat(), m_Cube);
 	}
 
 	void SceneLayer::OnGuiUpdate()

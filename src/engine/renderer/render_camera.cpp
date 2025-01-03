@@ -1,11 +1,10 @@
 #include "render_camera.h"
 #include "engine/application.h"
+#include "engine/core/input.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/trigonometric.hpp>
 #include <glm/gtx/vector_angle.hpp>
-
-#include "engine/core/input.h"
 
 namespace SDLarria
 {
@@ -49,7 +48,6 @@ namespace SDLarria
 		if (Input::Key::JustPressed(Input::Key::C))
 		{
 			m_CameraMode = !m_CameraMode;
-			//Input::Mouse::SetCursorInCenterOfWindow();
 			Input::Mouse::SetCursorMode(m_CameraMode ? Input::Mouse::CursorMode::VISIBLE : Input::Mouse::CursorMode::HIDDEN);
 		}
 
@@ -60,7 +58,6 @@ namespace SDLarria
 
 		const glm::vec2 rotationVector = Input::Mouse::GetNormalizedCursor();
 		SetOrientation(rotationVector.y / 10, rotationVector.x / 10);
-		//Input::Mouse::SetCursorInCenterOfWindow();
 
 		const int horizontalAxis = Input::Key::GetAxisValue(Input::Key::D, Input::Key::A);
 		m_Position += static_cast<float>(horizontalAxis) * normalize(cross(m_Orientation, glm::vec3(0, 1, 0)));

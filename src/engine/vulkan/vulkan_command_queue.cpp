@@ -1,6 +1,6 @@
 #include "vulkan_command_queue.h"
-#include "vulkan_renderer.h"
 #include "vulkan.h"
+#include "vulkan_renderer.h"
 #include "engine/application.h"
 
 namespace SDLarria 
@@ -208,7 +208,7 @@ namespace SDLarria
 
 	CommandBufferData& VulkanCommandBuffer::GetNextFrame()
 	{
-		const auto frameIndex = VulkanRenderer::Get().GetCurrentFrameIndex();
+		const auto frameIndex = VulkanRenderer::GetCurrentFrameIndex();
 		m_CurrentBuffer = m_Buffers[frameIndex];
 
 		return m_CurrentBuffer;

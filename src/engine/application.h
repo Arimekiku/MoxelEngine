@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.h"
+#include "vulkan/vulkan_context.h"
 
 namespace SDLarria 
 {
@@ -24,7 +25,6 @@ namespace SDLarria
 
 		GameWindow* m_Window;
 		VulkanContext m_Context;
-		VulkanRenderer m_Engine;
 		LayerStack m_LayerStack;
 	};
 }

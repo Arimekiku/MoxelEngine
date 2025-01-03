@@ -1,7 +1,9 @@
 #pragma once
 
-#include "engine/vulkan/vulkan_renderer.h"
 #include "layer/layer_stack.h"
+
+#include <SDL3/SDL.h>
+#include <vulkan/vulkan_core.h>
 
 namespace SDLarria 
 {
@@ -16,12 +18,14 @@ namespace SDLarria
 		SDL_Window* GetNativeWindow() const { return m_NativeWindow; }
 
 		void Update(LayerStack layers);
-		void Resize();
+		void UpdateWindowSize();
 
 	private:
 		VkExtent2D m_WindowSize = VkExtent2D(0, 0);
 
 		SDL_Window* m_NativeWindow = nullptr;
 		SDL_Surface* m_WindowSurface = nullptr;
+
+		bool m_IsOpen = true;
 	};
 }

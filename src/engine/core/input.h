@@ -51,8 +51,8 @@ namespace SDLarria
 		public:
 			enum CursorMode
 			{
-				VISIBLE,
-				HIDDEN,
+				VISIBLE = true,
+				HIDDEN = false,
 			};
 
 			static bool ButtonPressed(int code);
