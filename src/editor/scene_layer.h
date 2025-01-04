@@ -1,12 +1,12 @@
 #pragma once
 
-#include "engine/core/layer/layer.h"
-#include "engine/renderer/render_mesh.h"
-#include "engine/renderer/render_camera.h"
+#include "renderer/core/layer/layer.h"
+#include "engine/render_mesh.h"
+#include "engine/render_camera.h"
 
 #include <memory>
 
-namespace SDLarria
+namespace Moxel
 {
 	class SceneLayer final : public Layer
 	{

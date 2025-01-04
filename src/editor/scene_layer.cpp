@@ -3,13 +3,13 @@
 #include <imgui.h>
 #include <chrono>
 
-#include "engine/vulkan/vulkan_renderer.h"
+#include "renderer/vulkan/vulkan_renderer.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_RADIANS
 #include <glm/ext/matrix_transform.hpp>
 
-namespace SDLarria
+namespace Moxel
 {
 	SceneLayer::SceneLayer()
 	{
@@ -23,14 +23,14 @@ namespace SDLarria
 		vertices[6].Position = glm::vec3( 0.5f,  0.5f, -0.5f);
 		vertices[7].Position = glm::vec3(-0.5f,  0.5f, -0.5f);
 
-		vertices[0].Color = glm::vec3(1, 1, 1);
-		vertices[1].Color = glm::vec3(1, 1, 1);
-		vertices[2].Color = glm::vec3(1, 1, 1);
-		vertices[3].Color = glm::vec3(1, 1, 1);
-		vertices[4].Color = glm::vec3(1, 1, 1);
-		vertices[5].Color = glm::vec3(1, 1, 1);
+		vertices[0].Color = glm::vec3(0, 0, 1);
+		vertices[1].Color = glm::vec3(0, 1, 0);
+		vertices[2].Color = glm::vec3(0, 1, 1);
+		vertices[3].Color = glm::vec3(1, 0, 0);
+		vertices[4].Color = glm::vec3(1, 0, 1);
+		vertices[5].Color = glm::vec3(1, 1, 0);
 		vertices[6].Color = glm::vec3(1, 1, 1);
-		vertices[7].Color = glm::vec3(1, 1, 1);
+		vertices[7].Color = glm::vec3(0, 0, 0);
 
 		/*vertices[0].Normal = glm::vec3(-1.0f, -1.0f,  1.0f);
 		vertices[1].Normal = glm::vec3( 1.0f, -1.0f,  1.0f);

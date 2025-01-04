@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.12)
 
-project(SDLarria)
+project(MoxelEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -66,13 +66,13 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
 endforeach(GLSL)
 
 add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
-add_dependencies(SDLarria Shaders)
+add_dependencies(${PROJECT_NAME} Shaders)
 
-add_custom_command(TARGET SDLarria POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:SDLarria>/Resources/"
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:MoxelEngine>/Resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${PROJECT_BINARY_DIR}/Resources"
-        "$<TARGET_FILE_DIR:SDLarria>/Resources"
+        "$<TARGET_FILE_DIR:MoxelEngine>/Resources"
 )
 
 # define resources in binaries

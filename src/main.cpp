@@ -1,14 +1,14 @@
-﻿#include "engine/ui/gui_layer.h"
+﻿#include "renderer/ui/gui_layer.h"
 #include "editor/scene_layer.h"
 
-#include "engine/application.h"
+#include "renderer/application.h"
 
 int main(int argc, char** argv) 
 {
-	auto application = SDLarria::Application();
+	auto application = Moxel::Application();
 
-	application.AddLayer(new SDLarria::GuiLayer);
-	application.AddLayer(new SDLarria::SceneLayer);
+	application.AddLayer(new Moxel::GuiLayer);
+	application.AddLayer(new Moxel::SceneLayer);
 
 	application.Run();
 }
