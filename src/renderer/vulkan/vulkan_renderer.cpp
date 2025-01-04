@@ -53,7 +53,7 @@ namespace Moxel
 		{
 			fragment,
 			triangleVertexShader,
-			s_RenderData.m_Swapchain.GetFramebuffer(),
+			s_RenderData.m_Swapchain.GetFramebuffer()->GetRenderImage(),
 
 			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			VK_POLYGON_MODE_FILL,
@@ -92,7 +92,7 @@ namespace Moxel
 		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
 
 		// clear framebuffer
-		VulkanImage::Transit(framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		auto vulkanSubresourceRange = VkImageSubresourceRange();
 		vulkanSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -109,14 +109,14 @@ namespace Moxel
 		auto clearValue = VkClearValue();
 		clearValue.color = clearColor;
 
-		vkCmdClearColorImage(buffer,
-			framebuffer->GetRawImage(),
+		vkCmdClearColorImage(buffer, 
+			framebuffer->GetRenderImage()->GetRawImage(),
 			VK_IMAGE_LAYOUT_GENERAL,
 			reinterpret_cast<VkClearColorValue*>(&clearValue),
 			1,
 			&vulkanSubresourceRange);
 
-		VulkanImage::Transit(framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		framebuffer->Bind();
 	}
 
 	void VulkanRenderer::EndFrame()
@@ -126,10 +126,11 @@ namespace Moxel
 		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
 
 		// copy framebuffer into swapchain
-		VulkanImage::Transit(framebuffer->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+							 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-		framebuffer->CopyRaw(swapchainImage.ImageData, s_RenderData.m_Swapchain.GetSwapchainSize());
+		framebuffer->GetRenderImage()->CopyRaw(swapchainImage.ImageData, s_RenderData.m_Swapchain.GetSwapchainSize());
 		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		// setup render infos
@@ -168,21 +169,15 @@ namespace Moxel
 	void VulkanRenderer::RenderVertexArray(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat)
 	{
 		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
-
-		// setup render infos
-		auto colorAttachment = VkRenderingAttachmentInfo();
-		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		colorAttachment.imageView = s_RenderData.m_Swapchain.GetFramebuffer()->GetImageView();
-		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
 
 		auto renderInfo = VkRenderingInfo();
 		renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
 		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_RenderData.m_Swapchain.GetSwapchainSize());
 		renderInfo.layerCount = 1;
 		renderInfo.colorAttachmentCount = 1;
-		renderInfo.pColorAttachments = &colorAttachment;
+		renderInfo.pColorAttachments = &framebuffer->GetColorAttachment();
+		renderInfo.pDepthAttachment = &framebuffer->GetDepthAttachment();
 
 		// draw geometry
 		vkCmdBeginRendering(buffer, &renderInfo);

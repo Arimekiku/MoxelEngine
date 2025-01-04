@@ -6,23 +6,17 @@
 
 namespace Moxel
 {
-	VulkanImage::VulkanImage(const VkExtent2D& size)
+	VulkanImage::VulkanImage(const VulkanImageSpecs& specs)
 	{
 		const auto device = Application::Get().GetContext().GetLogicalDevice();
 
-		m_ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+		m_ImageFormat = specs.Format;
 		m_ImageExtent =
 		{
-			size.width,
-			size.height,
+			specs.InitialSize.width,
+			specs.InitialSize.height,
 			1
 		};
-
-		auto drawImageUsages = VkImageUsageFlags();
-		drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-		drawImageUsages |= VK_IMAGE_USAGE_STORAGE_BIT;
-		drawImageUsages |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 		auto imageInfo = VkImageCreateInfo();
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -34,7 +28,7 @@ namespace Moxel
 		imageInfo.arrayLayers = 1;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		imageInfo.usage = drawImageUsages;
+		imageInfo.usage = specs.ImageUsages;
 
 		VulkanAllocator::AllocateImage(imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, m_Image, m_Allocation);
 
@@ -48,7 +42,7 @@ namespace Moxel
 		imageViewInfo.subresourceRange.levelCount = 1;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewInfo.subresourceRange.layerCount = 1;
-		imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageViewInfo.subresourceRange.aspectMask = specs.ImageAspects;
 
 		const auto result = vkCreateImageView(device, &imageViewInfo, nullptr, &m_ImageView);
 		VULKAN_CHECK(result);

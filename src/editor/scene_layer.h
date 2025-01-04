@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include "engine/voxel_chunk.h"
+
 namespace Moxel
 {
 	class SceneLayer final : public Layer
@@ -20,6 +22,8 @@ namespace Moxel
 
 	private:
 		RenderCamera m_RenderCam;
+
+		VoxelChunk m_Chunk;
 
 		std::shared_ptr<RenderMesh> m_Cube;
 	};

@@ -2,6 +2,7 @@
 
 #include "vulkan_command_queue.h"
 #include "vulkan_image.h"
+#include "vulkan_framebuffer.h"
 
 #include <memory>
 
@@ -30,7 +31,7 @@ namespace Moxel
 		void UpdateFrame(const CommandBufferData& reservedBuffer);
 		void ShowSwapchain(const CommandBufferData& reservedBuffer);
 		FrameData& GetCurrentFrame() { return m_CurrentFrame; }
-		const std::shared_ptr<VulkanImage>& GetFramebuffer() { return m_Framebuffer; }
+		const std::shared_ptr<VulkanFramebuffer>& GetFramebuffer() const { return m_Framebuffer; }
 
 	private:
 		std::vector<VkImage> m_Images;
@@ -38,7 +39,7 @@ namespace Moxel
 
 		uint32_t m_CurrentFrameIndex = 0;
 		FrameData m_CurrentFrame;
-		std::shared_ptr<VulkanImage> m_Framebuffer;
+		std::shared_ptr<VulkanFramebuffer> m_Framebuffer;
 
 		VkDevice m_DeviceInstance = nullptr;
 		VkSwapchainKHR m_SwapchainInstance = nullptr;

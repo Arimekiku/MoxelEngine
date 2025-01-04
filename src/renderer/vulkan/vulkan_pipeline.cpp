@@ -38,7 +38,7 @@ namespace Moxel
 		renderingInfo.pNext = nullptr;
 		renderingInfo.colorAttachmentCount = 1;
 		renderingInfo.pColorAttachmentFormats = specs.Framebuffer->GetImageFormat();
-		renderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+		renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 
 		// set vertex input info
 		auto bindingDescription = VkVertexInputBindingDescription();
@@ -94,10 +94,8 @@ namespace Moxel
 		multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		multisampleInfo.pNext = nullptr;
 		multisampleInfo.sampleShadingEnable = VK_FALSE;
-		// multisampling defaulted to no multisampling (1 sample per pixel)
 		multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 		multisampleInfo.minSampleShading = 1.0f;
-		// no alpha to coverage either
 		multisampleInfo.alphaToCoverageEnable = VK_FALSE;
 		multisampleInfo.alphaToOneEnable = VK_FALSE;
 
@@ -105,9 +103,7 @@ namespace Moxel
 		// setup dummy color blending. We aren't using transparent objects yet
 		// the blending is just "no blend", but we do write to the color attachment
 		auto colorBlendAttachment = VkPipelineColorBlendAttachmentState();
-		// default write mask
 		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		// no blending
 		colorBlendAttachment.blendEnable = VK_FALSE;
 
 		auto colorBlending = VkPipelineColorBlendStateCreateInfo();
@@ -122,9 +118,9 @@ namespace Moxel
 		auto depthStencilInfo = VkPipelineDepthStencilStateCreateInfo();
 		depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		depthStencilInfo.pNext = nullptr;
-		depthStencilInfo.depthTestEnable = VK_FALSE;
-		depthStencilInfo.depthWriteEnable = VK_FALSE;
-		depthStencilInfo.depthCompareOp = VK_COMPARE_OP_NEVER;
+		depthStencilInfo.depthTestEnable = VK_TRUE;
+		depthStencilInfo.depthWriteEnable = VK_TRUE;
+		depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 		depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
 		depthStencilInfo.stencilTestEnable = VK_FALSE;
 		depthStencilInfo.front = VkStencilOpState();
@@ -133,8 +129,6 @@ namespace Moxel
 		depthStencilInfo.maxDepthBounds = 1.f;
 
 		// build the actual pipeline
-		// we now use all the info structs we have been writing into this one
-		// to create the pipeline
 		auto pipelineInfo = VkGraphicsPipelineCreateInfo();
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.pNext = &renderingInfo;

@@ -2,14 +2,13 @@
 #include "renderer/application.h"
 
 #include <VkBootstrap.h>
-#include <ranges>
 
 namespace Moxel
 {
 	void VulkanSwapchain::Initialize(const VkExtent2D& windowSize)
 	{
 		// build framebuffer
-		m_Framebuffer = std::make_shared<VulkanImage>(windowSize);
+		m_Framebuffer = std::make_shared<VulkanFramebuffer>();
 
 		// build swapchain
 		const auto& toolset = Application::Get().GetContext();

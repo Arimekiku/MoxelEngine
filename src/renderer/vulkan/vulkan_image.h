@@ -4,11 +4,19 @@
 
 namespace Moxel
 {
+	struct VulkanImageSpecs
+	{
+		VkFormat Format = VK_FORMAT_UNDEFINED;
+		VkExtent2D InitialSize = { 600, 800 };
+		VkImageUsageFlags ImageUsages = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		VkImageAspectFlags ImageAspects = VK_IMAGE_ASPECT_COLOR_BIT;
+	};
+
 	class VulkanImage 
 	{
 	public:
 		VulkanImage() = default;
-		VulkanImage(const VkExtent2D& size);
+		VulkanImage(const VulkanImageSpecs& specs);
 		~VulkanImage();
 
 		void CopyInto(const VulkanImage& target) const;

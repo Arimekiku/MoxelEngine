@@ -56,18 +56,20 @@ namespace Moxel
 		m_Cube->SetPosition(glm::vec3(1, 0, 0));
 
 		m_RenderCam = RenderCamera(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1));
+
+		m_Chunk = VoxelChunk();
 	}
 
 	void SceneLayer::OnEveryUpdate()
 	{
 		m_RenderCam.Update();
 
-		static auto startTime = std::chrono::high_resolution_clock::now();
+		/*static auto startTime = std::chrono::high_resolution_clock::now();
 		const auto currentTime = std::chrono::high_resolution_clock::now();
 		const float time = std::chrono::duration<float>(currentTime - startTime).count();
-		m_Cube->SetRotation(time * glm::vec3(0, 90, 0));
+		m_Cube->SetRotation(time * glm::vec3(0, 90, 0));*/
 
-		VulkanRenderer::RenderVertexArray(m_Cube, m_RenderCam.GetProjViewMat());
+		VulkanRenderer::RenderVertexArray(m_Chunk.GetVertexArray(), m_RenderCam.GetProjViewMat());
 	}
 
 	void SceneLayer::OnGuiUpdate()
