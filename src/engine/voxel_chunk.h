@@ -15,7 +15,8 @@ namespace Moxel
 
 		bool IsFree() const { return m_VertexArray == nullptr; }
 		void Clear() { m_VertexArray = nullptr; }
-		void RecreateChunk(glm::vec3 position);
+		void RecreateChunk();
+		void SetPosition(const glm::vec3 position) { m_Position = position; }
 
 		glm::vec3 GetPosition() const { return m_Position; }
 		const std::shared_ptr<RenderMesh>& GetVertexArray() const { return m_VertexArray; }

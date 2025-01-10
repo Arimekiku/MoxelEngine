@@ -14,10 +14,8 @@ namespace Moxel
 		m_VertexArray = nullptr;
 	}
 
-	void VoxelChunk::RecreateChunk(glm::vec3 position)
+	void VoxelChunk::RecreateChunk()
 	{
-		m_Position = position;
-
 		siv::PerlinNoise::seed_type pseed = m_Seed;
 		const auto perlin = siv::PerlinNoise(pseed);
 
