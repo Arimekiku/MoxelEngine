@@ -15,7 +15,7 @@ namespace Moxel
 
 	RenderMesh::~RenderMesh()
 	{
-		m_Mesh = nullptr;
+
 	}
 
 	void RenderMesh::SetPosition(const glm::vec3 position)

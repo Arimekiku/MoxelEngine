@@ -18,6 +18,9 @@ namespace Moxel
 		VulkanVertexArray() = default;
 		VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<Vertex>& vertices);
 		~VulkanVertexArray();
+		
+		bool IsEmpty() const { return m_Indices == 0 || m_Vertices.size() == 0; }
+		void Destroy();
 
 		const std::vector<Vertex>& GetVertices() { return m_Vertices; }
 		size_t GetIndexBufferSize() const { return m_Indices; }

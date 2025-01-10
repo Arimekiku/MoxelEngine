@@ -7,6 +7,7 @@
 namespace Moxel
 {
 	VulkanRenderer::RenderStaticData VulkanRenderer::s_RenderData;
+	std::deque<std::function<void()>> VulkanRenderer::s_ResourceFreeQueue;
 
 	struct GlobalRenderData
 	{
@@ -86,12 +87,27 @@ namespace Moxel
 		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
 
 		// begin render queue
+		// update fences
+		const auto device = Application::Get().GetContext().GetLogicalDevice();
+
+		auto result = vkWaitForFences(device, 1, &s_RenderData.m_BufferData.RenderFence, true, 1000000000);
+		VULKAN_CHECK(result);
+
+		for (auto& it : s_ResourceFreeQueue)
+		{
+			it();
+		}
+		s_ResourceFreeQueue.clear();
+
+		result = vkResetFences(device, 1, &s_RenderData.m_BufferData.RenderFence);
+		VULKAN_CHECK(result);
+
 		s_RenderData.m_CommandPool.BeginCommandQueue();
 
 		// prepare swapchain
 		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
 
-		// clear framebuffer
+		// clear resources
 		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		auto vulkanSubresourceRange = VkImageSubresourceRange();
@@ -116,6 +132,7 @@ namespace Moxel
 			1,
 			&vulkanSubresourceRange);
 
+		// bind dynamic resources
 		framebuffer->Bind();
 
 		auto renderInfo = VkRenderingInfo();

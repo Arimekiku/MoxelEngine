@@ -3,8 +3,9 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_shader.h"
-#include "vulkan_buffer_vertex_array.h"
 #include "engine/render_mesh.h"
+
+#include <deque>
 
 namespace Moxel
 {
@@ -22,6 +23,7 @@ namespace Moxel
 		static void Shutdown();
 
 		static void ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
+		static void QueueResourceFree(std::function<void()>&& function) { s_ResourceFreeQueue.push_back(function); }
 
 		static void PrepareFrame();
 		static void EndFrame();
@@ -34,6 +36,8 @@ namespace Moxel
 
 		static int GetCurrentFrameIndex() { return s_RenderData.m_CurrentFrameIndex % 2; }
 	private:
+		static std::deque<std::function<void()>> s_ResourceFreeQueue;
+
 		struct RenderStaticData
 		{
 			CommandBufferData m_BufferData;

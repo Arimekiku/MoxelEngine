@@ -4,9 +4,11 @@
 
 namespace Moxel
 {
-	VoxelChunk::VoxelChunk(const int seed)
+	VoxelChunk::VoxelChunk(const int seed, const glm::vec3 position)
 	{
 		m_Seed = seed;
+
+		m_Position = position;
 	}
 
 	VoxelChunk::~VoxelChunk()
@@ -115,7 +117,7 @@ namespace Moxel
 			}
 		}
 
-		if (totalIndices.size() == 0)
+		if (totalIndices.empty())
 		{
 			m_VertexArray = nullptr;
 			return;

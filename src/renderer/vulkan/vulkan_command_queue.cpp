@@ -138,18 +138,9 @@ namespace Moxel
 
 	void VulkanCommandBuffer::BeginCommandQueue() const
 	{
-		// update fences
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
-
-		auto result = vkWaitForFences(device, 1, &m_CurrentBuffer.RenderFence, true, 1000000000);
-		VULKAN_CHECK(result);
-
-		result = vkResetFences(device, 1, &m_CurrentBuffer.RenderFence);
-		VULKAN_CHECK(result);
-
 		// prepare current command buffer
 		const auto currentCommandBuffer = m_CurrentBuffer.CommandBuffer;
-		result = vkResetCommandBuffer(currentCommandBuffer, 0);
+		auto result = vkResetCommandBuffer(currentCommandBuffer, 0);
 		VULKAN_CHECK(result);
 
 		auto cmdBeginInfo = VkCommandBufferBeginInfo();
