@@ -32,10 +32,10 @@ namespace Moxel
 
 		const auto depthSpecs = VulkanImageSpecs
 		{
-			VK_FORMAT_D32_SFLOAT,
+			VK_FORMAT_D32_SFLOAT_S8_UINT,
 			windowSize, 
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			VK_IMAGE_ASPECT_DEPTH_BIT
+			VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
 		};
 
 		m_DepthImage = std::make_shared<VulkanImage>(depthSpecs);
@@ -45,7 +45,7 @@ namespace Moxel
 		m_DepthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		m_DepthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		m_DepthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		m_DepthAttachment.clearValue.depthStencil.depth = 1.f;
+		m_DepthAttachment.clearValue.depthStencil.depth = 1.0f;
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer() 
@@ -58,7 +58,7 @@ namespace Moxel
 	{
 		VulkanImage::Transit(m_ColorImage->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-		VulkanImage::Transit(m_DepthImage->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+		VulkanImage::Transit(m_DepthImage->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 	}
 
 }

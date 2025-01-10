@@ -2,12 +2,14 @@
 #include "vulkan.h"
 #include "vulkan_allocator.h"
 #include "vulkan_renderer.h"
+#include "renderer/application.h"
 
 namespace Moxel
 {
 	VulkanVertexArray::VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<Vertex>& vertices)
 	{
 		// vertex buffer
+		m_Vertices = vertices;
 		const auto verticesSize = vertices.size() * sizeof(vertices[0]);
 		auto vertexBufferInfo = VkBufferCreateInfo();
 		vertexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

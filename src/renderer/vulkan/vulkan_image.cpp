@@ -178,7 +178,7 @@ namespace Moxel
 		imageBarrier.newLayout = newLayout;
 
 		auto subImage = VkImageSubresourceRange();
-		subImage.aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		subImage.aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		subImage.baseMipLevel = 0;
 		subImage.levelCount = VK_REMAINING_MIP_LEVELS;
 		subImage.baseArrayLayer = 0;

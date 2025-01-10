@@ -1,12 +1,21 @@
 #pragma once
 
 #include "renderer/core/layer/layer.h"
-#include "engine/render_mesh.h"
 #include "engine/render_camera.h"
-
-#include <memory>
-
 #include "engine/voxel_chunk.h"
+
+struct KeyHasher
+{
+	size_t operator()(const glm::vec3& a) const { return std::hash<float>{}(a.x + a.y + a.z); }
+};
+
+struct KeyEquals
+{
+	bool operator()(const glm::vec3& a, const glm::vec3& b) const 
+	{ 
+		return a.x == b.x && a.y == b.y && a.z == b.z; 
+	}
+};
 
 namespace Moxel
 {
@@ -21,10 +30,10 @@ namespace Moxel
 		void OnGuiUpdate() override;
 
 	private:
+		int m_RenderDistance = 5;
 		RenderCamera m_RenderCam;
 
-		VoxelChunk m_Chunk;
-
-		std::shared_ptr<RenderMesh> m_Cube;
+		std::unordered_map<glm::vec3, VoxelChunk, KeyHasher, KeyEquals> m_TotalChunks;
+		std::vector<VoxelChunk> m_RenderChunks;
 	};
 }

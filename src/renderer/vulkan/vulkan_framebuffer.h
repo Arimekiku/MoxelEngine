@@ -13,6 +13,7 @@ namespace Moxel
 		void Bind() const;
 
 		const std::shared_ptr<VulkanImage>& GetRenderImage() const { return m_ColorImage; }
+		const std::shared_ptr<VulkanImage>& GetDepthImage() const { return m_DepthImage; }
 
 		const VkRenderingAttachmentInfo& GetColorAttachment() const { return m_ColorAttachment; }
 		const VkRenderingAttachmentInfo& GetDepthAttachment() const { return m_DepthAttachment; }

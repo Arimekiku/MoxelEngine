@@ -1,16 +1,36 @@
 #include "voxel_chunk.h"
+#include "PerlinNoise.hpp"
+#include "render_quad.h"
 
 namespace Moxel
 {
-	VoxelChunk::VoxelChunk()
+	VoxelChunk::VoxelChunk(const int seed)
 	{
-		for (auto &m_BlockPlane : m_Blocks)
+		m_Seed = seed;
+	}
+
+	VoxelChunk::~VoxelChunk()
+	{
+		m_VertexArray = nullptr;
+	}
+
+	void VoxelChunk::RecreateChunk(glm::vec3 position)
+	{
+		m_Position = position;
+
+		siv::PerlinNoise::seed_type pseed = m_Seed;
+		const auto perlin = siv::PerlinNoise(pseed);
+
+		for (int z = 0; z < 10; ++z)
 		{
-			for (auto &m_BlockLine : m_BlockPlane)
+			for (int y = 0; y < 10; ++y)
 			{
-				for (bool &m_Block : m_BlockLine)
+				for (int x = 0; x < 10; ++x)
 				{
-					m_Block = true;
+					const auto offset = glm::vec3(m_Position.x * 10 + x, m_Position.y * 10 + y, m_Position.z * 10 + z);
+					const double noise = perlin.octave3D_01(offset.x * 0.01f, offset.y * 0.01f, offset.z * 0.01f, 4);
+
+					m_Blocks[x][y][z] = noise > 0.5;
 				}
 			}
 		}
@@ -29,47 +49,78 @@ namespace Moxel
 						continue;
 					}
 
-					const auto positionOffset = glm::vec3(x, y, z);
+					const auto positionOffset = m_Position * 10.0f + glm::vec3(x, y, z);
+					auto indexQuadOffset = 0;
 
-					auto vertices = std::vector<Vertex>(8);
-					vertices[0].Position = glm::vec3(-0.5f, -0.5f, 0.5f) + positionOffset;
-					vertices[1].Position = glm::vec3( 0.5f, -0.5f, 0.5f) + positionOffset;
-					vertices[2].Position = glm::vec3( 0.5f,  0.5f, 0.5f) + positionOffset;
-					vertices[3].Position = glm::vec3(-0.5f,  0.5f, 0.5f) + positionOffset;
-					vertices[4].Position = glm::vec3(-0.5f, -0.5f, -0.5f) + positionOffset;
-					vertices[5].Position = glm::vec3( 0.5f, -0.5f, -0.5f) + positionOffset;
-					vertices[6].Position = glm::vec3( 0.5f,  0.5f, -0.5f) + positionOffset;
-					vertices[7].Position = glm::vec3(-0.5f,  0.5f, -0.5f) + positionOffset;
-
-					vertices[0].Color = glm::vec3(0, 0, 1);
-					vertices[1].Color = glm::vec3(0, 1, 0);
-					vertices[2].Color = glm::vec3(0, 1, 1);
-					vertices[3].Color = glm::vec3(1, 0, 0);
-					vertices[4].Color = glm::vec3(1, 0, 1);
-					vertices[5].Color = glm::vec3(1, 1, 0);
-					vertices[6].Color = glm::vec3(1, 1, 1);
-					vertices[7].Color = glm::vec3(0, 0, 0);
-					totalVertices.insert(totalVertices.end(), vertices.begin(), vertices.end());
-
-					std::vector<uint32_t> indices =
+					if (y == 9 || m_Blocks[x][y + 1][z] == false)
 					{
-						0, 1, 2, 2, 3, 0,
-						1, 5, 6, 6, 2, 1,
-						7, 6, 5, 5, 4, 7,
-						4, 0, 3, 3, 7, 4,
-						4, 5, 1, 1, 0, 4,
-						3, 2, 6, 6, 7, 3,
-					};
+						auto quadUp = RenderQuad(Direction::Up, positionOffset);
+						quadUp.AddIndicesOffset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadUp.GetVertices().begin(), quadUp.GetVertices().end());
+						totalIndices.insert(totalIndices.end(), quadUp.GetIndices().begin(), quadUp.GetIndices().end());
 
-					for (uint32_t& index : indices)
-					{
-						index += indexOffset;
+						indexQuadOffset += 4;
 					}
-					totalIndices.insert(totalIndices.end(), indices.begin(), indices.end());
 
-					indexOffset += 8;
+					if (y == 0 || m_Blocks[x][y - 1][z] == false)
+					{
+						auto quadDown = RenderQuad(Direction::Down, positionOffset);
+						quadDown.AddIndicesOffset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadDown.GetVertices().begin(), quadDown.GetVertices().end());
+						totalIndices.insert(totalIndices.end(), quadDown.GetIndices().begin(), quadDown.GetIndices().end());
+
+						indexQuadOffset += 4;
+					}
+
+					if (x == 9 || m_Blocks[x + 1][y][z] == false)
+					{
+						auto quadRight = RenderQuad(Direction::Right, positionOffset);
+						quadRight.AddIndicesOffset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadRight.GetVertices().begin(), quadRight.GetVertices().end());
+						totalIndices.insert(totalIndices.end(), quadRight.GetIndices().begin(), quadRight.GetIndices().end());
+
+						indexQuadOffset += 4;
+					}
+
+					if (x == 0 || m_Blocks[x - 1][y][z] == false)
+					{
+						auto quadLeft = RenderQuad(Direction::Left, positionOffset);
+						quadLeft.AddIndicesOffset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadLeft.GetVertices().begin(), quadLeft.GetVertices().end());
+						totalIndices.insert(totalIndices.end(), quadLeft.GetIndices().begin(), quadLeft.GetIndices().end());
+
+						indexQuadOffset += 4;
+					}
+
+					if (z == 0 || m_Blocks[x][y][z - 1] == false)
+					{
+						auto quadBack = RenderQuad(Direction::Backward, positionOffset);
+						quadBack.AddIndicesOffset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadBack.GetVertices().begin(), quadBack.GetVertices().end());
+						totalIndices.insert(totalIndices.end(), quadBack.GetIndices().begin(), quadBack.GetIndices().end());
+
+						indexQuadOffset += 4;
+					}
+
+					if (z == 9 || m_Blocks[x][y][z + 1] == false)
+					{
+						auto quadForw = RenderQuad(Direction::Forward, positionOffset);
+						quadForw.AddIndicesOffset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadForw.GetVertices().begin(), quadForw.GetVertices().end());
+						totalIndices.insert(totalIndices.end(), quadForw.GetIndices().begin(), quadForw.GetIndices().end());
+
+						indexQuadOffset += 4;
+					}
+
+					indexOffset += indexQuadOffset;
 				}
 			}
+		}
+
+		if (totalIndices.size() == 0)
+		{
+			m_VertexArray = nullptr;
+			return;
 		}
 
 		const auto vao = std::make_shared<VulkanVertexArray>(totalIndices, totalVertices);

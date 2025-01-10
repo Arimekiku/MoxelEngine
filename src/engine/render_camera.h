@@ -15,6 +15,7 @@ namespace Moxel
 		void Resize(uint16_t width, uint16_t height);
 		void SetPerspective(float fov, float minDist, float maxDist);
 
+		glm::vec3 GetPosition() const { return m_Position; }
 		glm::mat4 GetProjViewMat() const { return glm::mat4(m_Proj * m_View); }
 	private:
 		void SetOrientation(float rotX, float rotY);
@@ -22,7 +23,7 @@ namespace Moxel
 		bool m_CameraMode = false;
 		float m_FOV = 45;
 		float m_MinRenderDist = 0.1f;
-		float m_MaxRenderDist = 100.0f;
+		float m_MaxRenderDist = 1000.0f;
 		float m_Aspect = 1.0f;
 
 		glm::vec3 m_Position;

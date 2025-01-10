@@ -57,8 +57,8 @@ namespace Moxel
 
 			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_FRONT_BIT,
-			VK_FRONT_FACE_CLOCKWISE,
+			VK_CULL_MODE_NONE,
+			VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		};
 		s_RenderData.m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->GetDescriptorSetLayout());
 
@@ -117,6 +117,36 @@ namespace Moxel
 			&vulkanSubresourceRange);
 
 		framebuffer->Bind();
+
+		auto renderInfo = VkRenderingInfo();
+		renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_RenderData.m_Swapchain.GetSwapchainSize());
+		renderInfo.layerCount = 1;
+		renderInfo.colorAttachmentCount = 1;
+		renderInfo.pColorAttachments = &framebuffer->GetColorAttachment();
+		renderInfo.pDepthAttachment = &framebuffer->GetDepthAttachment();
+
+		// begin framebuffer rendering
+		vkCmdBeginRendering(buffer, &renderInfo);
+
+		// set dynamic viewport and scissor
+		const auto& [width, height] = s_RenderData.m_Swapchain.GetSwapchainSize();
+
+		auto viewport = VkViewport();
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = static_cast<float>(width);
+		viewport.height = static_cast<float>(height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(buffer, 0, 1, &viewport);
+
+		auto scissor = VkRect2D();
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		scissor.extent.width = width;
+		scissor.extent.height = height;
+		vkCmdSetScissor(buffer, 0, 1, &scissor);
 	}
 
 	void VulkanRenderer::EndFrame()
@@ -125,9 +155,11 @@ namespace Moxel
 		const auto& swapchainImage = s_RenderData.m_Swapchain.GetCurrentFrame();
 		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
 
+		// end framebuffer rendering
+		vkCmdEndRendering(buffer);
+
 		// copy framebuffer into swapchain
-		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-							 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 		framebuffer->GetRenderImage()->CopyRaw(swapchainImage.ImageData, s_RenderData.m_Swapchain.GetSwapchainSize());
@@ -169,37 +201,6 @@ namespace Moxel
 	void VulkanRenderer::RenderVertexArray(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat)
 	{
 		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
-		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
-
-		auto renderInfo = VkRenderingInfo();
-		renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_RenderData.m_Swapchain.GetSwapchainSize());
-		renderInfo.layerCount = 1;
-		renderInfo.colorAttachmentCount = 1;
-		renderInfo.pColorAttachments = &framebuffer->GetColorAttachment();
-		renderInfo.pDepthAttachment = &framebuffer->GetDepthAttachment();
-
-		// draw geometry
-		vkCmdBeginRendering(buffer, &renderInfo);
-
-		//set dynamic viewport and scissor
-		const auto& [width, height] = s_RenderData.m_Swapchain.GetSwapchainSize();
-
-		auto viewport = VkViewport();
-		viewport.x = 0;
-		viewport.y = 0;
-		viewport.width = static_cast<float>(width);
-		viewport.height = static_cast<float>(height);
-		viewport.minDepth = 0.f;
-		viewport.maxDepth = 1.f;
-		vkCmdSetViewport(buffer, 0, 1, &viewport);
-
-		auto scissor = VkRect2D();
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		scissor.extent.width = width;
-		scissor.extent.height = height;
-		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 		// update uniform data
 		auto ubo = GlobalRenderData();
@@ -220,8 +221,6 @@ namespace Moxel
 		const auto& set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipelineLayout(), 0, 1, &set, 0, nullptr);
 		vkCmdDrawIndexed(buffer, vertexArray->GetIndexBufferSize(), 1, 0, 0, 0);
-
-		vkCmdEndRendering(buffer);
 	}
 
 	void VulkanRenderer::Shutdown() 

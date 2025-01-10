@@ -1,75 +1,65 @@
 #include "scene_layer.h"
-
-#include <imgui.h>
-#include <chrono>
-
 #include "renderer/vulkan/vulkan_renderer.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_RADIANS
-#include <glm/ext/matrix_transform.hpp>
+#include <imgui.h>
 
 namespace Moxel
 {
 	SceneLayer::SceneLayer()
 	{
-		auto vertices = std::vector<Vertex>(8);
-		vertices[0].Position = glm::vec3(-0.5f, -0.5f, 0.5f);
-		vertices[1].Position = glm::vec3( 0.5f, -0.5f, 0.5f);
-		vertices[2].Position = glm::vec3( 0.5f,  0.5f, 0.5f);
-		vertices[3].Position = glm::vec3(-0.5f,  0.5f, 0.5f);
-		vertices[4].Position = glm::vec3(-0.5f, -0.5f, -0.5f);
-		vertices[5].Position = glm::vec3( 0.5f, -0.5f, -0.5f);
-		vertices[6].Position = glm::vec3( 0.5f,  0.5f, -0.5f);
-		vertices[7].Position = glm::vec3(-0.5f,  0.5f, -0.5f);
+		constexpr auto cameraPosition = glm::vec3(0, 0, 1);
+		m_RenderCam = RenderCamera(cameraPosition, glm::vec3(0, 0, -1));
 
-		vertices[0].Color = glm::vec3(0, 0, 1);
-		vertices[1].Color = glm::vec3(0, 1, 0);
-		vertices[2].Color = glm::vec3(0, 1, 1);
-		vertices[3].Color = glm::vec3(1, 0, 0);
-		vertices[4].Color = glm::vec3(1, 0, 1);
-		vertices[5].Color = glm::vec3(1, 1, 0);
-		vertices[6].Color = glm::vec3(1, 1, 1);
-		vertices[7].Color = glm::vec3(0, 0, 0);
-
-		/*vertices[0].Normal = glm::vec3(-1.0f, -1.0f,  1.0f);
-		vertices[1].Normal = glm::vec3( 1.0f, -1.0f,  1.0f);
-		vertices[2].Normal = glm::vec3( 1.0f,  1.0f,  1.0f);
-		vertices[3].Normal = glm::vec3(-1.0f,  1.0f,  1.0f);
-		vertices[4].Normal = glm::vec3(-1.0f, -1.0f, -1.0f);
-		vertices[5].Normal = glm::vec3( 1.0f, -1.0f, -1.0f);
-		vertices[6].Normal = glm::vec3( 1.0f,  1.0f, -1.0f);
-		vertices[7].Normal = glm::vec3(-1.0f,  1.0f, -1.0f);*/
-
-		std::vector<uint32_t> indices =
+		for (int z = -m_RenderDistance; z < m_RenderDistance; ++z)
 		{
-			0, 1, 2, 2, 3, 0,
-			1, 5, 6, 6, 2, 1,
-			7, 6, 5, 5, 4, 7,
-			4, 0, 3, 3, 7, 4,
-			4, 5, 1, 1, 0, 4,
-			3, 2, 6, 6, 7, 3,
-		};
+			for (int y = -m_RenderDistance; y < m_RenderDistance; ++y)
+			{
+				for (int x = -m_RenderDistance; x < m_RenderDistance; ++x)
+				{
+					const glm::vec3 chunkPosition = glm::vec3(x, y, z) + cameraPosition;
 
-		const auto vertexArray = std::make_shared<VulkanVertexArray>(indices, vertices);
-		m_Cube = std::make_shared<RenderMesh>(vertexArray);
-		m_Cube->SetPosition(glm::vec3(1, 0, 0));
-
-		m_RenderCam = RenderCamera(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1));
-
-		m_Chunk = VoxelChunk();
+					m_TotalChunks.emplace(chunkPosition, VoxelChunk(123456u));
+					m_TotalChunks[chunkPosition].RecreateChunk(chunkPosition);
+				}
+			}
+		}
 	}
 
 	void SceneLayer::OnEveryUpdate()
 	{
 		m_RenderCam.Update();
 
-		/*static auto startTime = std::chrono::high_resolution_clock::now();
-		const auto currentTime = std::chrono::high_resolution_clock::now();
-		const float time = std::chrono::duration<float>(currentTime - startTime).count();
-		m_Cube->SetRotation(time * glm::vec3(0, 90, 0));*/
+		const auto cameraPosition = m_RenderCam.GetPosition();
+		const auto intCast = glm::vec3((int) (cameraPosition.x / 10.0f), (int) (cameraPosition.y / 10.0f), (int) (cameraPosition.z / 10.0f));
+		for (int z = -m_RenderDistance; z < m_RenderDistance; ++z)
+		{
+			for (int y = -m_RenderDistance; y < m_RenderDistance; ++y)
+			{
+				for (int x = -m_RenderDistance; x < m_RenderDistance; ++x)
+				{
+					glm::vec3 chunkPosition = glm::vec3(x, y, z) + intCast;
 
-		VulkanRenderer::RenderVertexArray(m_Chunk.GetVertexArray(), m_RenderCam.GetProjViewMat());
+					if (m_TotalChunks.contains(chunkPosition) == false)
+					{
+						m_TotalChunks.emplace(chunkPosition, VoxelChunk(123456u));
+						m_TotalChunks[chunkPosition].RecreateChunk(chunkPosition);
+					}
+
+					m_RenderChunks.emplace_back(m_TotalChunks[chunkPosition]);
+				}
+			}
+		}
+
+		for (const auto& chunk: m_RenderChunks)
+		{
+			if (chunk.IsFree())
+			{
+				continue;
+			}
+
+			VulkanRenderer::RenderVertexArray(chunk.GetVertexArray(), m_RenderCam.GetProjViewMat());
+		}
+		m_RenderChunks.clear();
 	}
 
 	void SceneLayer::OnGuiUpdate()
@@ -78,7 +68,7 @@ namespace Moxel
 	}
 
 	void SceneLayer::Detach()
-	{
-		m_Cube = nullptr;
+	{ 
+		m_TotalChunks.clear();
 	}
 }

@@ -38,7 +38,7 @@ namespace Moxel
 		renderingInfo.pNext = nullptr;
 		renderingInfo.colorAttachmentCount = 1;
 		renderingInfo.pColorAttachmentFormats = specs.Framebuffer->GetImageFormat();
-		renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
+		renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 		// set vertex input info
 		auto bindingDescription = VkVertexInputBindingDescription();

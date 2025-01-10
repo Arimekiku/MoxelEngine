@@ -39,14 +39,19 @@ file(GLOB IMGUI_SOURCES
         "${IMGUI_DIR}/imgui_impl_sdl3.cpp"
     )
 
+# perlin
+set(PERLIN_DIR "PerlinNoise")
+file(GLOB PERLIN_SOURCE "${PERLIN_DIR}/PerlinNoise.hpp")
+
 ################################# Library ####################################
 
-add_library(${PROJECT_NAME} ${IMGUI_SOURCES})
+add_library(${PROJECT_NAME} ${IMGUI_SOURCES} ${PERLIN_SOURCE})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-target_include_directories(${PROJECT_NAME} 
-	PUBLIC 
+target_include_directories(${PROJECT_NAME}
+	PUBLIC
 		"${IMGUI_DIR}"
+		"${PERLIN_DIR}"
 		"${VK_BOOT_DIR}/src"
 		"${Vulkan_INCLUDE_DIRS}"
     )
