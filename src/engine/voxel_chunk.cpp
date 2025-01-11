@@ -4,10 +4,11 @@
 
 namespace Moxel
 {
-	VoxelChunk::VoxelChunk(const int seed, const glm::vec3 position)
-	{
-		m_Seed = seed;
+	static int s_seed = 123456u;
+	static int s_chunkSize = 16;
 
+	VoxelChunk::VoxelChunk(const glm::vec3 position)
+	{
 		m_Position = position;
 	}
 
@@ -18,16 +19,16 @@ namespace Moxel
 
 	void VoxelChunk::RecreateChunk()
 	{
-		siv::PerlinNoise::seed_type pseed = m_Seed;
+		siv::PerlinNoise::seed_type pseed = s_seed;
 		const auto perlin = siv::PerlinNoise(pseed);
 
-		for (int z = 0; z < 10; ++z)
+		for (int z = 0; z < s_chunkSize; ++z)
 		{
-			for (int y = 0; y < 10; ++y)
+			for (int y = 0; y < s_chunkSize; ++y)
 			{
-				for (int x = 0; x < 10; ++x)
+				for (int x = 0; x < s_chunkSize; ++x)
 				{
-					const auto offset = glm::vec3(m_Position.x * 10 + x, m_Position.y * 10 + y, m_Position.z * 10 + z);
+					const auto offset = glm::vec3(m_Position.x * s_chunkSize + x, m_Position.y * s_chunkSize + y, m_Position.z * s_chunkSize + z);
 					const double noise = perlin.octave3D_01(offset.x * 0.01f, offset.y * 0.01f, offset.z * 0.01f, 4);
 
 					m_Blocks[x][y][z] = noise > 0.5;
@@ -38,21 +39,21 @@ namespace Moxel
 		auto totalVertices = std::vector<Vertex>();
 		auto totalIndices = std::vector<uint32_t>();
 		int indexOffset = 0;
-		for (int z = 0; z < 10; ++z)
+		for (int z = 0; z < s_chunkSize; ++z)
 		{
-			for (int y = 0; y < 10; ++y)
+			for (int y = 0; y < s_chunkSize; ++y)
 			{
-				for (int x = 0; x < 10; ++x)
+				for (int x = 0; x < s_chunkSize; ++x)
 				{
 					if (m_Blocks[x][y][z] == false)
 					{
 						continue;
 					}
 
-					const auto positionOffset = m_Position * 10.0f + glm::vec3(x, y, z);
+					const auto positionOffset = m_Position * (float)s_chunkSize + glm::vec3(x, y, z);
 					auto indexQuadOffset = 0;
 
-					if (y == 9 || m_Blocks[x][y + 1][z] == false)
+					if (y == s_chunkSize - 1 || m_Blocks[x][y + 1][z] == false)
 					{
 						auto quadUp = RenderQuad(Direction::Up, positionOffset);
 						quadUp.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -72,7 +73,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (x == 9 || m_Blocks[x + 1][y][z] == false)
+					if (x == s_chunkSize - 1 || m_Blocks[x + 1][y][z] == false)
 					{
 						auto quadRight = RenderQuad(Direction::Right, positionOffset);
 						quadRight.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -102,7 +103,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (z == 9 || m_Blocks[x][y][z + 1] == false)
+					if (z == s_chunkSize - 1 || m_Blocks[x][y][z + 1] == false)
 					{
 						auto quadForw = RenderQuad(Direction::Forward, positionOffset);
 						quadForw.AddIndicesOffset(indexOffset + indexQuadOffset);

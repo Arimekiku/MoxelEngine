@@ -72,8 +72,16 @@ namespace Moxel
 	{
 		VulkanRenderer::QueueResourceFree([&]()
 		{
+			if (IsEmpty())
+			{
+				return;
+			}
+
 			VulkanAllocator::DestroyBuffer(m_VertexBuffer);
 			VulkanAllocator::DestroyBuffer(m_IndexBuffer);
+
+			m_Vertices.clear();
+			m_Indices = 0;
 		});
 	}
 

@@ -9,7 +9,7 @@ namespace Moxel
 	class VoxelChunk
 	{
 	public:
-		VoxelChunk(int seed, glm::vec3 position);
+		VoxelChunk(glm::vec3 position);
 		~VoxelChunk();
 
 		void SetForDeletion() { m_QueuedForDeletion = true; }
@@ -24,10 +24,9 @@ namespace Moxel
 	private:
 		bool m_QueuedForDeletion = false;
 
-		int m_Seed;
 		std::shared_ptr<RenderMesh> m_VertexArray = nullptr;
 		glm::vec3 m_Position = glm::vec3(0);
 
-		bool m_Blocks[10][10][10];
+		bool m_Blocks[16][16][16];
 	};
 }
