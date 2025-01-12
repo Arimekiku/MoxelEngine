@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "vulkan_buffer.h"
 #include "vulkan_image.h"
 
@@ -10,19 +12,17 @@ namespace Moxel
 	public:
 		VulkanAllocator() = delete;
 
-		static void Initialize();
-		static void Destroy();
+		static void initialize();
+		static void destroy();
 
-		static VulkanBuffer AllocateBuffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
-		static void AllocateImage(const VkImageCreateInfo& imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage, VmaAllocation& outAllocation);
+		static VulkanBuffer allocate_buffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
+		static VulkanImage allocate_image(const VulkanImageSpecs& specs, VmaMemoryUsage usage);
 
-		static void DestroyBuffer(const VulkanBuffer& buffer);
-		static void DestroyVulkanImage(const VulkanImage& image);
-
-		static void* MapData(VmaAllocation allocation);
-		static void UnmapData(VmaAllocation allocation);
-
+		static void destroy_buffer(const VulkanBuffer& buffer);
+		static void destroy_vulkan_image(const VulkanImage& image);
 	private:
-		static VmaAllocator m_Allocator;
+		static VmaAllocator m_allocator;
+
+		static std::unordered_map<UUID, VmaAllocation> m_allocatorAssets;
 	};
 }

@@ -11,20 +11,20 @@ namespace Moxel
 		Application();
 		~Application();
 
-		static Application& Get() { return *s_Instance; }
+		static Application& get() { return *s_instance; }
 
-		void AddLayer(Layer* layer);
+		void add_layer(Layer* layer);
 
-		void Run() const;
+		void run() const;
 
-		const VulkanContext& GetContext() const { return m_Context; }
-		GameWindow& GetWindow() const { return *m_Window; }
+		const VulkanContext& get_context() const { return m_context; }
+		GameWindow& get_window() const { return *m_window; }
 
 	private:
-		static Application* s_Instance;
+		static Application* s_instance;
 
-		GameWindow* m_Window;
-		VulkanContext m_Context;
+		GameWindow* m_window;
+		VulkanContext m_context;
 		LayerStack m_LayerStack;
 	};
 }

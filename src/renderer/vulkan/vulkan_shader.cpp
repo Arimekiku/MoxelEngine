@@ -25,7 +25,7 @@ namespace Moxel
 
 	VulkanShader::VulkanShader(const char* filePath, const ShaderType shaderType)
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 		const auto buffer = ReadFile(filePath);
 
 		auto createInfo = VkShaderModuleCreateInfo();
@@ -47,48 +47,48 @@ namespace Moxel
 			case ShaderType::COMPUTE: shaderStageFlag = VK_SHADER_STAGE_COMPUTE_BIT; break;
 		}
 
-		m_CreateInfo = VkPipelineShaderStageCreateInfo();
-		m_CreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		m_CreateInfo.pNext = nullptr;
-		m_CreateInfo.stage = shaderStageFlag;
-		m_CreateInfo.module = module;
-		m_CreateInfo.pName = "main";
+		m_createInfo = VkPipelineShaderStageCreateInfo();
+		m_createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		m_createInfo.pNext = nullptr;
+		m_createInfo.stage = shaderStageFlag;
+		m_createInfo.module = module;
+		m_createInfo.pName = "main";
 	}
 
-	void VulkanShader::Destroy() const
+	void VulkanShader::destroy() const
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		if (m_CreateInfo.module)
+		if (m_createInfo.module)
 		{
-			vkDestroyShaderModule(device, m_CreateInfo.module, nullptr);
+			vkDestroyShaderModule(device, m_createInfo.module, nullptr);
 		}
 	}
 
-	void VulkanShader::Release()
+	void VulkanShader::release()
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		if (m_CreateInfo.module)
+		if (m_createInfo.module)
 		{
-			vkDestroyShaderModule(device, m_CreateInfo.module, nullptr);
+			vkDestroyShaderModule(device, m_createInfo.module, nullptr);
 
-			m_CreateInfo.module = nullptr;
+			m_createInfo.module = nullptr;
 		}
 	}
 
-	void VulkanShaderLibrary::Destroy()
+	void VulkanShaderLibrary::destroy()
 	{
-		for (const auto& shader: m_Shaders)
+		for (const auto& shader: m_shaders)
 		{
-			shader->Destroy();
+			shader->destroy();
 		}
 
-		m_Shaders.clear();
+		m_shaders.clear();
 	}
 
-	void VulkanShaderLibrary::Add(const std::shared_ptr<VulkanShader>& shader)
+	void VulkanShaderLibrary::add(const std::shared_ptr<VulkanShader>& shader)
 	{
-		m_Shaders.emplace_back(shader);
+		m_shaders.emplace_back(shader);
 	}
 }

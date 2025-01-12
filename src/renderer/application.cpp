@@ -5,44 +5,44 @@
 
 namespace Moxel
 {
-	Application* Application::s_Instance;
+	Application* Application::s_instance;
 
 	Application::Application()
 	{
-		s_Instance = this;
+		s_instance = this;
 
-		Log::Initialize();
+		Log::initialize();
 
 		constexpr auto initialSize = VkExtent2D(1600, 900);
-		m_Window = new GameWindow(initialSize.width, initialSize.height);
-		m_Context.Initialize(m_Window->GetNativeWindow());
+		m_window = new GameWindow(initialSize.width, initialSize.height);
+		m_context.initialize(m_window->get_native_window());
 
-		VulkanAllocator::Initialize();
-		VulkanRenderer::Initialize(initialSize);
+		VulkanAllocator::initialize();
+		VulkanRenderer::initialize(initialSize);
 
 		m_LayerStack = LayerStack();
 	}
 
 	Application::~Application()
 	{
-		vkDeviceWaitIdle(m_Context.GetLogicalDevice());
+		vkDeviceWaitIdle(m_context.get_logical_device());
 
-		m_LayerStack.Clear();
+		m_LayerStack.clear();
 
-		VulkanRenderer::Shutdown();
-		VulkanAllocator::Destroy();
+		VulkanRenderer::shutdown();
+		VulkanAllocator::destroy();
 
-		m_Context.Destroy();
+		m_context.destroy();
 	}
 
-	void Application::Run() const
+	void Application::run() const
 	{
-		m_Window->Update(m_LayerStack);
+		m_window->update(m_LayerStack);
 	}
 
-	void Application::AddLayer(Layer* layer)
+	void Application::add_layer(Layer* layer)
 	{
-		m_LayerStack.Push(layer);
-		layer->Attach();
+		m_LayerStack.push(layer);
+		layer->attach();
 	}
 }

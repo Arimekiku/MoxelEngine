@@ -1,5 +1,7 @@
 #pragma once
 
+#include "renderer/core/asset.h"
+
 #include <vk_mem_alloc.h>
 
 namespace Moxel
@@ -12,31 +14,16 @@ namespace Moxel
 		VkImageAspectFlags ImageAspects = VK_IMAGE_ASPECT_COLOR_BIT;
 	};
 
-	class VulkanImage 
+	struct VulkanImage final : Asset
 	{
-	public:
-		VulkanImage() = default;
-		VulkanImage(const VulkanImageSpecs& specs);
-		~VulkanImage();
+		VkImageLayout Layout = VK_IMAGE_LAYOUT_UNDEFINED;
+		VkImage Image = nullptr;
+		VkImageView ImageView = nullptr;
+		VkFormat ImageFormat = VK_FORMAT_UNDEFINED;
+		VkExtent3D ImageExtent = { 0, 0, 0 };
 
-		void CopyInto(const VulkanImage& target) const;
-		void CopyRaw(VkImage target, const VkExtent2D& imageSize) const;
-		void Transit(VkImageLayout newLayout);
-		static void Transit(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
-
-		const VkFormat* GetImageFormat() const { return &m_ImageFormat; }
-		VkImage GetRawImage() const { return m_Image; }
-		VkImageView GetImageView() const { return m_ImageView; }
-		VkExtent3D GetImageSize() const { return m_ImageExtent; }
-		VmaAllocation GetAllocation() const { return m_Allocation; }
-
-	private:
-		VkImageLayout m_Layout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-		VkImage m_Image = nullptr;
-		VkImageView m_ImageView = nullptr;
-		VkFormat m_ImageFormat;
-		VkExtent3D m_ImageExtent;
-		VmaAllocation m_Allocation = nullptr;
+		void copy_into(const VulkanImage& target) const;
+		void copy_raw(VkImage target, const VkExtent2D& imageSize) const;
+		static void transit(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 	};
 }

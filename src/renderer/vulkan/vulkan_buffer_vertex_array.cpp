@@ -9,7 +9,7 @@ namespace Moxel
 	VulkanVertexArray::VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<Vertex>& vertices)
 	{
 		// vertex buffer
-		m_Vertices = vertices;
+		m_vertices = vertices;
 		const auto verticesSize = vertices.size() * sizeof(vertices[0]);
 		auto vertexBufferInfo = VkBufferCreateInfo();
 		vertexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -19,10 +19,10 @@ namespace Moxel
 
 		constexpr auto vertexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		m_VertexBuffer = VulkanAllocator::AllocateBuffer(vertexBufferInfo, vertexMemoryUsage);
+		m_vertexBuffer = VulkanAllocator::allocate_buffer(vertexBufferInfo, vertexMemoryUsage);
 
 		// index buffer
-		m_Indices = indices.size();
+		m_indices = indices.size();
 		const auto indicesSize = indices.size() * sizeof(indices[0]);
 		auto indexBufferInfo = VkBufferCreateInfo();
 		indexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -32,7 +32,7 @@ namespace Moxel
 
 		constexpr auto indexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		m_IndexBuffer = VulkanAllocator::AllocateBuffer(indexBufferInfo, indexMemoryUsage);
+		m_indexBuffer = VulkanAllocator::allocate_buffer(indexBufferInfo, indexMemoryUsage);
 
 		// allocate vertex array data
 		auto stagingBufferInfo = VkBufferCreateInfo();
@@ -43,28 +43,28 @@ namespace Moxel
 
 		constexpr auto stagingMemoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-		const auto stagingBuffer = VulkanAllocator::AllocateBuffer(stagingBufferInfo, stagingMemoryUsage);
+		const auto stagingBuffer = VulkanAllocator::allocate_buffer(stagingBufferInfo, stagingMemoryUsage);
 
 		// copy buffers
 		void* data = stagingBuffer.AllocationInfo.pMappedData;
 		memcpy(data, vertices.data(), verticesSize);
 		memcpy(static_cast<char*>(data) + verticesSize, indices.data(), indicesSize);
 
-		VulkanRenderer::ImmediateSubmit([&](VkCommandBuffer cmd)
+		VulkanRenderer::immediate_submit([&](VkCommandBuffer cmd)
 		{
 			auto vertexCopy = VkBufferCopy();
 			vertexCopy.dstOffset = 0;
 			vertexCopy.srcOffset = 0;
 			vertexCopy.size = verticesSize;
-			vkCmdCopyBuffer(cmd, stagingBuffer.Buffer, m_VertexBuffer.Buffer, 1, &vertexCopy);
+			vkCmdCopyBuffer(cmd, stagingBuffer.Buffer, m_vertexBuffer.Buffer, 1, &vertexCopy);
 
 			auto indexCopy = VkBufferCopy();
 			indexCopy.dstOffset = 0;
 			indexCopy.srcOffset = verticesSize;
 			indexCopy.size = indicesSize;
-			vkCmdCopyBuffer(cmd, stagingBuffer.Buffer, m_IndexBuffer.Buffer, 1, &indexCopy);
+			vkCmdCopyBuffer(cmd, stagingBuffer.Buffer, m_indexBuffer.Buffer, 1, &indexCopy);
 		});
 
-		VulkanAllocator::DestroyBuffer(stagingBuffer);
+		VulkanAllocator::destroy_buffer(stagingBuffer);
 	}
 }

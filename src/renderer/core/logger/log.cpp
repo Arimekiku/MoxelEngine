@@ -4,13 +4,13 @@
 
 namespace Moxel
 {
-	std::shared_ptr<spdlog::logger> Log::s_Logger;
+	std::shared_ptr<spdlog::logger> Log::s_logger;
 
-	void Log::Initialize()
+	void Log::initialize()
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$");
 
-		s_Logger = spdlog::stdout_color_mt("ENGINE");
-		s_Logger->set_level(spdlog::level::trace);
+		s_logger = spdlog::stdout_color_mt("ENGINE");
+		s_logger->set_level(spdlog::level::trace);
 	}
 }

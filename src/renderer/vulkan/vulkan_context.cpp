@@ -5,7 +5,7 @@
 
 namespace Moxel
 {
-	void VulkanContext::Initialize(SDL_Window* window) 
+	void VulkanContext::initialize(SDL_Window* window) 
 	{
 		auto builder = vkb::InstanceBuilder();
 		auto vkbInstance = builder
@@ -16,10 +16,10 @@ namespace Moxel
 			.build()
 			.value();
 
-		m_Instance = vkbInstance.instance;
-		m_DebugUtils = vkbInstance.debug_messenger;
+		m_instance = vkbInstance.instance;
+		m_debugUtils = vkbInstance.debug_messenger;
 
-		SDL_Vulkan_CreateSurface(window, m_Instance, nullptr, &m_WindowSurface);
+		SDL_Vulkan_CreateSurface(window, m_instance, nullptr, &m_windowSurface);
 
 		// vulkan 1.3 features
 		auto features13 = VkPhysicalDeviceVulkan13Features();
@@ -38,26 +38,26 @@ namespace Moxel
 			.set_minimum_version(1, 3)
 			.set_required_features_13(features13)
 			.set_required_features_12(features12)
-			.set_surface(m_WindowSurface)
+			.set_surface(m_windowSurface)
 			.select()
 			.value();
 
 		auto deviceBuilder = vkb::DeviceBuilder(physicalDevice);
 		auto vkbDevice = deviceBuilder.build().value();
 
-		m_LogicalDevice = vkbDevice.device;
-		m_PhysicalDevice = vkbDevice.physical_device;
+		m_logicalDevice = vkbDevice.device;
+		m_physicalDevice = vkbDevice.physical_device;
 
-		m_Queue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
-		m_FamilyIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+		m_queue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
+		m_familyIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 	}
 
-	void VulkanContext::Destroy() const
+	void VulkanContext::destroy() const
 	{
-		vkDestroySurfaceKHR(m_Instance, m_WindowSurface, nullptr);
-		vkDestroyDevice(m_LogicalDevice, nullptr);
+		vkDestroySurfaceKHR(m_instance, m_windowSurface, nullptr);
+		vkDestroyDevice(m_logicalDevice, nullptr);
 
-		vkb::destroy_debug_utils_messenger(m_Instance, m_DebugUtils);
-		vkDestroyInstance(m_Instance, nullptr);
+		vkb::destroy_debug_utils_messenger(m_instance, m_debugUtils);
+		vkDestroyInstance(m_instance, nullptr);
 	}
 }

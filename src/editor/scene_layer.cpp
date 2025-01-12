@@ -11,28 +11,28 @@ namespace Moxel
 		m_camera = RenderCamera(cameraPosition, glm::vec3(0, 0, -1));
 	}
 
-	void SceneLayer::OnEveryUpdate()
+	void SceneLayer::on_every_update()
 	{
-		m_camera.Update();
+		m_camera.update();
 
-		const auto cameraPosition = m_camera.GetPosition();
+		const auto cameraPosition = m_camera.get_position();
 		m_chunks.update(cameraPosition);
 
 		// render chunks
 		auto& renderChunks = m_chunks.get_render_chunks();
 		for (auto& [position, chunk]: renderChunks)
 		{
-			VulkanRenderer::RenderChunk(chunk->get_trs_matrix(position), chunk, m_camera.GetProjViewMat());
+			VulkanRenderer::render_chunk(chunk->get_trs_matrix(position), chunk, m_camera.get_proj_view_mat());
 		}
 		renderChunks.clear();
 	}
 
-	void SceneLayer::OnGuiUpdate()
+	void SceneLayer::on_gui_update()
 	{
 		ImGui::ShowDemoWindow();
 	}
 
-	void SceneLayer::Detach()
+	void SceneLayer::detach()
 	{ 
 		m_chunks.destroy_world();
 	}

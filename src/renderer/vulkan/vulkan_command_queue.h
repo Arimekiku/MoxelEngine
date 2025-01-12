@@ -22,31 +22,29 @@ namespace Moxel
 	public:
 		VulkanCommandBuffer() = default;
 		
-		void Initialize(int bufferCount);
-		void Destroy() const;
+		void initialize(int bufferCount);
+		void destroy() const;
 
-		void BeginImmediateQueue() const;
-		void EndImmediateQueue() const;
+		void begin_immediate_queue() const;
+		void end_immediate_queue() const;
 
-		void BeginCommandQueue() const;
-		void EndCommandQueue() const;
+		void begin_command_queue() const;
+		void end_command_queue() const;
 
-		VkCommandBuffer GetImmediateBuffer() const { return  m_ImmediateBuffer;}
-		VkCommandBuffer GetOperatingBuffer() const { return m_CurrentBuffer.CommandBuffer; }
-		CommandBufferData& GetNextFrame();
+		VkCommandBuffer get_immediate_buffer() const { return m_immediateBuffer;}
+		VkCommandBuffer get_operating_buffer() const { return m_currentBuffer.CommandBuffer; }
+		CommandBufferData& get_next_frame();
 
 	private:
-		std::vector<CommandBufferData> m_Buffers = std::vector<CommandBufferData>();
-		CommandBufferData m_CurrentBuffer;
+		std::vector<CommandBufferData> m_buffers = std::vector<CommandBufferData>();
+		CommandBufferData m_currentBuffer;
 
-		VkFence m_ImmediateFence = nullptr;
-		VkCommandPool m_ImmediatePool = nullptr;
-		VkCommandBuffer m_ImmediateBuffer = nullptr;
+		VkFence m_immediateFence = nullptr;
+		VkCommandPool m_immediatePool = nullptr;
+		VkCommandBuffer m_immediateBuffer = nullptr;
 
-		VkDevice m_DeviceInstance = nullptr;
-		VkQueue m_GraphicsQueue = nullptr;
-		uint32_t m_QueueFamily = 0;
-
-		friend class VulkanRenderer;
+		VkDevice m_deviceInstance = nullptr;
+		VkQueue m_graphicsQueue = nullptr;
+		uint32_t m_queueFamily = 0;
 	};
 }

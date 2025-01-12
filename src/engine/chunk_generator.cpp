@@ -22,12 +22,12 @@ namespace Moxel
 				continue;
 			}
 
-			VulkanRenderer::QueueResourceFree(chunk.second->get_chunk_mesh());
+			VulkanRenderer::queue_resource_free(chunk.second->get_chunk_mesh());
 		}
 
 		while (m_deletionQueue.empty() == false)
 		{
-			VulkanRenderer::QueueResourceFree(m_deletionQueue.front().second->get_chunk_mesh());
+			VulkanRenderer::queue_resource_free(m_deletionQueue.front().second->get_chunk_mesh());
 
 			m_deletionQueue.pop();
 		}
@@ -53,7 +53,7 @@ namespace Moxel
 
 			if (chunk.second->get_chunk_mesh() != nullptr)
 			{
-				VulkanRenderer::QueueResourceFree(chunk.second->get_chunk_mesh());
+				VulkanRenderer::queue_resource_free(chunk.second->get_chunk_mesh());
 			}
 
 			m_deletionQueue.pop();

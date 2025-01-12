@@ -10,16 +10,16 @@ namespace Moxel
 		VulkanBufferUniform(uint32_t bufferSize);
 		~VulkanBufferUniform();
 
-		void WriteData(const void* data, uint32_t size) const;
+		void write_data(const void* data, uint32_t size) const;
 
-		const VkDescriptorBufferInfo& GetDescriptorInfo() const { return m_DescriptorInfo; }
+		const VkDescriptorBufferInfo& get_descriptor_info() const { return m_descriptorInfo; }
 
 	private:
-		uint32_t m_Size = 0;
+		uint32_t m_size = 0;
 
-		VulkanBuffer m_Buffer;
-		VkDescriptorBufferInfo m_DescriptorInfo;
+		VulkanBuffer m_buffer;
+		VkDescriptorBufferInfo m_descriptorInfo;
 
-		void* m_Data = nullptr;
+		void* m_data = nullptr;
 	};
 }

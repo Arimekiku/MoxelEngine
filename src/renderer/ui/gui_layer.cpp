@@ -10,9 +10,9 @@ namespace Moxel
 {
     static VkDescriptorPool s_Test;
 
-    void GuiLayer::Attach()
+    void GuiLayer::attach()
     {
-		const auto& vulkan = Application::Get().GetContext();
+		const auto& vulkan = Application::get().get_context();
         const VkDescriptorPoolSize pool_sizes[] =
         { 
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -35,7 +35,7 @@ namespace Moxel
         pool_info.poolSizeCount = static_cast<uint32_t>(std::size(pool_sizes));
         pool_info.pPoolSizes = pool_sizes;
 
-        const auto result = vkCreateDescriptorPool(vulkan.GetLogicalDevice(), &pool_info, nullptr, &s_Test);
+        const auto result = vkCreateDescriptorPool(vulkan.get_logical_device(), &pool_info, nullptr, &s_Test);
         VULKAN_CHECK(result);
 
         IMGUI_CHECKVERSION();
@@ -44,25 +44,25 @@ namespace Moxel
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-        const auto window = Application::Get().GetWindow().GetNativeWindow();
+        const auto window = Application::get().get_window().get_native_window();
         ImGui_ImplSDL3_InitForVulkan(window);
 
         auto initInfo = ImGui_ImplVulkan_InitInfo();
-        initInfo.Instance = vulkan.GetInstance();
-        initInfo.PhysicalDevice = vulkan.GetPhysicalDevice();
-        initInfo.Device = vulkan.GetLogicalDevice();
-        initInfo.Queue = vulkan.GetRenderQueue();
+        initInfo.Instance = vulkan.get_instance();
+        initInfo.PhysicalDevice = vulkan.get_physical_device();
+        initInfo.Device = vulkan.get_logical_device();
+        initInfo.Queue = vulkan.get_render_queue();
         initInfo.DescriptorPool = s_Test;
         initInfo.MinImageCount = 3;
         initInfo.ImageCount = 3;
         initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        initInfo.CheckVkResultFn = VulkanUtils::VulkanCheck;
+        initInfo.CheckVkResultFn = VulkanUtils::vulkan_check;
 
-        auto& swapchain = VulkanRenderer::GetSwapchain();
+        auto& swapchain = VulkanRenderer::get_swapchain();
         auto createInfo = VkPipelineRenderingCreateInfo();
         createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         createInfo.colorAttachmentCount = 1;
-        createInfo.pColorAttachmentFormats = &swapchain.GetImageFormat();
+        createInfo.pColorAttachmentFormats = &swapchain.get_image_format();
 
         initInfo.UseDynamicRendering = true;
         initInfo.PipelineRenderingCreateInfo = createInfo;
@@ -73,9 +73,9 @@ namespace Moxel
         ImGui::StyleColorsDark();
     }
 
-    void GuiLayer::Detach()
+    void GuiLayer::detach()
     {
-        const auto device = Application::Get().GetContext().GetLogicalDevice();
+        const auto device = Application::get().get_context().get_logical_device();
 
         vkDeviceWaitIdle(device);
 
@@ -86,19 +86,19 @@ namespace Moxel
         ImGui::DestroyContext();
     }
 
-    void GuiLayer::ProcessEvents(const SDL_Event& event)
+    void GuiLayer::process_events(const SDL_Event& event)
     {
         ImGui_ImplSDL3_ProcessEvent(&event);
     }
 
-    void GuiLayer::Begin()
+    void GuiLayer::begin()
     {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
     }
 
-    void GuiLayer::End()
+    void GuiLayer::end()
     {
         ImGui::Render();
     }

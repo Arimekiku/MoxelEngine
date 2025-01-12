@@ -3,53 +3,53 @@
 
 namespace Moxel::Input
 {
-	std::unordered_map<uint16_t, bool> Key::m_KeyMap = std::unordered_map<uint16_t, bool>(256);
-	std::unordered_map<uint16_t, bool> Key::m_OldKeyMap = std::unordered_map<uint16_t, bool>(256);
+	std::unordered_map<uint16_t, bool> Key::m_keyMap = std::unordered_map<uint16_t, bool>(256);
+	std::unordered_map<uint16_t, bool> Key::m_oldKeyMap = std::unordered_map<uint16_t, bool>(256);
 
-	bool Key::JustPressed(const KeyCode code)
+	bool Key::just_pressed(const KeyCode code)
 	{
-		return m_KeyMap[code] != m_OldKeyMap[code] && m_KeyMap[code] == true;
+		return m_keyMap[code] != m_oldKeyMap[code] && m_keyMap[code] == true;
 	}
 
-	bool Key::JustReleased(const KeyCode code)
+	bool Key::just_released(const KeyCode code)
 	{
-		return m_KeyMap[code] != m_OldKeyMap[code] && m_KeyMap[code] == false;
+		return m_keyMap[code] != m_oldKeyMap[code] && m_keyMap[code] == false;
 	}
 
-	bool Key::Pressed(const KeyCode code)
+	bool Key::pressed(const KeyCode code)
 	{
-		return m_KeyMap[code] == true;
+		return m_keyMap[code] == true;
 	}
 
-	bool Key::Released(const KeyCode code)
+	bool Key::released(const KeyCode code)
 	{
-		return m_KeyMap[code] == false;
+		return m_keyMap[code] == false;
 	}
 
-	glm::vec2 Mouse::m_NormalizedCursor;
+	glm::vec2 Mouse::m_normalizedCursor;
 
-	int Key::GetAxisValue(const KeyCode positiveKey, const KeyCode negativeKey)
+	int Key::get_axis_value(const KeyCode positiveKey, const KeyCode negativeKey)
 	{
-		return Pressed(positiveKey) - Pressed(negativeKey);
+		return pressed(positiveKey) - pressed(negativeKey);
 	}
 
-	bool Mouse::ButtonPressed(const int code)
+	bool Mouse::button_pressed(const int code)
 	{
 		// TODO: implement
 
 		return false;
 	}
 
-	bool Mouse::ButtonReleased(const int code)
+	bool Mouse::button_released(const int code)
 	{
 		// TODO: implement
 
 		return false;
 	}
 
-	void Mouse::SetCursorMode(const CursorMode mode)
+	void Mouse::set_cursor_mode(const CursorMode mode)
 	{
-		auto* window = Application::Get().GetWindow().GetNativeWindow();
+		auto* window = Application::get().get_window().get_native_window();
 
 		SDL_SetWindowRelativeMouseMode(window, mode);
 
@@ -61,7 +61,7 @@ namespace Moxel::Input
 		}
 	}
 
-	glm::vec2 Mouse::GetCursorPosition()
+	glm::vec2 Mouse::se_get_cursor_position()
 	{
 		float mouseX, mouseY;
 		SDL_GetMouseState(&mouseX, &mouseY);
@@ -69,14 +69,14 @@ namespace Moxel::Input
 		return { mouseX, mouseY };
 	}
 
-	void Mouse::SetCursorPosition(const int x, const int y)
+	void Mouse::set_cursor_position(const int x, const int y)
 	{
-		auto* window = Application::Get().GetWindow().GetNativeWindow();
+		auto* window = Application::get().get_window().get_native_window();
 
 		SDL_WarpMouseInWindow(window, x, y);
 	}
 
-	float Mouse::GetMouseX()
+	float Mouse::get_mouse_x()
 	{
 		float xPos, yPos;
 		SDL_GetMouseState(&xPos, &yPos);
@@ -84,7 +84,7 @@ namespace Moxel::Input
 		return xPos;
 	}
 
-	float Mouse::GetMouseY()
+	float Mouse::get_mouse_y()
 	{
 		float xPos, yPos;
 		SDL_GetMouseState(&xPos, &yPos);
@@ -92,7 +92,7 @@ namespace Moxel::Input
 		return yPos;
 	}
 
-	glm::vec2 Mouse::GetNormalizedCursor()
+	glm::vec2 Mouse::get_normalized_cursor()
 	{
 		float xPos, yPos;
 		SDL_GetRelativeMouseState(&xPos, &yPos);
@@ -100,10 +100,10 @@ namespace Moxel::Input
 		return { xPos, yPos };
 	}
 
-	void Mouse::SetCursorInCenterOfWindow()
+	void Mouse::set_cursor_in_center_of_window()
 	{
-		const auto& [width, height] = Application::Get().GetWindow().GetWindowSize();
+		const auto& [width, height] = Application::get().get_window().get_window_size();
 
-		SetCursorPosition(width / 2, height / 2);
+		set_cursor_position(width / 2, height / 2);
 	}
 }

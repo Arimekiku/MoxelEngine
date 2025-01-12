@@ -1,11 +1,13 @@
 #include "vulkan_framebuffer.h"
+
+#include "vulkan_allocator.h"
 #include "renderer/application.h"
 
 namespace Moxel
 {
 	VulkanFramebuffer::VulkanFramebuffer()
 	{
-		const auto& windowSize = Application::Get().GetWindow().GetWindowSize();
+		const auto& windowSize = Application::get().get_window().get_window_size();
 
 		// setup render infos
 		auto drawImageUsages = VkImageUsageFlags();
@@ -22,13 +24,13 @@ namespace Moxel
 			VK_IMAGE_ASPECT_COLOR_BIT
 		};
 
-		m_ColorImage = std::make_shared<VulkanImage>(colorSpecs);
-		m_ColorAttachment = VkRenderingAttachmentInfo();
-		m_ColorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		m_ColorAttachment.imageView = m_ColorImage->GetImageView();
-		m_ColorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		m_ColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		m_ColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		m_colorImage = std::make_shared<VulkanImage>(VulkanAllocator::allocate_image(colorSpecs, VMA_MEMORY_USAGE_GPU_ONLY));
+		m_colorAttachment = VkRenderingAttachmentInfo();
+		m_colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		m_colorAttachment.imageView = m_colorImage->ImageView;
+		m_colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		m_colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		m_colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
 		const auto depthSpecs = VulkanImageSpecs
 		{
@@ -38,27 +40,25 @@ namespace Moxel
 			VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
 		};
 
-		m_DepthImage = std::make_shared<VulkanImage>(depthSpecs);
-		m_DepthAttachment = VkRenderingAttachmentInfo();
-		m_DepthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		m_DepthAttachment.imageView = m_DepthImage->GetImageView();
-		m_DepthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-		m_DepthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		m_DepthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		m_DepthAttachment.clearValue.depthStencil.depth = 1.0f;
+		m_depthImage = std::make_shared<VulkanImage>(VulkanAllocator::allocate_image(depthSpecs, VMA_MEMORY_USAGE_GPU_ONLY));
+		m_depthAttachment = VkRenderingAttachmentInfo();
+		m_depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		m_depthAttachment.imageView = m_depthImage->ImageView;
+		m_depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		m_depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		m_depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		m_depthAttachment.clearValue.depthStencil.depth = 1.0f;
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer() 
-	{ 
-		m_ColorImage = nullptr;
-		m_DepthImage = nullptr;
-	}
-
-	void VulkanFramebuffer::Bind() const
 	{
-		VulkanImage::Transit(m_ColorImage->GetRawImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-		VulkanImage::Transit(m_DepthImage->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		VulkanAllocator::destroy_vulkan_image(*m_colorImage);
+		VulkanAllocator::destroy_vulkan_image(*m_depthImage);
 	}
 
+	void VulkanFramebuffer::bind() const
+	{
+		VulkanImage::transit(m_colorImage->Image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VulkanImage::transit(m_depthImage->Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	}
 }

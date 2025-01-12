@@ -20,13 +20,13 @@ namespace Moxel
 		VulkanShader() = default;
 		VulkanShader(const char* filePath, ShaderType shaderType);
 
-		void Release();
-		void Destroy() const;
+		void release();
+		void destroy() const;
 
-		const VkPipelineShaderStageCreateInfo& GetPipelineCreateInfo() const { return m_CreateInfo; }
+		const VkPipelineShaderStageCreateInfo& get_pipeline_create_info() const { return m_createInfo; }
 
 	private:
-		VkPipelineShaderStageCreateInfo m_CreateInfo;
+		VkPipelineShaderStageCreateInfo m_createInfo;
 
 		friend class VulkanShaderLibrary;
 	};
@@ -37,12 +37,12 @@ namespace Moxel
 		VulkanShaderLibrary() = default;
 		~VulkanShaderLibrary() = default;
 
-		const std::shared_ptr<VulkanShader>& GetShader(const int index) { return m_Shaders[index]; }
-		void Destroy();
+		const std::shared_ptr<VulkanShader>& get_shader(const int index) { return m_shaders[index]; }
+		void destroy();
 
-		void Add(const std::shared_ptr<VulkanShader>& shader);
+		void add(const std::shared_ptr<VulkanShader>& shader);
 
 	private:
-		std::vector<std::shared_ptr<VulkanShader>> m_Shaders;
+		std::vector<std::shared_ptr<VulkanShader>> m_shaders;
 	};
 }

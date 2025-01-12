@@ -6,20 +6,20 @@
 
 namespace Moxel
 {
-    class LayerStack
-    {
-    public:
-        LayerStack() = default;
-        ~LayerStack() = default;
+	class LayerStack
+	{
+	public:
+		LayerStack() = default;
+		~LayerStack() = default;
 
-        void Push(Layer* layer);
-        void Pop(const Layer* layer);
-        void Clear();
+		void push(Layer* layer);
+		void pop(const Layer* layer);
+		void clear();
 
-        std::vector<Layer*>::iterator begin() { return m_Layers.begin(); }
-        std::vector<Layer*>::iterator end() { return m_Layers.end(); }
+		std::vector<Layer*>::iterator begin() { return m_layers.begin(); }
+		std::vector<Layer*>::iterator end() { return m_layers.end(); }
 
-    private:
-        std::vector<Layer*> m_Layers;
-    };
+	private:
+		std::vector<Layer*> m_layers;
+	};
 }

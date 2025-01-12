@@ -11,10 +11,10 @@ namespace Moxel
 	public:
 		SceneLayer();
 
-		void Detach() override;
+		void detach() override;
 
-		void OnEveryUpdate() override;
-		void OnGuiUpdate() override;
+		void on_every_update() override;
+		void on_gui_update() override;
 
 	private:
 		RenderCamera m_camera;

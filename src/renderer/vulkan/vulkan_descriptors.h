@@ -17,28 +17,28 @@ namespace Moxel
 		public:
 			Builder() = default;
 
-			Builder& AddPoolSize(VkDescriptorType descriptorType, uint32_t count);
-			Builder& SetCreateFlags(VkDescriptorPoolCreateFlags flags);
-			Builder& SetMaxSets(uint32_t count);
+			Builder& add_pool_size(VkDescriptorType descriptorType, uint32_t count);
+			Builder& set_create_flags(VkDescriptorPoolCreateFlags flags);
+			Builder& set_max_sets(uint32_t count);
 
-			std::unique_ptr<VulkanDescriptorPool> Build() const;
+			std::unique_ptr<VulkanDescriptorPool> build() const;
 
 		private:
-			std::vector<VkDescriptorPoolSize> m_PoolSizes;
-			VkDescriptorPoolCreateFlags m_PoolFlags = 0;
+			std::vector<VkDescriptorPoolSize> m_poolSizes;
+			VkDescriptorPoolCreateFlags m_poolFlags = 0;
 
-			uint32_t m_MaxSets = 1000;
+			uint32_t m_maxSets = 1000;
 		};
 
 		VulkanDescriptorPool(uint32_t maxSets, VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes);
 		~VulkanDescriptorPool();
 
-		bool AllocateDescriptor(VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptorSet) const;
-		void FreeDescriptors(const std::vector<VkDescriptorSet>& descriptors) const;
-		void ResetPool() const;
+		bool allocate_descriptor(VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptorSet) const;
+		void free_descriptors(const std::vector<VkDescriptorSet>& descriptors) const;
+		void reset_pool() const;
 
 	private:
-		VkDescriptorPool m_DescriptorPool = nullptr;
+		VkDescriptorPool m_descriptorPool = nullptr;
 
 		friend class DescriptorWriter;
 	};
@@ -51,21 +51,21 @@ namespace Moxel
 		public:
 			Builder() = default;
 
-			Builder& AddBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count = 1);
-			std::unique_ptr<VulkanDescriptorSetLayout> Build() const;
+			Builder& add_binding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count = 1);
+			std::unique_ptr<VulkanDescriptorSetLayout> build() const;
 
 		private:
-			std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_Bindings;
+			std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_bindings;
 		};
 
 		VulkanDescriptorSetLayout(const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& bindings);
 		~VulkanDescriptorSetLayout();
 
-		VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
+		VkDescriptorSetLayout get_descriptor_set_layout() const { return m_descriptorSetLayout; }
 
 	private:
-		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
-		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_Bindings;
+		VkDescriptorSetLayout m_descriptorSetLayout = nullptr;
+		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_bindings;
 
 		friend class DescriptorWriter;
 	};
@@ -74,18 +74,18 @@ namespace Moxel
 	{
 	public:
 		DescriptorWriter(VulkanDescriptorSetLayout& layout, VulkanDescriptorPool& pool)
-			: m_SetLayout(layout), m_Pool(pool) { }
+			: m_setLayout(layout), m_pool(pool) { }
 
-		DescriptorWriter& WriteBuffer(uint32_t binding, const VkDescriptorBufferInfo& bufferInfo);
-		DescriptorWriter& WriteImage(uint32_t binding, const VkDescriptorImageInfo& imageInfo);
+		DescriptorWriter& write_buffer(uint32_t binding, const VkDescriptorBufferInfo& bufferInfo);
+		DescriptorWriter& write_image(uint32_t binding, const VkDescriptorImageInfo& imageInfo);
 
-		bool Build(VkDescriptorSet& set);
-		void Overwrite(const VkDescriptorSet& set);
+		bool build(VkDescriptorSet& set);
+		void overwrite(const VkDescriptorSet& set);
 
 	private:
-		VulkanDescriptorSetLayout& m_SetLayout;
-		VulkanDescriptorPool& m_Pool;
+		VulkanDescriptorSetLayout& m_setLayout;
+		VulkanDescriptorPool& m_pool;
 
-		std::vector<VkWriteDescriptorSet> m_DescriptorSets;
+		std::vector<VkWriteDescriptorSet> m_descriptorSets;
 	};
 }

@@ -22,7 +22,7 @@ namespace Moxel
 		VkBool32 BlendEnable = VK_FALSE;
 		VkBool32 DepthTest = VK_FALSE;
 
-		void Clear() 
+		void clear()
 		{ 
 			Fragment = nullptr;
 			Vertex = nullptr;
@@ -36,16 +36,16 @@ namespace Moxel
 		VulkanGraphicsPipeline() = default;
 		VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout);
 
-		void Destroy();
+		void destroy();
 
-		VkPipeline GetPipeline() const { return m_Pipeline; }
-		VkPipelineLayout GetPipelineLayout() const { return m_Layout; }
+		VkPipeline get_pipeline() const { return m_pipeline; }
+		VkPipelineLayout get_pipeline_layout() const { return m_layout; }
 
 	private:
-		VulkanGraphicsPipelineSpecs m_Specs;
+		VulkanGraphicsPipelineSpecs m_specs;
 
-		VkPipelineLayout m_Layout = nullptr;
-		VkPipeline m_Pipeline = nullptr;
+		VkPipelineLayout m_layout = nullptr;
+		VkPipeline m_pipeline = nullptr;
 	};
 
 	struct VulkanComputePipelineSpecs
@@ -55,7 +55,7 @@ namespace Moxel
 
 		VkPushConstantRange PushConstants;
 
-		void Clear()
+		void clear()
 		{
 			Compute = nullptr;
 			Framebuffer = nullptr;
@@ -68,15 +68,15 @@ namespace Moxel
 		VulkanComputePipeline() = default;
 		VulkanComputePipeline(const VulkanComputePipelineSpecs& specs);
 
-		void Destroy();
+		void destroy();
 
-		VkPipelineLayout GetLayout() const { return m_Layout; }
-		VkPipeline GetPipeline() const { return m_Pipeline; }
+		VkPipelineLayout get_layout() const { return m_layout; }
+		VkPipeline get_pipeline() const { return m_pipeline; }
 
 	private:
-		VulkanComputePipelineSpecs m_Specs;
+		VulkanComputePipelineSpecs m_specs;
 
-		VkPipelineLayout m_Layout = nullptr;
-		VkPipeline m_Pipeline = nullptr;
+		VkPipelineLayout m_layout = nullptr;
+		VkPipeline m_pipeline = nullptr;
 	};
 }

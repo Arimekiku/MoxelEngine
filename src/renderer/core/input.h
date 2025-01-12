@@ -31,19 +31,19 @@ namespace Moxel
 				ESCAPE = SDLK_ESCAPE,
 			};
 
-			static void SetKeyValue(const uint16_t code, const bool value) { m_KeyMap[code] = value; }
-			static void CopyNewLayout() { m_OldKeyMap = m_KeyMap; }
+			static void set_key_value(const uint16_t code, const bool value) { m_keyMap[code] = value; }
+			static void copy_new_layout() { m_oldKeyMap = m_keyMap; }
 
-			static bool JustPressed(KeyCode code);
-			static bool JustReleased(KeyCode code);
-			static bool Pressed(KeyCode code);
-			static bool Released(KeyCode code);
+			static bool just_pressed(KeyCode code);
+			static bool just_released(KeyCode code);
+			static bool pressed(KeyCode code);
+			static bool released(KeyCode code);
 
-			static int GetAxisValue(KeyCode positiveKey, KeyCode negativeKey);
+			static int get_axis_value(KeyCode positiveKey, KeyCode negativeKey);
 
 		private:
-			static std::unordered_map<uint16_t, bool> m_KeyMap;
-			static std::unordered_map<uint16_t, bool> m_OldKeyMap;
+			static std::unordered_map<uint16_t, bool> m_keyMap;
+			static std::unordered_map<uint16_t, bool> m_oldKeyMap;
 		};
 
 		class Mouse
@@ -55,24 +55,24 @@ namespace Moxel
 				HIDDEN = false,
 			};
 
-			static bool ButtonPressed(int code);
-			static bool ButtonReleased(int code);
+			static bool button_pressed(int code);
+			static bool button_released(int code);
 
-			static void SetMouseRelative(const int x, const int y) { m_NormalizedCursor.x = x; m_NormalizedCursor.y = y; }
-			static void SetCursorMode(CursorMode mode);
+			static void set_mouse_relative(const int x, const int y) { m_normalizedCursor.x = x; m_normalizedCursor.y = y; }
+			static void set_cursor_mode(CursorMode mode);
 
-			static glm::vec2 GetCursorPosition();
-			static glm::vec2 GetNormalizedCursor();
+			static glm::vec2 se_get_cursor_position();
+			static glm::vec2 get_normalized_cursor();
 
-			static void SetCursorPosition(int x, int y);
+			static void set_cursor_position(int x, int y);
 
-			static float GetMouseX();
-			static float GetMouseY();
+			static float get_mouse_x();
+			static float get_mouse_y();
 
-			static void SetCursorInCenterOfWindow();
+			static void set_cursor_in_center_of_window();
 
 		private:
-			static glm::vec2 m_NormalizedCursor;
+			static glm::vec2 m_normalizedCursor;
 		};
 	};
 }

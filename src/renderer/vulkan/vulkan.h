@@ -9,7 +9,7 @@ namespace Moxel
 	class VulkanUtils 
 	{
 	public: 
-		static void VulkanCheck(const VkResult result)
+		static void vulkan_check(const VkResult result)
 		{
 			if (result != VK_SUCCESS)
 			{
@@ -21,4 +21,4 @@ namespace Moxel
 	};
 }
 
-#define VULKAN_CHECK(x)	::Moxel::VulkanUtils::VulkanCheck(x);
+#define VULKAN_CHECK(x)	::Moxel::VulkanUtils::vulkan_check(x);

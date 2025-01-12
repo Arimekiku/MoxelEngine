@@ -8,27 +8,27 @@ namespace Moxel
 
 	VulkanBufferUniform::VulkanBufferUniform(const uint32_t bufferSize)
 	{
-		m_Size = bufferSize;
+		m_size = bufferSize;
 
 		auto bufferInfo = VkBufferCreateInfo();
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-		bufferInfo.size = m_Size;
+		bufferInfo.size = m_size;
 
-		m_Buffer = VulkanAllocator::AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU);
+		m_buffer = VulkanAllocator::allocate_buffer(bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-		m_DescriptorInfo.buffer = m_Buffer.Buffer;
-		m_DescriptorInfo.offset = 0;
-		m_DescriptorInfo.range = m_Size;
+		m_descriptorInfo.buffer = m_buffer.Buffer;
+		m_descriptorInfo.offset = 0;
+		m_descriptorInfo.range = m_size;
 	}
 
 	VulkanBufferUniform::~VulkanBufferUniform()
 	{
-		VulkanAllocator::DestroyBuffer(m_Buffer);
+		VulkanAllocator::destroy_buffer(m_buffer);
 	}
 
-	void VulkanBufferUniform::WriteData(const void* data, const uint32_t size) const
+	void VulkanBufferUniform::write_data(const void* data, const uint32_t size) const
 	{
-		memcpy(m_Buffer.AllocationInfo.pMappedData, data, size);
+		memcpy(m_buffer.AllocationInfo.pMappedData, data, size);
 	}
 }

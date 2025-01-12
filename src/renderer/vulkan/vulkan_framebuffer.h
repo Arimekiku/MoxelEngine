@@ -1,4 +1,5 @@
 #pragma once
+
 #include "vulkan_image.h"
 #include "engine/render_mesh.h"
 
@@ -10,19 +11,19 @@ namespace Moxel
 		VulkanFramebuffer();
 		~VulkanFramebuffer();
 
-		void Bind() const;
+		void bind() const;
 
-		const std::shared_ptr<VulkanImage>& GetRenderImage() const { return m_ColorImage; }
-		const std::shared_ptr<VulkanImage>& GetDepthImage() const { return m_DepthImage; }
+		const std::shared_ptr<VulkanImage>& get_render_image() const { return m_colorImage; }
+		const std::shared_ptr<VulkanImage>& get_depth_image() const { return m_depthImage; }
 
-		const VkRenderingAttachmentInfo& GetColorAttachment() const { return m_ColorAttachment; }
-		const VkRenderingAttachmentInfo& GetDepthAttachment() const { return m_DepthAttachment; }
+		const VkRenderingAttachmentInfo& get_color_attachment() const { return m_colorAttachment; }
+		const VkRenderingAttachmentInfo& get_depth_attachment() const { return m_depthAttachment; }
 
 	private:
-		std::shared_ptr<VulkanImage> m_ColorImage;
-		VkRenderingAttachmentInfo m_ColorAttachment;
+		std::shared_ptr<VulkanImage> m_colorImage;
+		VkRenderingAttachmentInfo m_colorAttachment;
 
-		std::shared_ptr<VulkanImage> m_DepthImage;
-		VkRenderingAttachmentInfo m_DepthAttachment;
+		std::shared_ptr<VulkanImage> m_depthImage;
+		VkRenderingAttachmentInfo m_depthAttachment;
 	};
 }

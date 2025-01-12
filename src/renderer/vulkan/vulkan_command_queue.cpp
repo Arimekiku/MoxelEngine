@@ -5,27 +5,27 @@
 
 namespace Moxel
 {
-	void VulkanCommandBuffer::Initialize(const int bufferCount)
+	void VulkanCommandBuffer::initialize(const int bufferCount)
 	{
-		const auto& toolset = Application::Get().GetContext();
+		const auto& toolset = Application::get().get_context();
 
-		m_DeviceInstance = toolset.GetLogicalDevice();
-		m_GraphicsQueue = toolset.GetRenderQueue();
-		m_QueueFamily = toolset.GetQueueFamilyIndex();
+		m_deviceInstance = toolset.get_logical_device();
+		m_graphicsQueue = toolset.get_render_queue();
+		m_queueFamily = toolset.get_queue_family_index();
 
 		auto commandPoolInfo = VkCommandPoolCreateInfo();
 		commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		commandPoolInfo.pNext = nullptr;
 		commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		commandPoolInfo.queueFamilyIndex = m_QueueFamily;
+		commandPoolInfo.queueFamilyIndex = m_queueFamily;
 
 		// allocate buffers
-		m_Buffers.resize(bufferCount);
-		for (auto& frame : m_Buffers)
+		m_buffers.resize(bufferCount);
+		for (auto& frame : m_buffers)
 		{
 			frame = CommandBufferData();
 
-			auto result = vkCreateCommandPool(m_DeviceInstance, &commandPoolInfo, nullptr, &frame.CommandPool);
+			auto result = vkCreateCommandPool(m_deviceInstance, &commandPoolInfo, nullptr, &frame.CommandPool);
 			VULKAN_CHECK(result);
 
 			auto cmdAllocInfo = VkCommandBufferAllocateInfo();
@@ -35,7 +35,7 @@ namespace Moxel
 			cmdAllocInfo.commandBufferCount = 1;
 			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-			result = vkAllocateCommandBuffers(m_DeviceInstance, &cmdAllocInfo, &frame.CommandBuffer);
+			result = vkAllocateCommandBuffers(m_deviceInstance, &cmdAllocInfo, &frame.CommandBuffer);
 			VULKAN_CHECK(result);
 		}
 
@@ -49,56 +49,56 @@ namespace Moxel
 		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		semaphoreCreateInfo.pNext = nullptr;
 
-		for (auto& frame : m_Buffers)
+		for (auto& frame : m_buffers)
 		{
-			auto result = vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &frame.RenderFence);
+			auto result = vkCreateFence(m_deviceInstance, &fenceCreateInfo, nullptr, &frame.RenderFence);
 			VULKAN_CHECK(result);
 
-			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &frame.SwapchainSemaphore);
+			result = vkCreateSemaphore(m_deviceInstance, &semaphoreCreateInfo, nullptr, &frame.SwapchainSemaphore);
 			VULKAN_CHECK(result);
 
-			result = vkCreateSemaphore(m_DeviceInstance, &semaphoreCreateInfo, nullptr, &frame.RenderSemaphore);
+			result = vkCreateSemaphore(m_deviceInstance, &semaphoreCreateInfo, nullptr, &frame.RenderSemaphore);
 			VULKAN_CHECK(result);
 		}
 
 		// create immediate buffer
-		auto result = vkCreateCommandPool(m_DeviceInstance, &commandPoolInfo, nullptr, &m_ImmediatePool);
+		auto result = vkCreateCommandPool(m_deviceInstance, &commandPoolInfo, nullptr, &m_immediatePool);
 		VULKAN_CHECK(result);
 
 		auto cmdAllocInfo = VkCommandBufferAllocateInfo();
 		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		cmdAllocInfo.pNext = nullptr;
-		cmdAllocInfo.commandPool = m_ImmediatePool;
+		cmdAllocInfo.commandPool = m_immediatePool;
 		cmdAllocInfo.commandBufferCount = 1;
 		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-		result = vkAllocateCommandBuffers(m_DeviceInstance, &cmdAllocInfo, &m_ImmediateBuffer);
+		result = vkAllocateCommandBuffers(m_deviceInstance, &cmdAllocInfo, &m_immediateBuffer);
 		VULKAN_CHECK(result);
 
-		result = vkCreateFence(m_DeviceInstance, &fenceCreateInfo, nullptr, &m_ImmediateFence);
+		result = vkCreateFence(m_deviceInstance, &fenceCreateInfo, nullptr, &m_immediateFence);
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanCommandBuffer::Destroy() const 
+	void VulkanCommandBuffer::destroy() const 
 	{
-		for (const auto& frame : m_Buffers)
+		for (const auto& frame : m_buffers)
 		{
-			vkDestroyCommandPool(m_DeviceInstance, frame.CommandPool, nullptr);
-			vkDestroyFence(m_DeviceInstance, frame.RenderFence, nullptr);
-			vkDestroySemaphore(m_DeviceInstance, frame.RenderSemaphore, nullptr);
-			vkDestroySemaphore(m_DeviceInstance, frame.SwapchainSemaphore, nullptr);
+			vkDestroyCommandPool(m_deviceInstance, frame.CommandPool, nullptr);
+			vkDestroyFence(m_deviceInstance, frame.RenderFence, nullptr);
+			vkDestroySemaphore(m_deviceInstance, frame.RenderSemaphore, nullptr);
+			vkDestroySemaphore(m_deviceInstance, frame.SwapchainSemaphore, nullptr);
 		}
 
-		vkDestroyCommandPool(m_DeviceInstance, m_ImmediatePool, nullptr);
-		vkDestroyFence(m_DeviceInstance, m_ImmediateFence, nullptr);
+		vkDestroyCommandPool(m_deviceInstance, m_immediatePool, nullptr);
+		vkDestroyFence(m_deviceInstance, m_immediateFence, nullptr);
 	}
 
-	void VulkanCommandBuffer::BeginImmediateQueue() const
+	void VulkanCommandBuffer::begin_immediate_queue() const
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		VULKAN_CHECK(vkResetFences(device, 1, &m_ImmediateFence));
-		VULKAN_CHECK(vkResetCommandBuffer(m_ImmediateBuffer, 0));
+		VULKAN_CHECK(vkResetFences(device, 1, &m_immediateFence));
+		VULKAN_CHECK(vkResetCommandBuffer(m_immediateBuffer, 0));
 
 		auto bufferBeginInfo = VkCommandBufferBeginInfo();
 		bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -106,20 +106,20 @@ namespace Moxel
 		bufferBeginInfo.pInheritanceInfo = nullptr;
 		bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		VULKAN_CHECK(vkBeginCommandBuffer(m_ImmediateBuffer, &bufferBeginInfo));
+		VULKAN_CHECK(vkBeginCommandBuffer(m_immediateBuffer, &bufferBeginInfo));
 	}
 
-	void VulkanCommandBuffer::EndImmediateQueue() const
+	void VulkanCommandBuffer::end_immediate_queue() const
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
-		const auto queue = Application::Get().GetContext().GetRenderQueue();
+		const auto device = Application::get().get_context().get_logical_device();
+		const auto queue = Application::get().get_context().get_render_queue();
 
-		VULKAN_CHECK(vkEndCommandBuffer(m_ImmediateBuffer));
+		VULKAN_CHECK(vkEndCommandBuffer(m_immediateBuffer));
 
 		auto bufferInfo = VkCommandBufferSubmitInfo();
 		bufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
 		bufferInfo.pNext = nullptr;
-		bufferInfo.commandBuffer = m_ImmediateBuffer;
+		bufferInfo.commandBuffer = m_immediateBuffer;
 		bufferInfo.deviceMask = 0;
 
 		auto submit = VkSubmitInfo2();
@@ -132,14 +132,14 @@ namespace Moxel
 		submit.commandBufferInfoCount = 1;
 		submit.pCommandBufferInfos = &bufferInfo;
 
-		VULKAN_CHECK(vkQueueSubmit2(queue, 1, &submit, m_ImmediateFence));
-		VULKAN_CHECK(vkWaitForFences(device, 1, &m_ImmediateFence, true, 9999999999));
+		VULKAN_CHECK(vkQueueSubmit2(queue, 1, &submit, m_immediateFence));
+		VULKAN_CHECK(vkWaitForFences(device, 1, &m_immediateFence, true, 9999999999));
 	}
 
-	void VulkanCommandBuffer::BeginCommandQueue() const
+	void VulkanCommandBuffer::begin_command_queue() const
 	{
 		// prepare current command buffer
-		const auto currentCommandBuffer = m_CurrentBuffer.CommandBuffer;
+		const auto currentCommandBuffer = m_currentBuffer.CommandBuffer;
 		auto result = vkResetCommandBuffer(currentCommandBuffer, 0);
 		VULKAN_CHECK(result);
 
@@ -153,23 +153,23 @@ namespace Moxel
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanCommandBuffer::EndCommandQueue() const
+	void VulkanCommandBuffer::end_command_queue() const
 	{
 		// end command buffer so we can read it
-		auto result = vkEndCommandBuffer(m_CurrentBuffer.CommandBuffer);
+		auto result = vkEndCommandBuffer(m_currentBuffer.CommandBuffer);
 		VULKAN_CHECK(result);
 
 		// prepare the submission to the queue
 		auto bufferInfo = VkCommandBufferSubmitInfo();
 		bufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
 		bufferInfo.pNext = nullptr;
-		bufferInfo.commandBuffer = m_CurrentBuffer.CommandBuffer;
+		bufferInfo.commandBuffer = m_currentBuffer.CommandBuffer;
 		bufferInfo.deviceMask = 0;
 
 		auto waitInfo = VkSemaphoreSubmitInfo();
 		waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		waitInfo.pNext = nullptr;
-		waitInfo.semaphore = m_CurrentBuffer.SwapchainSemaphore;
+		waitInfo.semaphore = m_currentBuffer.SwapchainSemaphore;
 		waitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR;
 		waitInfo.deviceIndex = 0;
 		waitInfo.value = 1;
@@ -177,7 +177,7 @@ namespace Moxel
 		auto signalInfo = VkSemaphoreSubmitInfo();
 		signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		signalInfo.pNext = nullptr;
-		signalInfo.semaphore = m_CurrentBuffer.RenderSemaphore;
+		signalInfo.semaphore = m_currentBuffer.RenderSemaphore;
 		signalInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
 		signalInfo.deviceIndex = 0;
 		signalInfo.value = 1;
@@ -193,15 +193,15 @@ namespace Moxel
 		submit.pCommandBufferInfos = &bufferInfo;
 
 		// submit command buffer to the queue and execute it.
-		result = vkQueueSubmit2(m_GraphicsQueue, 1, &submit, m_CurrentBuffer.RenderFence);
+		result = vkQueueSubmit2(m_graphicsQueue, 1, &submit, m_currentBuffer.RenderFence);
 		VULKAN_CHECK(result);
 	}
 
-	CommandBufferData& VulkanCommandBuffer::GetNextFrame()
+	CommandBufferData& VulkanCommandBuffer::get_next_frame()
 	{
-		const auto frameIndex = VulkanRenderer::GetCurrentFrameIndex();
-		m_CurrentBuffer = m_Buffers[frameIndex];
+		const auto frameIndex = VulkanRenderer::get_current_frame_index();
+		m_currentBuffer = m_buffers[frameIndex];
 
-		return m_CurrentBuffer;
+		return m_currentBuffer;
 	}
 }

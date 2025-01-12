@@ -12,11 +12,11 @@ namespace Moxel
         GuiLayer() = default;
         ~GuiLayer() override = default;
 
-        void Attach() override;
-        void Detach() override;
+        void attach() override;
+        void detach() override;
 
-        static void ProcessEvents(const SDL_Event& event);
-        static void Begin();
-        static void End();
+        static void process_events(const SDL_Event& event);
+        static void begin();
+        static void end();
     };
 }

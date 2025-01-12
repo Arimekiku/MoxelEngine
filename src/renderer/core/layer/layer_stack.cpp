@@ -4,27 +4,27 @@
 
 namespace Moxel
 {
-    void LayerStack::Push(Layer* layer)
-    {
-        m_Layers.emplace_back(layer);
-    }
+	void LayerStack::push(Layer* layer)
+	{
+		m_layers.emplace_back(layer);
+	}
 
-    void LayerStack::Pop(const Layer* layer)
-    {
-        const auto iterator = std::ranges::find(m_Layers, layer);
+	void LayerStack::pop(const Layer* layer)
+	{
+		const auto iterator = std::ranges::find(m_layers, layer);
 
-        if (iterator != m_Layers.end())
-        {
-            m_Layers.erase(iterator);
-        }
-    }
+		if (iterator != m_layers.end())
+		{
+			m_layers.erase(iterator);
+		}
+	}
 
-    void LayerStack::Clear()
-    {
-        for (Layer* layer : m_Layers)
-        {
-            layer->Detach();
-            delete layer;
-        }
-    }
+	void LayerStack::clear()
+	{
+		for (Layer* layer : m_layers)
+		{
+			layer->detach();
+			delete layer;
+		}
+	}
 }

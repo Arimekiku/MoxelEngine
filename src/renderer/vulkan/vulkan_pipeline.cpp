@@ -7,12 +7,12 @@ namespace Moxel
 {
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout)
 	{
-		m_Specs = specs;
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		m_specs = specs;
+		const auto device = Application::get().get_context().get_logical_device();
 		const auto shaderInfo = std::vector
 		{
-			specs.Fragment->GetPipelineCreateInfo(),
-			specs.Vertex->GetPipelineCreateInfo(),
+			specs.Fragment->get_pipeline_create_info(),
+			specs.Vertex->get_pipeline_create_info(),
 		};
 
 		// set layout create info
@@ -29,7 +29,7 @@ namespace Moxel
 			graphicsInfo.pPushConstantRanges = &specs.PushConstants;
 		}
 
-		auto result = vkCreatePipelineLayout(device, &graphicsInfo, nullptr, &m_Layout);
+		auto result = vkCreatePipelineLayout(device, &graphicsInfo, nullptr, &m_layout);
 		VULKAN_CHECK(result);
 
 		// set pipeline rendering info
@@ -37,7 +37,7 @@ namespace Moxel
 		renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingInfo.pNext = nullptr;
 		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachmentFormats = specs.Framebuffer->GetImageFormat();
+		renderingInfo.pColorAttachmentFormats = &specs.Framebuffer->ImageFormat;
 		renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 		// set vertex input info
@@ -141,7 +141,7 @@ namespace Moxel
 		pipelineInfo.pMultisampleState = &multisampleInfo;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDepthStencilState = &depthStencilInfo;
-		pipelineInfo.layout = m_Layout;
+		pipelineInfo.layout = m_layout;
 
 		constexpr VkDynamicState state[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
@@ -152,28 +152,28 @@ namespace Moxel
 
 		pipelineInfo.pDynamicState = &dynamicInfo;
 
-		result = vkCreateGraphicsPipelines(device, nullptr, 1, &pipelineInfo, nullptr, &m_Pipeline);
+		result = vkCreateGraphicsPipelines(device, nullptr, 1, &pipelineInfo, nullptr, &m_pipeline);
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanGraphicsPipeline::Destroy()
+	void VulkanGraphicsPipeline::destroy()
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		m_Specs.Clear();
+		m_specs.clear();
 
-		vkDestroyPipelineLayout(device, m_Layout, nullptr);
-		vkDestroyPipeline(device, m_Pipeline, nullptr);
+		vkDestroyPipelineLayout(device, m_layout, nullptr);
+		vkDestroyPipeline(device, m_pipeline, nullptr);
 	}
 
 	VulkanComputePipeline::VulkanComputePipeline(const VulkanComputePipelineSpecs& specs)
 	{
-		m_Specs = specs;
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		m_specs = specs;
+		const auto device = Application::get().get_context().get_logical_device();
 
 		auto imageInfo = VkDescriptorImageInfo();
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imageInfo.imageView = specs.Framebuffer->GetImageView();
+		imageInfo.imageView = specs.Framebuffer->ImageView;
 
 		auto computeLayout = VkPipelineLayoutCreateInfo();
 		computeLayout.pNext = nullptr;
@@ -189,26 +189,26 @@ namespace Moxel
 			computeLayout.pushConstantRangeCount = 1;
 		}
 
-		auto result = vkCreatePipelineLayout(device, &computeLayout, nullptr, &m_Layout);
+		auto result = vkCreatePipelineLayout(device, &computeLayout, nullptr, &m_layout);
 		VULKAN_CHECK(result);
 
 		auto computePipelineCreateInfo = VkComputePipelineCreateInfo();
 		computePipelineCreateInfo.pNext = nullptr;
 		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-		computePipelineCreateInfo.layout = m_Layout;
-		computePipelineCreateInfo.stage = specs.Compute->GetPipelineCreateInfo();
+		computePipelineCreateInfo.layout = m_layout;
+		computePipelineCreateInfo.stage = specs.Compute->get_pipeline_create_info();
 
-		result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_Pipeline);
+		result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_pipeline);
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanComputePipeline::Destroy()
+	void VulkanComputePipeline::destroy()
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		m_Specs.Clear();
+		m_specs.clear();
 
-		vkDestroyPipelineLayout(device, m_Layout, nullptr);
-		vkDestroyPipeline(device, m_Pipeline, nullptr);
+		vkDestroyPipelineLayout(device, m_layout, nullptr);
+		vkDestroyPipeline(device, m_pipeline, nullptr);
 	}
 }

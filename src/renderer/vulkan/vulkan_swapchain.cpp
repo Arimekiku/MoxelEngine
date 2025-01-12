@@ -5,23 +5,23 @@
 
 namespace Moxel
 {
-	void VulkanSwapchain::Initialize(const VkExtent2D& windowSize)
+	void VulkanSwapchain::initialize(const VkExtent2D& windowSize)
 	{
 		// build framebuffer
-		m_Framebuffer = std::make_shared<VulkanFramebuffer>();
+		m_framebuffer = std::make_shared<VulkanFramebuffer>();
 
 		// build swapchain
-		const auto& toolset = Application::Get().GetContext();
-		m_DeviceInstance = toolset.GetLogicalDevice();
+		const auto& toolset = Application::get().get_context();
+		m_deviceInstance = toolset.get_logical_device();
 
-		const auto windowSurface = toolset.GetWindowSurface();
-		const auto physicalDevice = toolset.GetPhysicalDevice();
-		auto swapchainBuilder = vkb::SwapchainBuilder(physicalDevice, m_DeviceInstance, windowSurface);
+		const auto windowSurface = toolset.get_window_surface();
+		const auto physicalDevice = toolset.get_physical_device();
+		auto swapchainBuilder = vkb::SwapchainBuilder(physicalDevice, m_deviceInstance, windowSurface);
 
 		auto swapchainFormat = VkSurfaceFormatKHR();
 		swapchainFormat.format = VK_FORMAT_B8G8R8A8_SRGB;
 		swapchainFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-		m_SwapchainImageFormat = swapchainFormat.format;
+		m_swapchainImageFormat = swapchainFormat.format;
 
 		vkb::Swapchain vkbSwapchain = swapchainBuilder
 			.set_desired_format(swapchainFormat)
@@ -31,72 +31,72 @@ namespace Moxel
 			.build()
 			.value();
 
-		m_Images = vkbSwapchain.get_images().value();
-		m_ImageViews = vkbSwapchain.get_image_views().value();
-		m_SwapchainInstance = vkbSwapchain.swapchain;
-		m_SwapchainExtent = vkbSwapchain.extent;
+		m_images = vkbSwapchain.get_images().value();
+		m_imageViews = vkbSwapchain.get_image_views().value();
+		m_swapchainInstance = vkbSwapchain.swapchain;
+		m_swapchainExtent = vkbSwapchain.extent;
 	}
 
-	void VulkanSwapchain::Resize()
+	void VulkanSwapchain::resize()
 	{
-		const auto queue = Application::Get().GetContext().GetRenderQueue();
-		auto& window = Application::Get().GetWindow();
+		const auto queue = Application::get().get_context().get_render_queue();
+		auto& window = Application::get().get_window();
 
 		vkQueueWaitIdle(queue);
-		window.UpdateWindowSize();
+		window.update_window_size();
 
-		Destroy();
+		destroy();
 
-		const auto windowSize = window.GetWindowSize();
-		Initialize(windowSize);
+		const auto windowSize = window.get_window_size();
+		initialize(windowSize);
 	}
 
-	void VulkanSwapchain::Destroy() 
+	void VulkanSwapchain::destroy() 
 	{
-		m_Framebuffer = nullptr;
+		m_framebuffer = nullptr;
 
-		for (const auto& view : m_ImageViews)
+		for (const auto& view : m_imageViews)
 		{
-			vkDestroyImageView(m_DeviceInstance, view, nullptr);
+			vkDestroyImageView(m_deviceInstance, view, nullptr);
 		}
 
-		vkDestroySwapchainKHR(m_DeviceInstance, m_SwapchainInstance, nullptr);
+		vkDestroySwapchainKHR(m_deviceInstance, m_swapchainInstance, nullptr);
 	}
 
-	void VulkanSwapchain::UpdateFrame(const CommandBufferData& reservedBuffer)
+	void VulkanSwapchain::update_frame(const CommandBufferData& reservedBuffer)
 	{
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		const auto result = vkAcquireNextImageKHR(device, m_SwapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_CurrentFrameIndex);
+		const auto result = vkAcquireNextImageKHR(device, m_swapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_currentFrameIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			Resize();
+			resize();
 		}
 
-		m_CurrentFrame.ImageData = m_Images[m_CurrentFrameIndex];
-		m_CurrentFrame.ImageViewData = m_ImageViews[m_CurrentFrameIndex];
+		m_currentFrame.ImageData = m_images[m_currentFrameIndex];
+		m_currentFrame.ImageViewData = m_imageViews[m_currentFrameIndex];
 	}
 
-	void VulkanSwapchain::ShowSwapchain(const CommandBufferData& reservedBuffer)
+	void VulkanSwapchain::show_swapchain(const CommandBufferData& reservedBuffer)
 	{
-		const auto queue = Application::Get().GetContext().GetRenderQueue();
+		const auto queue = Application::get().get_context().get_render_queue();
 
 		// prepare present
 		auto presentInfo = VkPresentInfoKHR();
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.pNext = nullptr;
-		presentInfo.pSwapchains = &m_SwapchainInstance;
+		presentInfo.pSwapchains = &m_swapchainInstance;
 		presentInfo.swapchainCount = 1;
 
 		presentInfo.pWaitSemaphores = &reservedBuffer.RenderSemaphore;
 		presentInfo.waitSemaphoreCount = 1;
 
-		presentInfo.pImageIndices = &m_CurrentFrameIndex;
+		presentInfo.pImageIndices = &m_currentFrameIndex;
 
 		const auto result = vkQueuePresentKHR(queue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			Resize();
+			resize();
 		}
 	}
 }

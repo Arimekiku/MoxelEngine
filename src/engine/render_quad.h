@@ -18,13 +18,13 @@ namespace Moxel
 	public:
 		RenderQuad(Direction direction, glm::vec3 position);
 
-		void AddIndicesOffset(int value);
+		void add_indices_offset(int value);
 
-		const std::vector<Vertex>& GetVertices() const { return m_Vertices; }
-		const std::vector<uint32_t>& GetIndices() const { return m_Indices; }
+		const std::vector<Vertex>& get_vertices() const { return m_vertices; }
+		const std::vector<uint32_t>& get_indices() const { return m_indices; }
 
 	private:
-		std::vector<Vertex> m_Vertices;
-		std::vector<uint32_t> m_Indices;
+		std::vector<Vertex> m_vertices;
+		std::vector<uint32_t> m_indices;
 	};
 }

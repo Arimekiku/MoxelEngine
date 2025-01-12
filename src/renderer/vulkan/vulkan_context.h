@@ -10,26 +10,26 @@ namespace Moxel
 	public:
 		VulkanContext() = default;
 
-		void Initialize(SDL_Window* window);
-		void Destroy() const;
+		void initialize(SDL_Window* window);
+		void destroy() const;
 
-		VkInstance GetInstance() const { return m_Instance; }
-		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
-		VkDevice GetLogicalDevice() const { return m_LogicalDevice; }
-		VkSurfaceKHR GetWindowSurface() const { return m_WindowSurface; }
+		VkInstance get_instance() const { return m_instance; }
+		VkPhysicalDevice get_physical_device() const { return m_physicalDevice; }
+		VkDevice get_logical_device() const { return m_logicalDevice; }
+		VkSurfaceKHR get_window_surface() const { return m_windowSurface; }
 
-		VkQueue GetRenderQueue() const { return m_Queue; }
-		uint32_t GetQueueFamilyIndex() const { return m_FamilyIndex; }
+		VkQueue get_render_queue() const { return m_queue; }
+		uint32_t get_queue_family_index() const { return m_familyIndex; }
 
 	private:
-		VkSurfaceKHR m_WindowSurface = nullptr;
+		VkSurfaceKHR m_windowSurface = nullptr;
 
-		VkInstance m_Instance = nullptr;
-		VkDebugUtilsMessengerEXT m_DebugUtils = nullptr;
-		VkPhysicalDevice m_PhysicalDevice = nullptr;
-		VkDevice m_LogicalDevice = nullptr;
+		VkInstance m_instance = nullptr;
+		VkDebugUtilsMessengerEXT m_debugUtils = nullptr;
+		VkPhysicalDevice m_physicalDevice = nullptr;
+		VkDevice m_logicalDevice = nullptr;
 
-		VkQueue m_Queue = nullptr;
-		uint32_t m_FamilyIndex = 0;
+		VkQueue m_queue = nullptr;
+		uint32_t m_familyIndex = 0;
 	};
 }

@@ -7,8 +7,8 @@
 
 namespace Moxel
 {
-	VulkanRenderer::RenderStaticData VulkanRenderer::s_RenderData;
-	std::vector<std::shared_ptr<VulkanVertexArray>> VulkanRenderer::s_DeletionQueue;
+	VulkanRenderer::RenderStaticData VulkanRenderer::s_renderData;
+	std::vector<std::shared_ptr<VulkanVertexArray>> VulkanRenderer::s_deletionQueue;
 
 	struct GlobalRenderData
 	{
@@ -16,36 +16,36 @@ namespace Moxel
 		glm::mat4 cameraMatrix;
 	};
 
-	void VulkanRenderer::Initialize(const VkExtent2D& windowSize)
+	void VulkanRenderer::initialize(const VkExtent2D& windowSize)
 	{
 		// initialize renderer
-		s_RenderData.m_Swapchain.Initialize(windowSize);
-		s_RenderData.m_CommandPool.Initialize(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
+		s_renderData.m_swapchain.initialize(windowSize);
+		s_renderData.m_commandPool.initialize(s_renderData.m_specs.FRAMES_IN_FLIGHT);
 
 		// setup shaders and pipelines
-		s_RenderData.m_Uniforms.resize(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
-		for (auto& uniform : s_RenderData.m_Uniforms)
+		s_renderData.m_uniforms.resize(s_renderData.m_specs.FRAMES_IN_FLIGHT);
+		for (auto& uniform : s_renderData.m_uniforms)
 		{
 			uniform = std::make_shared<VulkanBufferUniform>(sizeof(GlobalRenderData));
 		}
 
-		s_RenderData.m_GlobalDescriptorPool = VulkanDescriptorPool::Builder()
-			.SetMaxSets(s_RenderData.m_Specs.FRAMES_IN_FLIGHT)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, s_RenderData.m_Specs.FRAMES_IN_FLIGHT)
-			.Build();
+		s_renderData.m_globalDescriptorPool = VulkanDescriptorPool::Builder()
+			.set_max_sets(s_renderData.m_specs.FRAMES_IN_FLIGHT)
+			.add_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, s_renderData.m_specs.FRAMES_IN_FLIGHT)
+			.build();
 
 		const auto globalSetLayout = VulkanDescriptorSetLayout::Builder()
-			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.Build();
+			.add_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.build();
 
-		s_RenderData.m_GlobalSets = std::vector<VkDescriptorSet>(s_RenderData.m_Specs.FRAMES_IN_FLIGHT);
-		for (int i = 0; i < s_RenderData.m_GlobalSets.size(); ++i)
+		s_renderData.m_globalSets = std::vector<VkDescriptorSet>(s_renderData.m_specs.FRAMES_IN_FLIGHT);
+		for (int i = 0; i < s_renderData.m_globalSets.size(); ++i)
 		{
-			const auto& bufferInfo = s_RenderData.m_Uniforms[i]->GetDescriptorInfo();
+			const auto& bufferInfo = s_renderData.m_uniforms[i]->get_descriptor_info();
 
-			DescriptorWriter(*globalSetLayout, *s_RenderData.m_GlobalDescriptorPool)
-				.WriteBuffer(0, bufferInfo)
-				.Build(s_RenderData.m_GlobalSets[i]);
+			DescriptorWriter(*globalSetLayout, *s_renderData.m_globalDescriptorPool)
+				.write_buffer(0, bufferInfo)
+				.build(s_renderData.m_globalSets[i]);
 		}
 
 		const auto fragment = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.frag.spv", ShaderType::FRAGMENT);
@@ -55,62 +55,62 @@ namespace Moxel
 		{
 			fragment,
 			triangleVertexShader,
-			s_RenderData.m_Swapchain.GetFramebuffer()->GetRenderImage(),
+			s_renderData.m_swapchain.get_framebuffer()->get_render_image(),
 
 			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE,
 			VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		};
-		s_RenderData.m_MeshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->GetDescriptorSetLayout());
+		s_renderData.m_meshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->get_descriptor_set_layout());
 
 		// release shaders
-		s_RenderData.m_ShaderLibrary.Add(fragment);
-		fragment->Release();
-		s_RenderData.m_ShaderLibrary.Add(triangleVertexShader);
-		triangleVertexShader->Release();
+		s_renderData.m_shaderLibrary.add(fragment);
+		fragment->release();
+		s_renderData.m_shaderLibrary.add(triangleVertexShader);
+		triangleVertexShader->release();
 	}
 
-	void VulkanRenderer::ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function)
+	void VulkanRenderer::immediate_submit(std::function<void(VkCommandBuffer freeBuffer)>&& function)
 	{
-		const auto immediateBuffer = s_RenderData.m_CommandPool.GetImmediateBuffer();
-		s_RenderData.m_CommandPool.BeginImmediateQueue();
+		const auto immediateBuffer = s_renderData.m_commandPool.get_immediate_buffer();
+		s_renderData.m_commandPool.begin_immediate_queue();
 
 		function(immediateBuffer);
 
-		s_RenderData.m_CommandPool.EndImmediateQueue();
+		s_renderData.m_commandPool.end_immediate_queue();
 	}
 
-	void VulkanRenderer::PrepareFrame()
+	void VulkanRenderer::prepare_frame()
 	{
-		s_RenderData.m_BufferData = s_RenderData.m_CommandPool.GetNextFrame();
-		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
-		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
+		s_renderData.m_bufferData = s_renderData.m_commandPool.get_next_frame();
+		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
+		const auto& framebuffer = s_renderData.m_swapchain.get_framebuffer();
 
 		// begin render queue
 		// update fences
-		const auto device = Application::Get().GetContext().GetLogicalDevice();
+		const auto device = Application::get().get_context().get_logical_device();
 
-		auto result = vkWaitForFences(device, 1, &s_RenderData.m_BufferData.RenderFence, true, 1000000000);
+		auto result = vkWaitForFences(device, 1, &s_renderData.m_bufferData.RenderFence, true, 1000000000);
 		VULKAN_CHECK(result);
 
-		for (auto& buffer: s_DeletionQueue)
+		for (const auto& vertexArray: s_deletionQueue)
 		{
-			VulkanAllocator::DestroyBuffer(buffer->GetVertexBuffer());
-			VulkanAllocator::DestroyBuffer(buffer->GetIndexBuffer());
+			VulkanAllocator::destroy_buffer(vertexArray->get_vertex_buffer());
+			VulkanAllocator::destroy_buffer(vertexArray->get_index_buffer());
 		}
-		s_DeletionQueue.clear();
+		s_deletionQueue.clear();
 
-		result = vkResetFences(device, 1, &s_RenderData.m_BufferData.RenderFence);
-		VULKAN_CHECK(result);		
+		result = vkResetFences(device, 1, &s_renderData.m_bufferData.RenderFence);
+		VULKAN_CHECK(result);
 
-		s_RenderData.m_CommandPool.BeginCommandQueue();
+		s_renderData.m_commandPool.begin_command_queue();
 
 		// prepare swapchain
-		s_RenderData.m_Swapchain.UpdateFrame(s_RenderData.m_BufferData);
+		s_renderData.m_swapchain.update_frame(s_renderData.m_bufferData);
 
 		// clear resources
-		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		VulkanImage::transit(framebuffer->get_render_image()->Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		auto vulkanSubresourceRange = VkImageSubresourceRange();
 		vulkanSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -127,29 +127,29 @@ namespace Moxel
 		auto clearValue = VkClearValue();
 		clearValue.color = clearColor;
 
-		vkCmdClearColorImage(buffer, 
-			framebuffer->GetRenderImage()->GetRawImage(),
+		vkCmdClearColorImage(buffer,
+			framebuffer->get_render_image()->Image,
 			VK_IMAGE_LAYOUT_GENERAL,
 			reinterpret_cast<VkClearColorValue*>(&clearValue),
 			1,
 			&vulkanSubresourceRange);
 
 		// bind dynamic resources
-		framebuffer->Bind();
+		framebuffer->bind();
 
 		auto renderInfo = VkRenderingInfo();
 		renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_RenderData.m_Swapchain.GetSwapchainSize());
+		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_renderData.m_swapchain.get_swapchain_size());
 		renderInfo.layerCount = 1;
 		renderInfo.colorAttachmentCount = 1;
-		renderInfo.pColorAttachments = &framebuffer->GetColorAttachment();
-		renderInfo.pDepthAttachment = &framebuffer->GetDepthAttachment();
+		renderInfo.pColorAttachments = &framebuffer->get_color_attachment();
+		renderInfo.pDepthAttachment = &framebuffer->get_depth_attachment();
 
 		// begin framebuffer rendering
 		vkCmdBeginRendering(buffer, &renderInfo);
 
 		// set dynamic viewport and scissor
-		const auto& [width, height] = s_RenderData.m_Swapchain.GetSwapchainSize();
+		const auto& [width, height] = s_renderData.m_swapchain.get_swapchain_size();
 
 		auto viewport = VkViewport();
 		viewport.x = 0;
@@ -168,21 +168,21 @@ namespace Moxel
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 	}
 
-	void VulkanRenderer::EndFrame()
+	void VulkanRenderer::end_frame()
 	{
-		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
-		const auto& swapchainImage = s_RenderData.m_Swapchain.GetCurrentFrame();
-		const auto& framebuffer = s_RenderData.m_Swapchain.GetFramebuffer();
+		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
+		const auto& swapchainImage = s_renderData.m_swapchain.get_current_frame();
+		const auto& framebuffer = s_renderData.m_swapchain.get_framebuffer();
 
 		// end framebuffer rendering
 		vkCmdEndRendering(buffer);
 
 		// copy framebuffer into swapchain
-		VulkanImage::Transit(framebuffer->GetRenderImage()->GetRawImage(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		VulkanImage::transit(framebuffer->get_render_image()->Image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		VulkanImage::transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-		framebuffer->GetRenderImage()->CopyRaw(swapchainImage.ImageData, s_RenderData.m_Swapchain.GetSwapchainSize());
-		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		framebuffer->get_render_image()->copy_raw(swapchainImage.ImageData, s_renderData.m_swapchain.get_swapchain_size());
+		VulkanImage::transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		// setup render infos
 		auto colorAttachment = VkRenderingAttachmentInfo();
@@ -194,7 +194,7 @@ namespace Moxel
 
 		auto renderInfo = VkRenderingInfo();
 		renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_RenderData.m_Swapchain.GetSwapchainSize());
+		renderInfo.renderArea = VkRect2D(VkOffset2D(0, 0), s_renderData.m_swapchain.get_swapchain_size());
 		renderInfo.layerCount = 1;
 		renderInfo.colorAttachmentCount = 1;
 		renderInfo.pColorAttachments = &colorAttachment;
@@ -207,84 +207,84 @@ namespace Moxel
 		vkCmdEndRendering(buffer);
 
 		// set current mode into present so we can draw it on screen
-		VulkanImage::Transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		VulkanImage::transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		// end render queue
-		s_RenderData.m_CommandPool.EndCommandQueue();
+		s_renderData.m_commandPool.end_command_queue();
 
 		// render swapchain image
-		s_RenderData.m_Swapchain.ShowSwapchain(s_RenderData.m_BufferData);
-		s_RenderData.m_CurrentFrameIndex = (s_RenderData.m_CurrentFrameIndex + 1) % s_RenderData.m_Specs.FRAMES_IN_FLIGHT;
+		s_renderData.m_swapchain.show_swapchain(s_renderData.m_bufferData);
+		s_renderData.m_currentFrameIndex = (s_renderData.m_currentFrameIndex + 1) % s_renderData.m_specs.FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::RenderVertexArray(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat)
+	void VulkanRenderer::render_vertex_array(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat)
 	{
-		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
+		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
 
 		// update uniform data
 		auto ubo = GlobalRenderData();
 		ubo.meshTRS = mesh->get_trs_matrix();
 		ubo.cameraMatrix = cameraMat;
-		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
+		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
 
 		//launch a draw command to draw vertices
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
 
 		const auto& vertexArray = mesh->get_vertex_array();
-		VkBuffer vertexBuffer = vertexArray->GetVertexBuffer().Buffer;
+		VkBuffer vertexBuffer = vertexArray->get_vertex_buffer().Buffer;
 		constexpr VkDeviceSize offsets[] = { 0 };
 
 		vkCmdBindVertexBuffers(buffer, 0, 1, &vertexBuffer, offsets);
-		vkCmdBindIndexBuffer(buffer, vertexArray->GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(buffer, vertexArray->get_index_buffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		const auto& set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
-		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipelineLayout(), 0, 1, &set, 0, nullptr);
-		vkCmdDrawIndexed(buffer, vertexArray->GetIndexBufferSize(), 1, 0, 0, 0);
+		const auto& set = s_renderData.m_globalSets[s_renderData.m_currentFrameIndex];
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline_layout(), 0, 1, &set, 0, nullptr);
+		vkCmdDrawIndexed(buffer, vertexArray->get_index_buffer_size(), 1, 0, 0, 0);
 	}
 
-	void VulkanRenderer::RenderChunk(glm::mat4 trs, std::shared_ptr<Chunk>& chunk, const glm::mat4& cameraMat)
+	void VulkanRenderer::render_chunk(const glm::mat4& trs, const std::shared_ptr<Chunk>& chunk, const glm::mat4& cameraMat)
 	{
-		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
+		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
 
 		// update uniform data
 		auto ubo = GlobalRenderData();
 		ubo.meshTRS = trs;
 		ubo.cameraMatrix = cameraMat;
-		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
+		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
 
 		//launch a draw command to draw vertices
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
 
 		const auto& vertexArray = chunk->get_chunk_mesh();
-		VkBuffer vertexBuffer = vertexArray->GetVertexBuffer().Buffer;
+		VkBuffer vertexBuffer = vertexArray->get_vertex_buffer().Buffer;
 		constexpr VkDeviceSize offsets[] = { 0 };
 
 		vkCmdBindVertexBuffers(buffer, 0, 1, &vertexBuffer, offsets);
-		vkCmdBindIndexBuffer(buffer, vertexArray->GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(buffer, vertexArray->get_index_buffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		const auto& set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
-		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipelineLayout(), 0, 1, &set, 0, nullptr);
-		vkCmdDrawIndexed(buffer, vertexArray->GetIndexBufferSize(), 1, 0, 0, 0);
+		const auto& set = s_renderData.m_globalSets[s_renderData.m_currentFrameIndex];
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline_layout(), 0, 1, &set, 0, nullptr);
+		vkCmdDrawIndexed(buffer, vertexArray->get_index_buffer_size(), 1, 0, 0, 0);
 	}
 
-	void VulkanRenderer::Shutdown() 
+	void VulkanRenderer::shutdown()
 	{
-		s_RenderData.m_CommandPool.Destroy();
-		s_RenderData.m_Swapchain.Destroy();
+		s_renderData.m_commandPool.destroy();
+		s_renderData.m_swapchain.destroy();
 
-		s_RenderData.m_MeshedPipeline.Destroy();
-		s_RenderData.m_ShaderLibrary.Destroy();
+		s_renderData.m_meshedPipeline.destroy();
+		s_renderData.m_shaderLibrary.destroy();
 
 		// clear resources
-		s_RenderData.m_GlobalDescriptorPool = nullptr;
-		s_RenderData.m_GlobalSets.clear();
-		s_RenderData.m_Uniforms.clear();
+		s_renderData.m_globalDescriptorPool = nullptr;
+		s_renderData.m_globalSets.clear();
+		s_renderData.m_uniforms.clear();
 
-		for (const auto& buffer: s_DeletionQueue)
+		for (const auto& buffer: s_deletionQueue)
 		{
-			VulkanAllocator::DestroyBuffer(buffer->GetVertexBuffer());
-			VulkanAllocator::DestroyBuffer(buffer->GetIndexBuffer());
+			VulkanAllocator::destroy_buffer(buffer->get_vertex_buffer());
+			VulkanAllocator::destroy_buffer(buffer->get_index_buffer());
 		}
-		s_DeletionQueue.clear();
+		s_deletionQueue.clear();
 	}
 }

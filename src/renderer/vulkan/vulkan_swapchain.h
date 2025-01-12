@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkan_command_queue.h"
-#include "vulkan_image.h"
 #include "vulkan_framebuffer.h"
 
 #include <memory>
@@ -21,32 +20,30 @@ namespace Moxel
 	public:
 		VulkanSwapchain() = default;
 
-		void Initialize(const VkExtent2D& windowSize);
-		void Resize();
-		void Destroy();
+		void initialize(const VkExtent2D& windowSize);
+		void resize();
+		void destroy();
 
-		VkExtent2D& GetSwapchainSize() { return m_SwapchainExtent; }
-		VkFormat& GetImageFormat() { return m_SwapchainImageFormat; }
+		VkExtent2D& get_swapchain_size() { return m_swapchainExtent; }
+		VkFormat& get_image_format() { return m_swapchainImageFormat; }
 
-		void UpdateFrame(const CommandBufferData& reservedBuffer);
-		void ShowSwapchain(const CommandBufferData& reservedBuffer);
-		FrameData& GetCurrentFrame() { return m_CurrentFrame; }
-		const std::shared_ptr<VulkanFramebuffer>& GetFramebuffer() const { return m_Framebuffer; }
+		void update_frame(const CommandBufferData& reservedBuffer);
+		void show_swapchain(const CommandBufferData& reservedBuffer);
+		FrameData& get_current_frame() { return m_currentFrame; }
+		const std::shared_ptr<VulkanFramebuffer>& get_framebuffer() const { return m_framebuffer; }
 
 	private:
-		std::vector<VkImage> m_Images;
-		std::vector<VkImageView> m_ImageViews;
+		std::vector<VkImage> m_images;
+		std::vector<VkImageView> m_imageViews;
 
-		uint32_t m_CurrentFrameIndex = 0;
-		FrameData m_CurrentFrame;
-		std::shared_ptr<VulkanFramebuffer> m_Framebuffer;
+		uint32_t m_currentFrameIndex = 0;
+		FrameData m_currentFrame;
+		std::shared_ptr<VulkanFramebuffer> m_framebuffer;
 
-		VkDevice m_DeviceInstance = nullptr;
-		VkSwapchainKHR m_SwapchainInstance = nullptr;
-		VkFormat m_SwapchainImageFormat = VK_FORMAT_UNDEFINED;
+		VkDevice m_deviceInstance = nullptr;
+		VkSwapchainKHR m_swapchainInstance = nullptr;
+		VkFormat m_swapchainImageFormat = VK_FORMAT_UNDEFINED;
 
-		VkExtent2D m_SwapchainExtent = VkExtent2D(0, 0);
-
-		friend class VulkanRenderer;
+		VkExtent2D m_swapchainExtent = VkExtent2D(0, 0);
 	};
 }

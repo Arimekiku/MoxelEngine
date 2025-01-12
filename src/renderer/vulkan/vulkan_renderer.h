@@ -6,8 +6,6 @@
 #include "engine/render_mesh.h"
 #include "engine/chunk.h"
 
-#include <deque>
-
 namespace Moxel
 {
 	struct VulkanRendererSpecs 
@@ -20,46 +18,46 @@ namespace Moxel
 	public:
 		VulkanRenderer() = delete;
 
-		static void Initialize(const VkExtent2D& windowSize);
-		static void Shutdown();
+		static void initialize(const VkExtent2D& windowSize);
+		static void shutdown();
 
-		static void ImmediateSubmit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
-		static void QueueResourceFree(const std::shared_ptr<VulkanVertexArray>& vertexArray)
+		static void immediate_submit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
+		static void queue_resource_free(const std::shared_ptr<VulkanVertexArray>& vertexArray)
 		{
-			s_DeletionQueue.push_back(vertexArray);
+			s_deletionQueue.push_back(vertexArray);
 		}
 
-		static void PrepareFrame();
-		static void EndFrame();
+		static void prepare_frame();
+		static void end_frame();
 
-		static void RenderVertexArray(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat);
-		static void RenderChunk(glm::mat4 trs, std::shared_ptr<Chunk>& chunk, const glm::mat4& cameraMat);
+		static void render_vertex_array(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat);
+		static void render_chunk(const glm::mat4& trs, const std::shared_ptr<Chunk>& chunk, const glm::mat4& cameraMat);
 
-		static VulkanSwapchain& GetSwapchain() { return s_RenderData.m_Swapchain; }
-		static VulkanCommandBuffer& GetCommandPool() { return s_RenderData.m_CommandPool; }
-		static VulkanRendererSpecs& GetSpecifications() { return s_RenderData.m_Specs; }
+		static VulkanSwapchain& get_swapchain() { return s_renderData.m_swapchain; }
+		static VulkanCommandBuffer& get_command_pool() { return s_renderData.m_commandPool; }
+		static VulkanRendererSpecs& get_specifications() { return s_renderData.m_specs; }
 
-		static int GetCurrentFrameIndex() { return s_RenderData.m_CurrentFrameIndex % 2; }
+		static int get_current_frame_index() { return s_renderData.m_currentFrameIndex % 2; }
 	private:
 		struct RenderStaticData
 		{
-			CommandBufferData m_BufferData;
-			int m_CurrentFrameIndex = 0;
+			CommandBufferData m_bufferData;
+			int m_currentFrameIndex = 0;
 
-			VulkanRendererSpecs m_Specs = VulkanRendererSpecs();
-			VulkanSwapchain m_Swapchain = VulkanSwapchain();
-			VulkanCommandBuffer m_CommandPool = VulkanCommandBuffer();
+			VulkanRendererSpecs m_specs = VulkanRendererSpecs();
+			VulkanSwapchain m_swapchain = VulkanSwapchain();
+			VulkanCommandBuffer m_commandPool = VulkanCommandBuffer();
 
-			VulkanGraphicsPipeline m_MeshedPipeline;
+			VulkanGraphicsPipeline m_meshedPipeline;
 
-			std::unique_ptr<VulkanDescriptorPool> m_GlobalDescriptorPool;
-			std::vector<VkDescriptorSet> m_GlobalSets;
+			std::unique_ptr<VulkanDescriptorPool> m_globalDescriptorPool;
+			std::vector<VkDescriptorSet> m_globalSets;
 
-			VulkanShaderLibrary m_ShaderLibrary = VulkanShaderLibrary();
-			std::vector<std::shared_ptr<VulkanBufferUniform>> m_Uniforms;
+			VulkanShaderLibrary m_shaderLibrary = VulkanShaderLibrary();
+			std::vector<std::shared_ptr<VulkanBufferUniform>> m_uniforms;
 		};
 
-		static std::vector<std::shared_ptr<VulkanVertexArray>> s_DeletionQueue;
-		static RenderStaticData s_RenderData;
+		static std::vector<std::shared_ptr<VulkanVertexArray>> s_deletionQueue;
+		static RenderStaticData s_renderData;
 	};
 }

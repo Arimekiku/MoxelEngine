@@ -79,9 +79,9 @@ namespace Moxel
 					if (y == chunkSize - 1 || get_block(z * chunkSize * chunkSize + (y + 1) * chunkSize + x) == false)
 					{
 						auto quadUp = RenderQuad(Direction::Up, positionOffset);
-						quadUp.AddIndicesOffset(indexOffset + indexQuadOffset);
-						totalVertices.insert(totalVertices.end(), quadUp.GetVertices().begin(), quadUp.GetVertices().end());
-						totalIndices.insert(totalIndices.end(), quadUp.GetIndices().begin(), quadUp.GetIndices().end());
+						quadUp.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadUp.get_vertices().begin(), quadUp.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadUp.get_indices().begin(), quadUp.get_indices().end());
 
 						indexQuadOffset += 4;
 					}
@@ -89,9 +89,9 @@ namespace Moxel
 					if (y == 0 || get_block(z * chunkSize * chunkSize + (y - 1) * chunkSize + x) == false)
 					{
 						auto quadDown = RenderQuad(Direction::Down, positionOffset);
-						quadDown.AddIndicesOffset(indexOffset + indexQuadOffset);
-						totalVertices.insert(totalVertices.end(), quadDown.GetVertices().begin(), quadDown.GetVertices().end());
-						totalIndices.insert(totalIndices.end(), quadDown.GetIndices().begin(), quadDown.GetIndices().end());
+						quadDown.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadDown.get_vertices().begin(), quadDown.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadDown.get_indices().begin(), quadDown.get_indices().end());
 
 						indexQuadOffset += 4;
 					}
@@ -99,9 +99,9 @@ namespace Moxel
 					if (x == chunkSize - 1 || get_block(z * chunkSize * chunkSize + y * chunkSize + x + 1) == false)
 					{
 						auto quadRight = RenderQuad(Direction::Right, positionOffset);
-						quadRight.AddIndicesOffset(indexOffset + indexQuadOffset);
-						totalVertices.insert(totalVertices.end(), quadRight.GetVertices().begin(), quadRight.GetVertices().end());
-						totalIndices.insert(totalIndices.end(), quadRight.GetIndices().begin(), quadRight.GetIndices().end());
+						quadRight.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadRight.get_vertices().begin(), quadRight.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadRight.get_indices().begin(), quadRight.get_indices().end());
 
 						indexQuadOffset += 4;
 					}
@@ -109,9 +109,9 @@ namespace Moxel
 					if (x == 0 || get_block(z * chunkSize * chunkSize + y * chunkSize + x - 1) == false)
 					{
 						auto quadLeft = RenderQuad(Direction::Left, positionOffset);
-						quadLeft.AddIndicesOffset(indexOffset + indexQuadOffset);
-						totalVertices.insert(totalVertices.end(), quadLeft.GetVertices().begin(), quadLeft.GetVertices().end());
-						totalIndices.insert(totalIndices.end(), quadLeft.GetIndices().begin(), quadLeft.GetIndices().end());
+						quadLeft.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadLeft.get_vertices().begin(), quadLeft.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadLeft.get_indices().begin(), quadLeft.get_indices().end());
 
 						indexQuadOffset += 4;
 					}
@@ -119,9 +119,9 @@ namespace Moxel
 					if (z == 0 || get_block((z - 1) * chunkSize * chunkSize + y * chunkSize + x) == false)
 					{
 						auto quadBack = RenderQuad(Direction::Backward, positionOffset);
-						quadBack.AddIndicesOffset(indexOffset + indexQuadOffset);
-						totalVertices.insert(totalVertices.end(), quadBack.GetVertices().begin(), quadBack.GetVertices().end());
-						totalIndices.insert(totalIndices.end(), quadBack.GetIndices().begin(), quadBack.GetIndices().end());
+						quadBack.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadBack.get_vertices().begin(), quadBack.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadBack.get_indices().begin(), quadBack.get_indices().end());
 
 						indexQuadOffset += 4;
 					}
@@ -129,9 +129,9 @@ namespace Moxel
 					if (z == chunkSize - 1 || get_block((z + 1) * chunkSize * chunkSize + y * chunkSize + x) == false)
 					{
 						auto quadForw = RenderQuad(Direction::Forward, positionOffset);
-						quadForw.AddIndicesOffset(indexOffset + indexQuadOffset);
-						totalVertices.insert(totalVertices.end(), quadForw.GetVertices().begin(), quadForw.GetVertices().end());
-						totalIndices.insert(totalIndices.end(), quadForw.GetIndices().begin(), quadForw.GetIndices().end());
+						quadForw.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadForw.get_vertices().begin(), quadForw.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadForw.get_indices().begin(), quadForw.get_indices().end());
 
 						indexQuadOffset += 4;
 					}
