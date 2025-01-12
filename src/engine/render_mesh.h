@@ -12,18 +12,18 @@ namespace Moxel
 		RenderMesh(const std::shared_ptr<VulkanVertexArray>& vertexArray);
 		~RenderMesh();
 
-		void SetPosition(glm::vec3 position);
-		void SetRotation(glm::vec3 rotation);
-		void SetScale(glm::vec3 scale);
+		void set_position(glm::vec3 position);
+		void set_rotation(glm::vec3 rotation);
+		void set_scale(glm::vec3 scale);
 
-		const std::shared_ptr<VulkanVertexArray>& GetVertexArray() const;
-		glm::mat4 GetTRSMatrix() const;
+		const std::shared_ptr<VulkanVertexArray>& get_vertex_array() const;
+		glm::mat4 get_trs_matrix() const;
 
 	private:
-		std::shared_ptr<VulkanVertexArray> m_Mesh;
+		std::shared_ptr<VulkanVertexArray> m_vertexArray;
 
-		glm::vec3 m_Position = glm::vec3(0.0f);
-		glm::vec3 m_Rotation = glm::vec3(0.0f);
-		glm::vec3 m_Scale = glm::vec3(1.0f);
+		glm::vec3 m_position = glm::vec3(0.0f);
+		glm::vec3 m_rotation = glm::vec3(0.0f);
+		glm::vec3 m_scale = glm::vec3(1.0f);
 	};
 }

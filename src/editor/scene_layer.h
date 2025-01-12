@@ -2,8 +2,7 @@
 
 #include "renderer/core/layer/layer.h"
 #include "engine/render_camera.h"
-#include "engine/voxel_chunk.h"
-#include <engine/chunk_builder.h>
+#include "engine/chunk_generator.h"
 
 namespace Moxel
 {

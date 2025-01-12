@@ -1,13 +1,14 @@
 #include "vulkan_renderer.h"
 #include "renderer/application.h"
 #include "vulkan.h"
+#include "vulkan_allocator.h"
 
 #include <backends/imgui_impl_vulkan.h>
 
 namespace Moxel
 {
 	VulkanRenderer::RenderStaticData VulkanRenderer::s_RenderData;
-	std::deque<std::function<void()>> VulkanRenderer::s_ResourceFreeQueue;
+	std::vector<std::shared_ptr<VulkanVertexArray>> VulkanRenderer::s_DeletionQueue;
 
 	struct GlobalRenderData
 	{
@@ -93,14 +94,15 @@ namespace Moxel
 		auto result = vkWaitForFences(device, 1, &s_RenderData.m_BufferData.RenderFence, true, 1000000000);
 		VULKAN_CHECK(result);
 
-		for (auto& it : s_ResourceFreeQueue)
+		for (auto& buffer: s_DeletionQueue)
 		{
-			it();
+			VulkanAllocator::DestroyBuffer(buffer->GetVertexBuffer());
+			VulkanAllocator::DestroyBuffer(buffer->GetIndexBuffer());
 		}
-		s_ResourceFreeQueue.clear();
+		s_DeletionQueue.clear();
 
 		result = vkResetFences(device, 1, &s_RenderData.m_BufferData.RenderFence);
-		VULKAN_CHECK(result);
+		VULKAN_CHECK(result);		
 
 		s_RenderData.m_CommandPool.BeginCommandQueue();
 
@@ -221,14 +223,39 @@ namespace Moxel
 
 		// update uniform data
 		auto ubo = GlobalRenderData();
-		ubo.meshTRS = mesh->GetTRSMatrix();
+		ubo.meshTRS = mesh->get_trs_matrix();
 		ubo.cameraMatrix = cameraMat;
 		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
 
 		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
 
-		const auto& vertexArray = mesh->GetVertexArray();
+		const auto& vertexArray = mesh->get_vertex_array();
+		VkBuffer vertexBuffer = vertexArray->GetVertexBuffer().Buffer;
+		constexpr VkDeviceSize offsets[] = { 0 };
+
+		vkCmdBindVertexBuffers(buffer, 0, 1, &vertexBuffer, offsets);
+		vkCmdBindIndexBuffer(buffer, vertexArray->GetIndexBuffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
+
+		const auto& set = s_RenderData.m_GlobalSets[s_RenderData.m_CurrentFrameIndex];
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipelineLayout(), 0, 1, &set, 0, nullptr);
+		vkCmdDrawIndexed(buffer, vertexArray->GetIndexBufferSize(), 1, 0, 0, 0);
+	}
+
+	void VulkanRenderer::RenderChunk(glm::mat4 trs, std::shared_ptr<Chunk>& chunk, const glm::mat4& cameraMat)
+	{
+		const auto& buffer = s_RenderData.m_BufferData.CommandBuffer;
+
+		// update uniform data
+		auto ubo = GlobalRenderData();
+		ubo.meshTRS = trs;
+		ubo.cameraMatrix = cameraMat;
+		s_RenderData.m_Uniforms[s_RenderData.m_CurrentFrameIndex]->WriteData(&ubo, sizeof(ubo));
+
+		//launch a draw command to draw vertices
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_RenderData.m_MeshedPipeline.GetPipeline());
+
+		const auto& vertexArray = chunk->get_chunk_mesh();
 		VkBuffer vertexBuffer = vertexArray->GetVertexBuffer().Buffer;
 		constexpr VkDeviceSize offsets[] = { 0 };
 
@@ -252,5 +279,12 @@ namespace Moxel
 		s_RenderData.m_GlobalDescriptorPool = nullptr;
 		s_RenderData.m_GlobalSets.clear();
 		s_RenderData.m_Uniforms.clear();
+
+		for (const auto& buffer: s_DeletionQueue)
+		{
+			VulkanAllocator::DestroyBuffer(buffer->GetVertexBuffer());
+			VulkanAllocator::DestroyBuffer(buffer->GetIndexBuffer());
+		}
+		s_DeletionQueue.clear();
 	}
 }

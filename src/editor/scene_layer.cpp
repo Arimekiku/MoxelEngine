@@ -16,18 +16,13 @@ namespace Moxel
 		m_camera.Update();
 
 		const auto cameraPosition = m_camera.GetPosition();
-		m_chunks.Update(cameraPosition);
+		m_chunks.update(cameraPosition);
 
 		// render chunks
-		auto& renderChunks = m_chunks.GetRenderChunks();
-		for (const auto& chunk: renderChunks)
+		auto& renderChunks = m_chunks.get_render_chunks();
+		for (auto& [position, chunk]: renderChunks)
 		{
-			if (chunk->IsSetForDeletion() || chunk->IsEmpty())
-			{
-				continue;
-			}
-
-			VulkanRenderer::RenderVertexArray(chunk->GetVertexArray(), m_camera.GetProjViewMat());
+			VulkanRenderer::RenderChunk(chunk->get_trs_matrix(position), chunk, m_camera.GetProjViewMat());
 		}
 		renderChunks.clear();
 	}
@@ -39,6 +34,6 @@ namespace Moxel
 
 	void SceneLayer::Detach()
 	{ 
-		m_chunks.DestroyWorld();
+		m_chunks.destroy_world();
 	}
 }

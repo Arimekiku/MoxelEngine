@@ -1,59 +1,82 @@
-#include "voxel_chunk.h"
-#include "PerlinNoise.hpp"
+#include "chunk.h"
 #include "render_quad.h"
+
+#include <PerlinNoise.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Moxel
 {
-	static int s_seed = 123456u;
-	static int s_chunkSize = 16;
-
-	VoxelChunk::VoxelChunk(const glm::vec3 position)
+	Chunk::Chunk(const int size)
 	{
-		m_Position = position;
+		m_blocks.resize(size);
 	}
 
-	VoxelChunk::~VoxelChunk()
+	Chunk::~Chunk()
 	{
-		m_VertexArray = nullptr;
+		m_blocks.clear();
+		destroy_mesh();
 	}
 
-	void VoxelChunk::RecreateChunk()
+	glm::mat4 Chunk::get_trs_matrix(const ChunkPosition position)
 	{
-		siv::PerlinNoise::seed_type pseed = s_seed;
-		const auto perlin = siv::PerlinNoise(pseed);
+		const glm::mat4 translation = translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, position.z));
+		const glm::mat4 rotation = toMat4(glm::quat(radians(glm::vec3(0))));
+		const glm::mat4 scaling = scale(glm::mat4(1.0f), glm::vec3(1.0f));
 
-		for (int z = 0; z < s_chunkSize; ++z)
+		return translation * rotation * scaling;
+	}
+
+	void Chunk::generate_mesh(const ChunkPosition position)
+	{
+		const int chunkSize = cbrt(m_blocks.size());
+
+		// generate chunk data from perlin
+		constexpr siv::PerlinNoise::seed_type seed = 123456u;
+		const auto perlin = siv::PerlinNoise(seed);
+
+		for (int z = 0; z < chunkSize; ++z)
 		{
-			for (int y = 0; y < s_chunkSize; ++y)
+			for (int y = 0; y < chunkSize; ++y)
 			{
-				for (int x = 0; x < s_chunkSize; ++x)
+				for (int x = 0; x < chunkSize; ++x)
 				{
-					const auto offset = glm::vec3(m_Position.x * s_chunkSize + x, m_Position.y * s_chunkSize + y, m_Position.z * s_chunkSize + z);
+					const auto offset = glm::vec3(position.x * chunkSize + x, position.y * chunkSize + y, position.z * chunkSize + z);
 					const double noise = perlin.octave3D_01(offset.x * 0.01f, offset.y * 0.01f, offset.z * 0.01f, 4);
 
-					m_Blocks[x][y][z] = noise > 0.5;
+					if (noise > 0.5f)
+					{
+						set_block(z * chunkSize * chunkSize + y * chunkSize + x);
+					}
 				}
 			}
 		}
 
+		// generate mesh data from chunk
 		auto totalVertices = std::vector<Vertex>();
 		auto totalIndices = std::vector<uint32_t>();
 		int indexOffset = 0;
-		for (int z = 0; z < s_chunkSize; ++z)
+
+		const auto chunkPositionAsVec3 = glm::i32vec3(position.x, position.y, position.z);
+		for (int z = 0; z < chunkSize; ++z)
 		{
-			for (int y = 0; y < s_chunkSize; ++y)
+			for (int y = 0; y < chunkSize; ++y)
 			{
-				for (int x = 0; x < s_chunkSize; ++x)
+				for (int x = 0; x < chunkSize; ++x)
 				{
-					if (m_Blocks[x][y][z] == false)
+					if (get_block(z * chunkSize * chunkSize + y * chunkSize + x) == false)
 					{
 						continue;
 					}
 
-					const auto positionOffset = m_Position * (float)s_chunkSize + glm::vec3(x, y, z);
+					const auto positionOffset = chunkPositionAsVec3 * chunkSize + glm::i32vec3(x, y, z);
 					auto indexQuadOffset = 0;
 
-					if (y == s_chunkSize - 1 || m_Blocks[x][y + 1][z] == false)
+					if (y == chunkSize - 1 || get_block(z * chunkSize * chunkSize + (y + 1) * chunkSize + x) == false)
 					{
 						auto quadUp = RenderQuad(Direction::Up, positionOffset);
 						quadUp.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -63,7 +86,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (y == 0 || m_Blocks[x][y - 1][z] == false)
+					if (y == 0 || get_block(z * chunkSize * chunkSize + (y - 1) * chunkSize + x) == false)
 					{
 						auto quadDown = RenderQuad(Direction::Down, positionOffset);
 						quadDown.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -73,7 +96,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (x == s_chunkSize - 1 || m_Blocks[x + 1][y][z] == false)
+					if (x == chunkSize - 1 || get_block(z * chunkSize * chunkSize + y * chunkSize + x + 1) == false)
 					{
 						auto quadRight = RenderQuad(Direction::Right, positionOffset);
 						quadRight.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -83,7 +106,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (x == 0 || m_Blocks[x - 1][y][z] == false)
+					if (x == 0 || get_block(z * chunkSize * chunkSize + y * chunkSize + x - 1) == false)
 					{
 						auto quadLeft = RenderQuad(Direction::Left, positionOffset);
 						quadLeft.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -93,7 +116,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (z == 0 || m_Blocks[x][y][z - 1] == false)
+					if (z == 0 || get_block((z - 1) * chunkSize * chunkSize + y * chunkSize + x) == false)
 					{
 						auto quadBack = RenderQuad(Direction::Backward, positionOffset);
 						quadBack.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -103,7 +126,7 @@ namespace Moxel
 						indexQuadOffset += 4;
 					}
 
-					if (z == s_chunkSize - 1 || m_Blocks[x][y][z + 1] == false)
+					if (z == chunkSize - 1 || get_block((z + 1) * chunkSize * chunkSize + y * chunkSize + x) == false)
 					{
 						auto quadForw = RenderQuad(Direction::Forward, positionOffset);
 						quadForw.AddIndicesOffset(indexOffset + indexQuadOffset);
@@ -120,11 +143,19 @@ namespace Moxel
 
 		if (totalIndices.empty())
 		{
-			m_VertexArray = nullptr;
 			return;
 		}
 
-		const auto vao = std::make_shared<VulkanVertexArray>(totalIndices, totalVertices);
-		m_VertexArray = std::make_shared<RenderMesh>(vao);
+		m_chunkMesh = std::make_shared<VulkanVertexArray>(totalIndices, totalVertices);
+	}
+
+	void Chunk::destroy_mesh()
+	{
+		if (m_chunkMesh == nullptr)
+		{
+			return;
+		}
+
+		m_chunkMesh = nullptr;
 	}
 }
