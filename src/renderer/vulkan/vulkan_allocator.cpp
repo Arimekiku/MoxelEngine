@@ -28,11 +28,9 @@ namespace Moxel
 		allocCreateInfo.usage = usage;
 		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-		//TODO: fix bad allocation situation
-		//VmaAllocation allocation;
-		//m_allocatorAssets.emplace(buffer.get_uuid(), allocation);
-
-		vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &buffer.Buffer, &buffer.Allocation, &buffer.AllocationInfo);
+		VmaAllocation allocation;
+		vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &buffer.Buffer, &allocation, &buffer.AllocationInfo);
+		m_allocatorAssets.emplace(buffer.get_uuid(), allocation);
 
 		return buffer;
 	}
@@ -47,9 +45,6 @@ namespace Moxel
 		auto allocationInfo = VmaAllocationCreateInfo();
 		allocationInfo.usage = usage;
 		allocationInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-		VmaAllocation allocation;
-		m_allocatorAssets.emplace(image.get_uuid(), allocation);
 
 		// allocation
 		image.ImageFormat = specs.Format;
@@ -72,7 +67,9 @@ namespace Moxel
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.usage = specs.ImageUsages;
 
+		VmaAllocation allocation;
 		vmaCreateImage(m_allocator, &imageInfo, &allocationInfo, &image.Image, &allocation, nullptr);
+		m_allocatorAssets.emplace(image.get_uuid(), allocation);
 
 		auto imageViewInfo = VkImageViewCreateInfo();
 		imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -108,6 +105,8 @@ namespace Moxel
 
 	void VulkanAllocator::destroy_buffer(const VulkanBuffer& buffer)
 	{
-		vmaDestroyBuffer(m_allocator, buffer.Buffer, buffer.Allocation);
+		const auto allocation = m_allocatorAssets.at(buffer.get_uuid());
+
+		vmaDestroyBuffer(m_allocator, buffer.Buffer, allocation);
 	}
 }

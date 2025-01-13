@@ -9,7 +9,6 @@ namespace Moxel
 	struct VulkanBuffer final : Asset
 	{
 		VkBuffer Buffer = nullptr;
-		VmaAllocation Allocation = nullptr;
 		VmaAllocationInfo AllocationInfo = VmaAllocationInfo();
 	};
 }

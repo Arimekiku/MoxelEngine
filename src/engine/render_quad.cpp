@@ -3,14 +3,14 @@
 
 namespace Moxel
 {
-	RenderQuad::RenderQuad(const Direction direction, const glm::vec3 position)
+	RenderQuad::RenderQuad(const Side side, const glm::vec3 position)
 	{
 		m_indices = std::vector<uint32_t> { 0, 1, 2, 0, 2, 3 };
 		m_vertices.resize(4);
 
-		switch (direction)
+		switch (side)
 		{
-			case Direction::Down:
+			case Side::Down:
 			{
 				m_vertices[0] = Vertex({ -0.5f, -0.5f, -0.5f }, { 1, 0, 0 });
 				m_vertices[1] = Vertex({ 0.5f, -0.5f, -0.5f }, { 0, 1, 0 });
@@ -19,7 +19,7 @@ namespace Moxel
 
 				break;
 			}
-			case Direction::Up:
+			case Side::Up:
 			{
 				m_vertices[0] = Vertex({ -0.5f, 0.5f, 0.5f }, { 1, 0, 0 });
 				m_vertices[1] = Vertex({ 0.5f, 0.5f, 0.5f }, { 0, 1, 0 });
@@ -28,7 +28,7 @@ namespace Moxel
 
 				break;
 			}
-			case Direction::Left:
+			case Side::Left:
 			{
 				m_vertices[0] = Vertex({ -0.5f, -0.5f, -0.5f }, { 1, 0, 0 });
 				m_vertices[1] = Vertex({ -0.5f, -0.5f, 0.5f }, { 0, 1, 0 });
@@ -37,7 +37,7 @@ namespace Moxel
 
 				break;
 			}
-			case Direction::Right:
+			case Side::Right:
 			{
 				m_vertices[0] = Vertex({ 0.5f, 0.5f, -0.5f }, { 1, 0, 0 });
 				m_vertices[1] = Vertex({ 0.5f, 0.5f, 0.5f }, { 0, 1, 0 });
@@ -46,7 +46,7 @@ namespace Moxel
 
 				break;
 			}
-			case Direction::Forward:
+			case Side::Front:
 			{
 				m_vertices[0] = Vertex({ 0.5f, -0.5f, 0.5f }, { 1, 0, 0 });
 				m_vertices[1] = Vertex({ 0.5f, 0.5f, 0.5f }, { 0, 1, 0 });
@@ -55,7 +55,7 @@ namespace Moxel
 
 				break;
 			}
-			case Direction::Backward:
+			case Side::Back:
 			{
 				m_vertices[0] = Vertex({ -0.5f, -0.5f, -0.5f }, { 1, 0, 0 });
 				m_vertices[1] = Vertex({ -0.5f, 0.5f, -0.5f }, { 0, 1, 0 });

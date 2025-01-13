@@ -3,10 +3,10 @@
 
 namespace Moxel
 {
-	enum class Direction
+	enum class Side
 	{
-		Forward,
-		Backward,
+		Front,
+		Back,
 		Left,
 		Right,
 		Up,
@@ -16,7 +16,7 @@ namespace Moxel
 	class RenderQuad
 	{
 	public:
-		RenderQuad(Direction direction, glm::vec3 position);
+		RenderQuad(Side side, glm::vec3 position);
 
 		void add_indices_offset(int value);
 

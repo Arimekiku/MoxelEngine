@@ -12,7 +12,6 @@ namespace Moxel
 
 	struct GlobalRenderData
 	{
-		glm::mat4 meshTRS;
 		glm::mat4 cameraMatrix;
 	};
 
@@ -51,6 +50,11 @@ namespace Moxel
 		const auto fragment = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.frag.spv", ShaderType::FRAGMENT);
 		const auto triangleVertexShader = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle_meshed.vert.spv", ShaderType::VERTEX);
 
+		auto pushConstant = VkPushConstantRange();
+		pushConstant.offset = 0;
+		pushConstant.size = sizeof(glm::mat4);
+		pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
 		const auto meshedSpecs = VulkanGraphicsPipelineSpecs
 		{
 			fragment,
@@ -61,6 +65,7 @@ namespace Moxel
 			VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE,
 			VK_FRONT_FACE_COUNTER_CLOCKWISE,
+			pushConstant
 		};
 		s_renderData.m_meshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->get_descriptor_set_layout());
 
@@ -223,7 +228,6 @@ namespace Moxel
 
 		// update uniform data
 		auto ubo = GlobalRenderData();
-		ubo.meshTRS = mesh->get_trs_matrix();
 		ubo.cameraMatrix = cameraMat;
 		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
 
@@ -242,18 +246,19 @@ namespace Moxel
 		vkCmdDrawIndexed(buffer, vertexArray->get_index_buffer_size(), 1, 0, 0, 0);
 	}
 
-	void VulkanRenderer::render_chunk(const glm::mat4& trs, const std::shared_ptr<Chunk>& chunk, const glm::mat4& cameraMat)
+	void VulkanRenderer::render_chunk(const glm::mat4& trs, const std::shared_ptr<ChunkMesh>& chunk, const glm::mat4& cameraMat)
 	{
 		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
 
 		// update uniform data
 		auto ubo = GlobalRenderData();
-		ubo.meshTRS = trs;
 		ubo.cameraMatrix = cameraMat;
 		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
 
 		//launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
+
+		vkCmdPushConstants(buffer, s_renderData.m_meshedPipeline.get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &trs);
 
 		const auto& vertexArray = chunk->get_chunk_mesh();
 		VkBuffer vertexBuffer = vertexArray->get_vertex_buffer().Buffer;
