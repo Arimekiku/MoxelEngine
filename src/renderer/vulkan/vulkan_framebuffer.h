@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkan_image.h"
-#include "engine/render_mesh.h"
 
 namespace Moxel
 {

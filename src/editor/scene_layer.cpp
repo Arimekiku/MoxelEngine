@@ -19,12 +19,16 @@ namespace Moxel
 		m_chunks.update(cameraPosition);
 
 		// render chunks
-		auto& renderChunks = m_chunks.get_render_chunks();
-		for (auto& [position, chunk]: renderChunks)
+		auto& renderChunks = m_chunks.get_render_queue();
+		while (renderChunks.empty() == false)
 		{
-			VulkanRenderer::render_chunk(chunk->get_trs_matrix(position), chunk, m_camera.get_proj_view_mat());
+			const auto& position = renderChunks.front();
+			const auto& chunk = m_chunks.get_render_chunk(position);
+
+			VulkanRenderer::render_chunk(position, chunk, m_camera.get_proj_view_mat());
+
+			renderChunks.pop();
 		}
-		renderChunks.clear();
 	}
 
 	void SceneLayer::on_gui_update()

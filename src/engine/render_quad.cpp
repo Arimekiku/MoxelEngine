@@ -3,7 +3,7 @@
 
 namespace Moxel
 {
-	RenderQuad::RenderQuad(const Side side, const glm::vec3 position)
+	RenderQuad::RenderQuad(const Side side, const glm::u8vec3 position)
 	{
 		m_indices = std::vector<uint32_t> { 0, 1, 2, 0, 2, 3 };
 		m_vertices.resize(4);
@@ -12,72 +12,67 @@ namespace Moxel
 		{
 			case Side::Down:
 			{
-				m_vertices[0] = Vertex({ -0.5f, -0.5f, -0.5f }, { 1, 0, 0 });
-				m_vertices[1] = Vertex({ 0.5f, -0.5f, -0.5f }, { 0, 1, 0 });
-				m_vertices[2] = Vertex({ 0.5f, -0.5f, 0.5f }, { 0, 0, 1 });
-				m_vertices[3] = Vertex({ -0.5f, -0.5f, 0.5f }, { 1, 1, 1 });
+				m_vertices[0] = VoxelVertex({0 + position.x, 0 + position.y, 0 + position.z}, {1, 0, 0});
+				m_vertices[1] = VoxelVertex({1 + position.x, 0 + position.y, 0 + position.z}, {0, 1, 0});
+				m_vertices[2] = VoxelVertex({1 + position.x, 0 + position.y, 1 + position.z}, {0, 0, 1});
+				m_vertices[3] = VoxelVertex({0 + position.x, 0 + position.y, 1 + position.z}, {1, 1, 1});
 
 				break;
 			}
 			case Side::Up:
 			{
-				m_vertices[0] = Vertex({ -0.5f, 0.5f, 0.5f }, { 1, 0, 0 });
-				m_vertices[1] = Vertex({ 0.5f, 0.5f, 0.5f }, { 0, 1, 0 });
-				m_vertices[2] = Vertex({ 0.5f, 0.5f, -0.5f }, { 0, 0, 1 });
-				m_vertices[3] = Vertex({ -0.5f, 0.5f, -0.5f }, { 1, 1, 1 });
+				m_vertices[0] = VoxelVertex({0 + position.x, 1 + position.y, 1 + position.z}, {1, 0, 0});
+				m_vertices[1] = VoxelVertex({1 + position.x, 1 + position.y, 1 + position.z}, {0, 1, 0});
+				m_vertices[2] = VoxelVertex({1 + position.x, 1 + position.y, 0 + position.z}, {0, 0, 1});
+				m_vertices[3] = VoxelVertex({0 + position.x, 1 + position.y, 0 + position.z}, {1, 1, 1});
 
 				break;
 			}
 			case Side::Left:
 			{
-				m_vertices[0] = Vertex({ -0.5f, -0.5f, -0.5f }, { 1, 0, 0 });
-				m_vertices[1] = Vertex({ -0.5f, -0.5f, 0.5f }, { 0, 1, 0 });
-				m_vertices[2] = Vertex({ -0.5f, 0.5f, 0.5f }, { 0, 0, 1 });
-				m_vertices[3] = Vertex({ -0.5f, 0.5f, -0.5f }, { 1, 1, 1 });
+				m_vertices[0] = VoxelVertex({0 + position.x, 0 + position.y, 0 + position.z}, {1, 0, 0});
+				m_vertices[1] = VoxelVertex({0 + position.x, 0 + position.y, 1 + position.z}, {0, 1, 0});
+				m_vertices[2] = VoxelVertex({0 + position.x, 1 + position.y, 1 + position.z}, {0, 0, 1});
+				m_vertices[3] = VoxelVertex({0 + position.x, 1 + position.y, 0 + position.z}, {1, 1, 1});
 
 				break;
 			}
-			case Side::Right:
+			case Side::Right: 
 			{
-				m_vertices[0] = Vertex({ 0.5f, 0.5f, -0.5f }, { 1, 0, 0 });
-				m_vertices[1] = Vertex({ 0.5f, 0.5f, 0.5f }, { 0, 1, 0 });
-				m_vertices[2] = Vertex({ 0.5f, -0.5f, 0.5f }, { 0, 0, 1 });
-				m_vertices[3] = Vertex({ 0.5f, -0.5f, -0.5f }, { 1, 1, 1 });
-
-				break;
-			}
-			case Side::Front:
-			{
-				m_vertices[0] = Vertex({ 0.5f, -0.5f, 0.5f }, { 1, 0, 0 });
-				m_vertices[1] = Vertex({ 0.5f, 0.5f, 0.5f }, { 0, 1, 0 });
-				m_vertices[2] = Vertex({ -0.5f, 0.5f, 0.5f }, { 0, 0, 1 });
-				m_vertices[3] = Vertex({ -0.5f, -0.5f, 0.5f }, { 1, 1, 1 });
+				m_vertices[0] = VoxelVertex({1 + position.x, 1 + position.y, 0 + position.z}, {1, 0, 0});
+				m_vertices[1] = VoxelVertex({1 + position.x, 1 + position.y, 1 + position.z}, {0, 1, 0});
+				m_vertices[2] = VoxelVertex({1 + position.x, 0 + position.y, 1 + position.z}, {0, 0, 1});
+				m_vertices[3] = VoxelVertex({1 + position.x, 0 + position.y, 0 + position.z}, {1, 1, 1});
 
 				break;
 			}
 			case Side::Back:
 			{
-				m_vertices[0] = Vertex({ -0.5f, -0.5f, -0.5f }, { 1, 0, 0 });
-				m_vertices[1] = Vertex({ -0.5f, 0.5f, -0.5f }, { 0, 1, 0 });
-				m_vertices[2] = Vertex({ 0.5f, 0.5f, -0.5f }, { 0, 0, 1 });
-				m_vertices[3] = Vertex({ 0.5f, -0.5f, -0.5f }, { 1, 1, 1 });
+				m_vertices[0] = VoxelVertex({0 + position.x, 0 + position.y, 0 + position.z}, {1, 0, 0});
+				m_vertices[1] = VoxelVertex({0 + position.x, 1 + position.y, 0 + position.z}, {0, 1, 0});
+				m_vertices[2] = VoxelVertex({1 + position.x, 1 + position.y, 0 + position.z}, {0, 0, 1});
+				m_vertices[3] = VoxelVertex({1 + position.x, 0 + position.y, 0 + position.z}, {1, 1, 1});
+
+				break;
+			}
+			case Side::Front:
+			{
+				m_vertices[0] = VoxelVertex({1 + position.x, 0 + position.y, 1 + position.z}, {1, 0, 0});
+				m_vertices[1] = VoxelVertex({1 + position.x, 1 + position.y, 1 + position.z}, {0, 1, 0});
+				m_vertices[2] = VoxelVertex({0 + position.x, 1 + position.y, 1 + position.z}, {0, 0, 1});
+				m_vertices[3] = VoxelVertex({0 + position.x, 0 + position.y, 1 + position.z}, {1, 1, 1});
 
 				break;
 			}
 			default: LOG_ASSERT(false, "Invalid direction");
 		}
-
-		for (auto& [vertexPosition, _] : m_vertices)
-		{
-			vertexPosition += position;
-		}
 	}
 
 	void RenderQuad::add_indices_offset(const int value)
 	{
-		for (uint32_t& index : m_indices)
+		for (int i = 0; i < m_indices.size(); i++)
 		{
-			index += value;
+			m_indices[i] += value;
 		}
 	}
 }

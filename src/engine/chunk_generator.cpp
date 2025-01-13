@@ -24,7 +24,6 @@ namespace Moxel
 			VulkanRenderer::queue_resource_free(chunk->get_chunk_mesh());
 		}
 
-		m_renderChunks.clear();
 		m_meshChunks.clear();
 	}
 	
@@ -45,7 +44,7 @@ namespace Moxel
 				break;
 			}
 
-			const auto& position = m_dataGenerationQueue.front().first;
+			const auto& position = m_dataGenerationQueue.front();
 			m_dataChunks[position]->generate_data(position);
 			m_dataGenerationQueue.pop();
 		}
@@ -58,7 +57,7 @@ namespace Moxel
 				break;
 			}
 
-			generate_chunk_mesh(m_meshGenerationQueue.front().first);
+			generate_chunk_mesh(m_meshGenerationQueue.front());
 			m_meshGenerationQueue.pop();
 		}
 	}
@@ -83,7 +82,7 @@ namespace Moxel
 
 					const auto chunk = std::make_shared<Chunk>(totalSize);
 					m_dataChunks.emplace(chunkPosition, chunk);
-					m_dataGenerationQueue.emplace(chunkPosition, chunk);
+					m_dataGenerationQueue.emplace(chunkPosition);
 				}
 			}
 		}
@@ -121,8 +120,26 @@ namespace Moxel
 							continue;
 						}
 
+						const auto right = ChunkPosition(chunkPosition.x + 1, chunkPosition.y, chunkPosition.z);
+						if (m_dataChunks.contains(right) == false || m_dataChunks[right]->is_processed() == false)
+						{
+							continue;
+						}
+
+						const auto up = ChunkPosition(chunkPosition.x, chunkPosition.y + 1, chunkPosition.z);
+						if (m_dataChunks.contains(up) == false || m_dataChunks[up]->is_processed() == false)
+						{
+							continue;
+						}
+
+						const auto front = ChunkPosition(chunkPosition.x, chunkPosition.y, chunkPosition.z + 1);
+						if (m_dataChunks.contains(front) == false || m_dataChunks[front]->is_processed() == false)
+						{
+							continue;
+						}
+
 						m_meshChunks[chunkPosition] = nullptr;
-						m_meshGenerationQueue.emplace(chunkPosition, nullptr);
+						m_meshGenerationQueue.emplace(chunkPosition);
 						continue;
 					}
 
@@ -131,7 +148,7 @@ namespace Moxel
 						continue;
 					}
 
-					m_renderChunks.emplace(chunkPosition, m_meshChunks.at(chunkPosition));
+					m_renderQueue.push(chunkPosition);
 				}
 			}
 		}
@@ -146,10 +163,16 @@ namespace Moxel
 			const auto right = ChunkPosition(position.x + 1, position.y, position.z);
 			const auto up = ChunkPosition(position.x, position.y + 1, position.z);
 			const auto front = ChunkPosition(position.x, position.y, position.z + 1);
+			const auto left = ChunkPosition(position.x - 1, position.y, position.z);
+			const auto down = ChunkPosition(position.x, position.y - 1, position.z);
+			const auto back = ChunkPosition(position.x, position.y, position.z - 1);
 
 			if (m_meshChunks.contains(right) && m_meshChunks[right] != nullptr 
 				&& m_meshChunks.contains(up) && m_meshChunks[up] != nullptr 
-				&& m_meshChunks.contains(front) && m_meshChunks[front] != nullptr)
+				&& m_meshChunks.contains(front) && m_meshChunks[front] != nullptr 
+				&& m_meshChunks.contains(left) && m_meshChunks[left] != nullptr 
+				&& m_meshChunks.contains(down) && m_meshChunks[down] != nullptr 
+				&& m_meshChunks.contains(back) && m_meshChunks[back] != nullptr)
 			{
 				chunksToErase.emplace_back(position);
 			}
@@ -205,7 +228,7 @@ namespace Moxel
 		};
 	}
 
-	bool ChunkBuilder::get_voxel(ChunkPosition position, int x, int y, int z) const
+	bool ChunkBuilder::get_voxel(ChunkPosition position, const int x, const int y, const int z) const
 	{
 		const auto chunkSize = m_specs.ChunkSize;
 		int actualX = x, actualY = y, actualZ = z;
@@ -234,7 +257,7 @@ namespace Moxel
 	void ChunkBuilder::generate_chunk_mesh(ChunkPosition position)
 	{
 		// generate mesh data from chunk
-		auto totalVertices = std::vector<Vertex>();
+		auto totalVertices = std::vector<VoxelVertex>();
 		auto totalIndices = std::vector<uint32_t>();
 		int indexOffset = 0;
 
@@ -245,88 +268,80 @@ namespace Moxel
 			{
 				for (int x = 0; x < chunkSize; ++x)
 				{
+					const auto mainBlock = m_dataChunks.at(position)->get_block(z * chunkSize * chunkSize + y * chunkSize + x);
+					if (mainBlock == false)
+					{
+						continue;
+					}
+
 					const auto positionOffset = glm::i32vec3(x, y, z);
 					int indexQuadOffset = 0;
 
-					const auto mainBlock = m_dataChunks.at(position)->get_block(z * chunkSize * chunkSize + y * chunkSize + x);
 					const auto leftBlock = get_voxel(position, x - 1, y, z);
 					const auto downBlock = get_voxel(position, x, y - 1, z);
 					const auto backBlock = get_voxel(position, x, y, z - 1);
+					const auto rightBlock = get_voxel(position, x + 1, y, z);
+					const auto upBlock = get_voxel(position, x, y + 1, z);
+					const auto frontBlock = get_voxel(position, x, y, z + 1);
 
-					switch (mainBlock)
+					if (downBlock == false)
 					{
-						case true:
-						{
-							// down quad
-							if (downBlock == false)
-							{
-								auto quadDown = RenderQuad(Side::Down, positionOffset);
-								quadDown.add_indices_offset(indexOffset + indexQuadOffset);
-								totalVertices.insert(totalVertices.end(), quadDown.get_vertices().begin(), quadDown.get_vertices().end());
-								totalIndices.insert(totalIndices.end(), quadDown.get_indices().begin(), quadDown.get_indices().end());
+						auto quadDown = RenderQuad(Side::Down, positionOffset);
+						quadDown.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadDown.get_vertices().begin(), quadDown.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadDown.get_indices().begin(), quadDown.get_indices().end());
 
-								indexQuadOffset += 4;
-							}
+						indexQuadOffset += 4;
+					}
 
-							// left quad
-							if (leftBlock == false)
-							{
-								auto quadLeft = RenderQuad(Side::Left, positionOffset);
-								quadLeft.add_indices_offset(indexOffset + indexQuadOffset);
-								totalVertices.insert(totalVertices.end(), quadLeft.get_vertices().begin(), quadLeft.get_vertices().end());
-								totalIndices.insert(totalIndices.end(), quadLeft.get_indices().begin(), quadLeft.get_indices().end());
+					if (upBlock == false)
+					{
+						auto quadUp = RenderQuad(Side::Up, positionOffset);
+						quadUp.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadUp.get_vertices().begin(), quadUp.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadUp.get_indices().begin(), quadUp.get_indices().end());
 
-								indexQuadOffset += 4;
-							}
+						indexQuadOffset += 4;
+					}
 
-							// back quad
-							if (backBlock == false)
-							{
-								auto quadBack = RenderQuad(Side::Back, positionOffset);
-								quadBack.add_indices_offset(indexOffset + indexQuadOffset);
-								totalVertices.insert(totalVertices.end(), quadBack.get_vertices().begin(), quadBack.get_vertices().end());
-								totalIndices.insert(totalIndices.end(), quadBack.get_indices().begin(), quadBack.get_indices().end());
+					if (leftBlock == false)
+					{
+						auto quadLeft = RenderQuad(Side::Left, positionOffset);
+						quadLeft.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadLeft.get_vertices().begin(), quadLeft.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadLeft.get_indices().begin(), quadLeft.get_indices().end());
 
-								indexQuadOffset += 4;
-							}
-							break;
-						}
-						case false:
-						{
-							// up quad
-							if (downBlock == true)
-							{
-								auto quadUp = RenderQuad(Side::Down, positionOffset);
-								quadUp.add_indices_offset(indexOffset + indexQuadOffset);
-								totalVertices.insert(totalVertices.end(), quadUp.get_vertices().begin(), quadUp.get_vertices().end());
-								totalIndices.insert(totalIndices.end(), quadUp.get_indices().begin(), quadUp.get_indices().end());
+						indexQuadOffset += 4;
+					}
 
-								indexQuadOffset += 4;
-							}
+					if (rightBlock == false)
+					{
+						auto quadRight = RenderQuad(Side::Right, positionOffset);
+						quadRight.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadRight.get_vertices().begin(), quadRight.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadRight.get_indices().begin(), quadRight.get_indices().end());
 
-							// right quad
-							if (leftBlock == true)
-							{
-								auto quadRight = RenderQuad(Side::Left, positionOffset);
-								quadRight.add_indices_offset(indexOffset + indexQuadOffset);
-								totalVertices.insert(totalVertices.end(), quadRight.get_vertices().begin(), quadRight.get_vertices().end());
-								totalIndices.insert(totalIndices.end(), quadRight.get_indices().begin(), quadRight.get_indices().end());
+						indexQuadOffset += 4;
+					}
 
-								indexQuadOffset += 4;
-							}
+					if (backBlock == false)
+					{
+						auto quadBack = RenderQuad(Side::Back, positionOffset);
+						quadBack.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadBack.get_vertices().begin(), quadBack.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadBack.get_indices().begin(), quadBack.get_indices().end());
 
-							// front quad
-							if (backBlock == true)
-							{
-								auto quadFront = RenderQuad(Side::Back, positionOffset);
-								quadFront.add_indices_offset(indexOffset + indexQuadOffset);
-								totalVertices.insert(totalVertices.end(), quadFront.get_vertices().begin(), quadFront.get_vertices().end());
-								totalIndices.insert(totalIndices.end(), quadFront.get_indices().begin(), quadFront.get_indices().end());
+						indexQuadOffset += 4;
+					}
 
-								indexQuadOffset += 4;
-							}
-							break;
-						}
+					if (frontBlock == false)
+					{
+						auto quadFront = RenderQuad(Side::Front, positionOffset);
+						quadFront.add_indices_offset(indexOffset + indexQuadOffset);
+						totalVertices.insert(totalVertices.end(), quadFront.get_vertices().begin(), quadFront.get_vertices().end());
+						totalIndices.insert(totalIndices.end(), quadFront.get_indices().begin(), quadFront.get_indices().end());
+
+						indexQuadOffset += 4;
 					}
 
 					indexOffset += indexQuadOffset;

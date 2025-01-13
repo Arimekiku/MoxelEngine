@@ -1,11 +1,24 @@
 #pragma once
-#include "renderer/vulkan/vulkan_buffer_vertex_array.h"
+
+#include <glm/glm.hpp>
 
 namespace Moxel
 {
+	struct VoxelVertex
+	{
+		uint32_t Position;
+		glm::vec3 Color;
+
+		VoxelVertex() = default;
+		VoxelVertex(glm::u8vec3 localCoord, glm::vec3 color) 
+		{
+			Color = color;
+			Position = (uint32_t) localCoord.x | (uint32_t) localCoord.y << 5 | (uint32_t) localCoord.z << 10;
+		}
+	};
+
 	enum class Side
 	{
-		//TODO: currently we only need 3 sides, think about it
 		Front,
 		Back,
 		Left,
@@ -17,15 +30,15 @@ namespace Moxel
 	class RenderQuad
 	{
 	public:
-		RenderQuad(Side side, glm::vec3 position);
+		RenderQuad(Side side, glm::u8vec3 position);
 
 		void add_indices_offset(int value);
 
-		const std::vector<Vertex>& get_vertices() const { return m_vertices; }
+		const std::vector<VoxelVertex>& get_vertices() const { return m_vertices; }
 		const std::vector<uint32_t>& get_indices() const { return m_indices; }
 
 	private:
-		std::vector<Vertex> m_vertices;
+		std::vector<VoxelVertex> m_vertices;
 		std::vector<uint32_t> m_indices;
 	};
 }

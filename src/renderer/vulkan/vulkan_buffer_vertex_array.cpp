@@ -6,7 +6,7 @@
 
 namespace Moxel
 {
-	VulkanVertexArray::VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<Vertex>& vertices)
+	VulkanVertexArray::VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<VoxelVertex>& vertices)
 	{
 		auto& allocator = Application::get().get_allocator();
 

@@ -63,8 +63,8 @@ namespace Moxel
 
 			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_NONE,
-			VK_FRONT_FACE_COUNTER_CLOCKWISE,
+			VK_CULL_MODE_FRONT_BIT,
+			VK_FRONT_FACE_CLOCKWISE,
 			pushConstant
 		};
 		s_renderData.m_meshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->get_descriptor_set_layout());
@@ -223,7 +223,7 @@ namespace Moxel
 		s_renderData.m_currentFrameIndex = (s_renderData.m_currentFrameIndex + 1) % s_renderData.m_specs.FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::render_vertex_array(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat)
+	void VulkanRenderer::render_chunk(const ChunkPosition chunkPosition, const std::shared_ptr<ChunkMesh>& chunk, const glm::mat4& cameraMat)
 	{
 		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
 
@@ -232,34 +232,12 @@ namespace Moxel
 		ubo.cameraMatrix = cameraMat;
 		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
 
-		//launch a draw command to draw vertices
+		// launch a draw command to draw vertices
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
 
-		const auto& vertexArray = mesh->get_vertex_array();
-		VkBuffer vertexBuffer = vertexArray->get_vertex_buffer().Buffer;
-		constexpr VkDeviceSize offsets[] = { 0 };
-
-		vkCmdBindVertexBuffers(buffer, 0, 1, &vertexBuffer, offsets);
-		vkCmdBindIndexBuffer(buffer, vertexArray->get_index_buffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
-
-		const auto& set = s_renderData.m_globalSets[s_renderData.m_currentFrameIndex];
-		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline_layout(), 0, 1, &set, 0, nullptr);
-		vkCmdDrawIndexed(buffer, vertexArray->get_index_buffer_size(), 1, 0, 0, 0);
-	}
-
-	void VulkanRenderer::render_chunk(const glm::mat4& trs, const std::shared_ptr<ChunkMesh>& chunk, const glm::mat4& cameraMat)
-	{
-		const auto& buffer = s_renderData.m_bufferData.CommandBuffer;
-
-		// update uniform data
-		auto ubo = GlobalRenderData();
-		ubo.cameraMatrix = cameraMat;
-		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
-
-		//launch a draw command to draw vertices
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
-
-		vkCmdPushConstants(buffer, s_renderData.m_meshedPipeline.get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &trs);
+		// update per-vertex data
+		glm::vec3 chunkWorld = glm::vec3(chunkPosition.x, chunkPosition.y, chunkPosition.z) * 16.0f; 
+		vkCmdPushConstants(buffer, s_renderData.m_meshedPipeline.get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &chunkWorld);
 
 		const auto& vertexArray = chunk->get_chunk_mesh();
 		VkBuffer vertexBuffer = vertexArray->get_vertex_buffer().Buffer;

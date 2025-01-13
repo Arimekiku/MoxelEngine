@@ -3,7 +3,6 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_shader.h"
-#include "engine/render_mesh.h"
 #include "engine/chunk.h"
 
 namespace Moxel
@@ -30,8 +29,7 @@ namespace Moxel
 		static void prepare_frame();
 		static void end_frame();
 
-		static void render_vertex_array(const std::shared_ptr<RenderMesh>& mesh, const glm::mat4& cameraMat);
-		static void render_chunk(const glm::mat4& trs, const std::shared_ptr<ChunkMesh>& chunk, const glm::mat4& cameraMat);
+		static void render_chunk(const ChunkPosition chunkPosition, const std::shared_ptr<ChunkMesh>& chunk, const glm::mat4& cameraMat);
 
 		static VulkanSwapchain& get_swapchain() { return s_renderData.m_swapchain; }
 		static VulkanCommandBuffer& get_command_pool() { return s_renderData.m_commandPool; }

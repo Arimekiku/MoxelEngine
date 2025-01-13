@@ -1,6 +1,7 @@
 #include "vulkan_pipeline.h"
 #include "vulkan.h"
 #include "vulkan_buffer_vertex_array.h"
+#include "engine/render_quad.h"
 #include "renderer/application.h"
 
 namespace Moxel
@@ -49,13 +50,13 @@ namespace Moxel
 		auto attributeDescriptions = std::vector<VkVertexInputAttributeDescription>(2);
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, Position);
+		attributeDescriptions[0].format = VK_FORMAT_R32_UINT;
+		attributeDescriptions[0].offset = offsetof(VoxelVertex, Position);
 
 		attributeDescriptions[1].binding = 0;
 		attributeDescriptions[1].location = 1;
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, Color);
+		attributeDescriptions[1].offset = offsetof(VoxelVertex, Color);
 
 		auto vertexInputInfo = VkPipelineVertexInputStateCreateInfo();
 		vertexInputInfo.pNext = nullptr;

@@ -27,7 +27,8 @@ namespace Moxel
 		void update(glm::vec3 playerPosition);
 		void destroy_world();
 
-		std::unordered_map<ChunkPosition, std::shared_ptr<ChunkMesh>>& get_render_chunks() { return m_renderChunks; }
+		std::queue<ChunkPosition>& get_render_queue() { return m_renderQueue; }
+		std::shared_ptr<ChunkMesh>& get_render_chunk(ChunkPosition position) { return m_meshChunks[position]; }
 	private:
 		void generate_chunk_mesh(ChunkPosition position);
 		bool get_voxel(ChunkPosition position, int x, int y, int z) const;
@@ -44,11 +45,10 @@ namespace Moxel
 		ChunkWorldSpecs m_specs;
 
 		std::unordered_map<ChunkPosition, std::shared_ptr<Chunk>> m_dataChunks;
-		std::queue<std::pair<ChunkPosition, std::shared_ptr<Chunk>>> m_dataGenerationQueue;
-
 		std::unordered_map<ChunkPosition, std::shared_ptr<ChunkMesh>> m_meshChunks;
-		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_meshGenerationQueue;
 
-		std::unordered_map<ChunkPosition, std::shared_ptr<ChunkMesh>> m_renderChunks;
+		std::queue<ChunkPosition> m_dataGenerationQueue;
+		std::queue<ChunkPosition> m_meshGenerationQueue;
+		std::queue<ChunkPosition> m_renderQueue;
 	};
 }

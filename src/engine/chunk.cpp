@@ -54,15 +54,6 @@ namespace Moxel
 		destroy_mesh();
 	}
 
-	glm::mat4 ChunkMesh::get_trs_matrix(const ChunkPosition position)
-	{
-		const glm::mat4 translation = translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, position.z) * 16.0f);
-		const glm::mat4 rotation = toMat4(glm::quat(radians(glm::vec3(0))));
-		const glm::mat4 scaling = scale(glm::mat4(1.0f), glm::vec3(1.0f));
-
-		return translation * rotation * scaling;
-	}
-
 	void ChunkMesh::destroy_mesh()
 	{
 		if (m_chunkMesh == nullptr)

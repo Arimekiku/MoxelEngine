@@ -42,7 +42,6 @@ namespace Moxel
 			: m_chunkMesh(mesh) { }
 		~ChunkMesh();
 
-		glm::mat4 get_trs_matrix(ChunkPosition position);
 		void destroy_mesh();
 
 		const std::shared_ptr<VulkanVertexArray>& get_chunk_mesh() { return m_chunkMesh; }
