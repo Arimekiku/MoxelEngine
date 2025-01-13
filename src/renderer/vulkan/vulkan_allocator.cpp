@@ -5,9 +5,6 @@
 
 namespace Moxel
 {
-	VmaAllocator VulkanAllocator::m_allocator;
-	std::unordered_map<UUID, VmaAllocation> VulkanAllocator::m_allocatorAssets;
-
 	void VulkanAllocator::initialize()
 	{
 		const auto& instance = Application::get().get_context();
@@ -30,7 +27,7 @@ namespace Moxel
 
 		VmaAllocation allocation;
 		vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &buffer.Buffer, &allocation, &buffer.AllocationInfo);
-		m_allocatorAssets.emplace(buffer.get_uuid(), allocation);
+		m_allocatorAssets[buffer.get_uuid()] = allocation;
 
 		return buffer;
 	}
@@ -69,7 +66,7 @@ namespace Moxel
 
 		VmaAllocation allocation;
 		vmaCreateImage(m_allocator, &imageInfo, &allocationInfo, &image.Image, &allocation, nullptr);
-		m_allocatorAssets.emplace(image.get_uuid(), allocation);
+		m_allocatorAssets[image.get_uuid()] = allocation;
 
 		auto imageViewInfo = VkImageViewCreateInfo();
 		imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -89,24 +86,27 @@ namespace Moxel
 		return image;
 	}
 
-	void VulkanAllocator::destroy()
+	void VulkanAllocator::destroy() const
 	{
 		vmaDestroyAllocator(m_allocator);
 	}
 
 	void VulkanAllocator::destroy_vulkan_image(const VulkanImage& image)
 	{
-		const auto device = Application::get().get_context().get_logical_device();
-		const auto allocation = m_allocatorAssets.at(image.get_uuid());
+		const auto imageId = image.get_uuid();
 
+		const auto device = Application::get().get_context().get_logical_device();
 		vkDestroyImageView(device, image.ImageView, nullptr);
-		vmaDestroyImage(m_allocator, image.Image, allocation);
+
+		vmaDestroyImage(m_allocator, image.Image, m_allocatorAssets[imageId]);
+		m_allocatorAssets.erase(imageId);
 	}
 
 	void VulkanAllocator::destroy_buffer(const VulkanBuffer& buffer)
 	{
-		const auto allocation = m_allocatorAssets.at(buffer.get_uuid());
+		const auto bufferId = buffer.get_uuid();
 
-		vmaDestroyBuffer(m_allocator, buffer.Buffer, allocation);
+		vmaDestroyBuffer(m_allocator, buffer.Buffer, m_allocatorAssets[bufferId]);
+		m_allocatorAssets.erase(bufferId);
 	}
 }

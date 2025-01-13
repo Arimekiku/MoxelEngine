@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.h"
+#include "vulkan/vulkan_allocator.h"
 #include "vulkan/vulkan_context.h"
 
 namespace Moxel
@@ -17,6 +18,7 @@ namespace Moxel
 
 		void run() const;
 
+		VulkanAllocator& get_allocator() { return m_allocator; }
 		const VulkanContext& get_context() const { return m_context; }
 		GameWindow& get_window() const { return *m_window; }
 
@@ -24,6 +26,7 @@ namespace Moxel
 		static Application* s_instance;
 
 		GameWindow* m_window;
+		VulkanAllocator m_allocator;
 		VulkanContext m_context;
 		LayerStack m_LayerStack;
 	};

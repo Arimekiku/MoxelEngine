@@ -31,24 +31,23 @@ namespace Moxel
 	private:
 		void generate_chunk_mesh(ChunkPosition position);
 		bool get_voxel(ChunkPosition position, int x, int y, int z) const;
-		int get_voxel_index(glm::i32vec3 position) const;
 
-		void update_deletion_queue(glm::i32vec3 playerChunkPosition);
-		void update_render_queue(glm::i32vec3 playerChunkPosition);
+		void update_mesh_generation_queue(glm::i32vec3 playerChunkPosition);
+		void update_mesh_deletion_queue(glm::i32vec3 playerChunkPosition);
+
+		void update_data_generation_queue(glm::i32vec3 playerChunkPosition);
+		void update_data_deletion_queue();
 
 		const int MAX_CHUNKS_PER_FRAME_GENERATED = 16;
-		const int MAX_CHUNKS_PER_FRAME_UNLOADED = 8;
+		const int MAX_CHUNKS_DATA_PER_FRAME_GENERATED = 32;
 
 		ChunkWorldSpecs m_specs;
 
 		std::unordered_map<ChunkPosition, std::shared_ptr<Chunk>> m_dataChunks;
+		std::queue<std::pair<ChunkPosition, std::shared_ptr<Chunk>>> m_dataGenerationQueue;
+
 		std::unordered_map<ChunkPosition, std::shared_ptr<ChunkMesh>> m_meshChunks;
-
-		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_dataGenerationQueue;
-		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_dataDeletionQueue;
-
 		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_meshGenerationQueue;
-		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_meshDeletionQueue;
 
 		std::unordered_map<ChunkPosition, std::shared_ptr<ChunkMesh>> m_renderChunks;
 	};

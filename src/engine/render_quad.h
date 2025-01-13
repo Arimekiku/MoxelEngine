@@ -5,6 +5,7 @@ namespace Moxel
 {
 	enum class Side
 	{
+		//TODO: currently we only need 3 sides, think about it
 		Front,
 		Back,
 		Left,

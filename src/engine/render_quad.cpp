@@ -67,9 +67,9 @@ namespace Moxel
 			default: LOG_ASSERT(false, "Invalid direction");
 		}
 
-		for (auto& [Position, _] : m_vertices)
+		for (auto& [vertexPosition, _] : m_vertices)
 		{
-			Position += position;
+			vertexPosition += position;
 		}
 	}
 

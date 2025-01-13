@@ -99,10 +99,11 @@ namespace Moxel
 		auto result = vkWaitForFences(device, 1, &s_renderData.m_bufferData.RenderFence, true, 1000000000);
 		VULKAN_CHECK(result);
 
+		auto& allocator = Application::get().get_allocator();
 		for (const auto& vertexArray: s_deletionQueue)
 		{
-			VulkanAllocator::destroy_buffer(vertexArray->get_vertex_buffer());
-			VulkanAllocator::destroy_buffer(vertexArray->get_index_buffer());
+			allocator.destroy_buffer(vertexArray->get_vertex_buffer());
+			allocator.destroy_buffer(vertexArray->get_index_buffer());
 		}
 		s_deletionQueue.clear();
 
@@ -285,10 +286,11 @@ namespace Moxel
 		s_renderData.m_globalSets.clear();
 		s_renderData.m_uniforms.clear();
 
-		for (const auto& buffer: s_deletionQueue)
+		auto& allocator = Application::get().get_allocator();
+		for (const auto& vertexArray: s_deletionQueue)
 		{
-			VulkanAllocator::destroy_buffer(buffer->get_vertex_buffer());
-			VulkanAllocator::destroy_buffer(buffer->get_index_buffer());
+			allocator.destroy_buffer(vertexArray->get_vertex_buffer());
+			allocator.destroy_buffer(vertexArray->get_index_buffer());
 		}
 		s_deletionQueue.clear();
 	}

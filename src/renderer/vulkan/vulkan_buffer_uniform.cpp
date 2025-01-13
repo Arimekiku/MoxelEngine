@@ -1,6 +1,6 @@
 #include "vulkan_buffer_uniform.h"
-#include "vulkan_allocator.h"
 #include "vulkan_renderer.h"
+#include "renderer/application.h"
 
 namespace Moxel
 {
@@ -15,7 +15,7 @@ namespace Moxel
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 		bufferInfo.size = m_size;
 
-		m_buffer = VulkanAllocator::allocate_buffer(bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU);
+		m_buffer = Application::get().get_allocator().allocate_buffer(bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 		m_descriptorInfo.buffer = m_buffer.Buffer;
 		m_descriptorInfo.offset = 0;
@@ -24,7 +24,7 @@ namespace Moxel
 
 	VulkanBufferUniform::~VulkanBufferUniform()
 	{
-		VulkanAllocator::destroy_buffer(m_buffer);
+		Application::get().get_allocator().destroy_buffer(m_buffer);
 	}
 
 	void VulkanBufferUniform::write_data(const void* data, const uint32_t size) const

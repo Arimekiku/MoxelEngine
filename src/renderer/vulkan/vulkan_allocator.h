@@ -10,19 +10,19 @@ namespace Moxel
 	class VulkanAllocator
 	{
 	public:
-		VulkanAllocator() = delete;
+		VulkanAllocator() = default;
 
-		static void initialize();
-		static void destroy();
+		void initialize();
+		void destroy() const;
 
-		static VulkanBuffer allocate_buffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
-		static VulkanImage allocate_image(const VulkanImageSpecs& specs, VmaMemoryUsage usage);
+		VulkanBuffer allocate_buffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
+		VulkanImage allocate_image(const VulkanImageSpecs& specs, VmaMemoryUsage usage);
 
-		static void destroy_buffer(const VulkanBuffer& buffer);
-		static void destroy_vulkan_image(const VulkanImage& image);
+		void destroy_buffer(const VulkanBuffer& buffer);
+		void destroy_vulkan_image(const VulkanImage& image);
 	private:
-		static VmaAllocator m_allocator;
+		VmaAllocator m_allocator;
 
-		static std::unordered_map<UUID, VmaAllocation> m_allocatorAssets;
+		std::unordered_map<UUID, VmaAllocation> m_allocatorAssets;
 	};
 }

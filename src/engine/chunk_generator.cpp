@@ -16,19 +16,12 @@ namespace Moxel
 	{ 
 		for (const auto& chunk: std::views::values(m_meshChunks))
 		{
-			if (chunk->get_chunk_mesh() == nullptr)
+			if (chunk == nullptr || chunk->get_chunk_mesh() == nullptr)
 			{
 				continue;
 			}
 
 			VulkanRenderer::queue_resource_free(chunk->get_chunk_mesh());
-		}
-
-		while (m_meshDeletionQueue.empty() == false)
-		{
-			VulkanRenderer::queue_resource_free(m_meshDeletionQueue.front().second->get_chunk_mesh());
-
-			m_meshDeletionQueue.pop();
 		}
 
 		m_renderChunks.clear();
@@ -40,41 +33,66 @@ namespace Moxel
 		const auto playerChunkPosition = world_pos_to_chunk(playerPosition);
 
 		// update deletion data
-		update_deletion_queue(playerChunkPosition);
-		for (int i = 0; i < MAX_CHUNKS_PER_FRAME_UNLOADED; i++)
+		update_data_deletion_queue();
+		update_mesh_deletion_queue(playerChunkPosition);
+
+		// update render data
+		update_data_generation_queue(playerChunkPosition);
+		for (int i = 0; i < MAX_CHUNKS_DATA_PER_FRAME_GENERATED; i++)
 		{
-			if (m_meshDeletionQueue.empty() == true)
+			if (m_dataGenerationQueue.empty())
 			{
 				break;
 			}
 
-			const auto& [position, chunk] = m_meshDeletionQueue.front();
-			if (chunk->get_chunk_mesh() != nullptr)
-			{
-				VulkanRenderer::queue_resource_free(chunk->get_chunk_mesh());
-			}
-
-			m_meshDeletionQueue.pop();
+			const auto& position = m_dataGenerationQueue.front().first;
+			m_dataChunks[position]->generate_data(position);
+			m_dataGenerationQueue.pop();
 		}
 
-		// update render data
-		update_render_queue(playerChunkPosition);
+		update_mesh_generation_queue(playerChunkPosition);
 		for (int i = 0; i < MAX_CHUNKS_PER_FRAME_GENERATED; i++)
 		{
-			if (m_meshGenerationQueue.empty() == true)
+			if (m_meshGenerationQueue.empty())
 			{
 				break;
 			}
 
 			generate_chunk_mesh(m_meshGenerationQueue.front().first);
-
 			m_meshGenerationQueue.pop();
 		}
 	}
 
-	void ChunkBuilder::update_render_queue(const glm::i32vec3 playerChunkPosition)
+	void ChunkBuilder::update_data_generation_queue(const glm::i32vec3 playerChunkPosition)
+	{
+		const int totalSize = m_specs.ChunkSize * m_specs.ChunkSize * m_specs.ChunkSize;
+		const int renderDistance = m_specs.RenderDistance;
+
+		for (int z = -(renderDistance + 1) + playerChunkPosition.z; z < (renderDistance + 1) + playerChunkPosition.z; ++z)
+		{
+			for (int y = -(renderDistance + 1) + playerChunkPosition.y; y < (renderDistance + 1) + playerChunkPosition.y; ++y)
+			{
+				for (int x = -(renderDistance + 1) + playerChunkPosition.x; x < (renderDistance + 1) + playerChunkPosition.x; ++x)
+				{
+					auto chunkPosition = ChunkPosition(x, y, z);
+
+					if (m_dataChunks.contains(chunkPosition) || m_meshChunks.contains(chunkPosition))
+					{
+						continue;
+					}
+
+					const auto chunk = std::make_shared<Chunk>(totalSize);
+					m_dataChunks.emplace(chunkPosition, chunk);
+					m_dataGenerationQueue.emplace(chunkPosition, chunk);
+				}
+			}
+		}
+	}
+
+	void ChunkBuilder::update_mesh_generation_queue(const glm::i32vec3 playerChunkPosition)
 	{
 		const int renderDistance = m_specs.RenderDistance;
+
 		for (int z = -renderDistance + playerChunkPosition.z; z < renderDistance + playerChunkPosition.z; ++z)
 		{
 			for (int y = -renderDistance + playerChunkPosition.y; y < renderDistance + playerChunkPosition.y; ++y)
@@ -83,48 +101,32 @@ namespace Moxel
 				{
 					auto chunkPosition = ChunkPosition(x, y, z);
 
-					if (m_dataChunks.contains(chunkPosition) == false)
-					{
-						const auto chunk = std::make_shared<Chunk>(m_specs.ChunkSize * m_specs.ChunkSize * m_specs.ChunkSize);
-
-						m_dataChunks.emplace(chunkPosition, chunk);
-						m_dataChunks.at(chunkPosition)->generate_data(chunkPosition);
-
-						continue;
-					}
-
-					if (m_meshChunks.contains(chunkPosition) == false && m_dataChunks.contains(chunkPosition) == true)
+					if (m_meshChunks.contains(chunkPosition) == false)
 					{
 						const auto left = ChunkPosition(chunkPosition.x - 1, chunkPosition.y, chunkPosition.z);
-						if (m_dataChunks.contains(left) == false)
+						if (m_dataChunks.contains(left) == false || m_dataChunks[left]->is_processed() == false)
 						{
-							m_dataChunks.emplace(left, std::make_shared<Chunk>(m_specs.ChunkSize * m_specs.ChunkSize *
-																			   m_specs.ChunkSize));
-							m_dataChunks.at(left)->generate_data(left);
+							continue;
 						}
 
 						const auto down = ChunkPosition(chunkPosition.x, chunkPosition.y - 1, chunkPosition.z);
-						if (m_dataChunks.contains(down) == false)
+						if (m_dataChunks.contains(down) == false || m_dataChunks[down]->is_processed() == false)
 						{
-							m_dataChunks.emplace(down, std::make_shared<Chunk>(m_specs.ChunkSize * m_specs.ChunkSize *
-																			   m_specs.ChunkSize));
-							m_dataChunks.at(down)->generate_data(down);
+							continue;
 						}
 
 						const auto back = ChunkPosition(chunkPosition.x, chunkPosition.y, chunkPosition.z - 1);
-						if (m_dataChunks.contains(back) == false)
+						if (m_dataChunks.contains(back) == false || m_dataChunks[back]->is_processed() == false)
 						{
-							m_dataChunks.emplace(back, std::make_shared<Chunk>(m_specs.ChunkSize * m_specs.ChunkSize *
-																			   m_specs.ChunkSize));
-							m_dataChunks.at(back)->generate_data(back);
+							continue;
 						}
 
-						m_meshChunks[chunkPosition] = std::make_shared<ChunkMesh>(nullptr);
+						m_meshChunks[chunkPosition] = nullptr;
 						m_meshGenerationQueue.emplace(chunkPosition, nullptr);
 						continue;
 					}
 
-					if (m_meshChunks.contains(chunkPosition) == false || m_meshChunks.at(chunkPosition)->get_chunk_mesh() == nullptr)
+					if (m_meshChunks[chunkPosition] == nullptr || m_meshChunks[chunkPosition]->get_chunk_mesh() == nullptr)
 					{
 						continue;
 					}
@@ -135,25 +137,54 @@ namespace Moxel
 		}
 	}
 
-	void ChunkBuilder::update_deletion_queue(const glm::i32vec3 playerChunkPosition)
+	void ChunkBuilder::update_data_deletion_queue()
 	{
-		const auto renderDistance = m_specs.RenderDistance;
 		auto chunksToErase = std::vector<ChunkPosition>();
-		for (const auto& chunk: m_meshChunks)
-		{
-			const auto xDistance = abs(chunk.first.x - playerChunkPosition.x);
-			const auto yDistance = abs(chunk.first.y - playerChunkPosition.y);
-			const auto zDistance = abs(chunk.first.z - playerChunkPosition.z);
 
-			if (xDistance > renderDistance || yDistance > renderDistance || zDistance > renderDistance)
+		for (const auto& position: std::views::keys(m_dataChunks))
+		{
+			const auto right = ChunkPosition(position.x + 1, position.y, position.z);
+			const auto up = ChunkPosition(position.x, position.y + 1, position.z);
+			const auto front = ChunkPosition(position.x, position.y, position.z + 1);
+
+			if (m_meshChunks.contains(right) && m_meshChunks[right] != nullptr 
+				&& m_meshChunks.contains(up) && m_meshChunks[up] != nullptr 
+				&& m_meshChunks.contains(front) && m_meshChunks[front] != nullptr)
 			{
-				m_meshDeletionQueue.emplace(chunk);
-				chunksToErase.emplace_back(chunk.first);
+				chunksToErase.emplace_back(position);
 			}
 		}
 
 		for (const auto& position: chunksToErase)
 		{
+			m_dataChunks.erase(position);
+		}
+	}
+
+	void ChunkBuilder::update_mesh_deletion_queue(const glm::i32vec3 playerChunkPosition)
+	{
+		const auto renderDistance = m_specs.RenderDistance;
+		auto chunksToErase = std::vector<ChunkPosition>();
+
+		for (const auto& position: std::views::keys(m_meshChunks))
+		{
+			const auto xDistance = abs(position.x - playerChunkPosition.x);
+			const auto yDistance = abs(position.y - playerChunkPosition.y);
+			const auto zDistance = abs(position.z - playerChunkPosition.z);
+
+			if (xDistance > renderDistance || yDistance > renderDistance || zDistance > renderDistance)
+			{
+				chunksToErase.emplace_back(position);
+			}
+		}
+
+		for (const auto& position: chunksToErase)
+		{
+			if (m_meshChunks[position]->get_chunk_mesh() != nullptr)
+			{
+				VulkanRenderer::queue_resource_free(m_meshChunks[position]->get_chunk_mesh());
+			}
+
 			m_meshChunks.erase(position);
 		}
 	}
@@ -172,11 +203,6 @@ namespace Moxel
 			static_cast<int>(worldPosition.y / chunkSize),
 			static_cast<int>(worldPosition.z / chunkSize)
 		};
-	}
-
-	int ChunkBuilder::get_voxel_index(const glm::i32vec3 position) const
-	{
-		return position.z | (position.y << m_specs.ChunkBitSize) | (position.x << m_specs.ChunkBitSize * 2);
 	}
 
 	bool ChunkBuilder::get_voxel(ChunkPosition position, int x, int y, int z) const
@@ -310,6 +336,7 @@ namespace Moxel
 
 		if (totalIndices.empty())
 		{
+			m_meshChunks[position] = std::make_shared<ChunkMesh>(nullptr);
 			return;
 		}
 

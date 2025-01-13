@@ -8,6 +8,8 @@ namespace Moxel
 {
 	VulkanVertexArray::VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<Vertex>& vertices)
 	{
+		auto& allocator = Application::get().get_allocator();
+
 		// vertex buffer
 		m_vertices = vertices;
 		const auto verticesSize = vertices.size() * sizeof(vertices[0]);
@@ -19,7 +21,7 @@ namespace Moxel
 
 		constexpr auto vertexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		m_vertexBuffer = VulkanAllocator::allocate_buffer(vertexBufferInfo, vertexMemoryUsage);
+		m_vertexBuffer = allocator.allocate_buffer(vertexBufferInfo, vertexMemoryUsage);
 
 		// index buffer
 		m_indices = indices.size();
@@ -32,7 +34,7 @@ namespace Moxel
 
 		constexpr auto indexMemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		m_indexBuffer = VulkanAllocator::allocate_buffer(indexBufferInfo, indexMemoryUsage);
+		m_indexBuffer = allocator.allocate_buffer(indexBufferInfo, indexMemoryUsage);
 
 		// allocate vertex array data
 		auto stagingBufferInfo = VkBufferCreateInfo();
@@ -43,7 +45,7 @@ namespace Moxel
 
 		constexpr auto stagingMemoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-		const auto stagingBuffer = VulkanAllocator::allocate_buffer(stagingBufferInfo, stagingMemoryUsage);
+		const auto stagingBuffer = allocator.allocate_buffer(stagingBufferInfo, stagingMemoryUsage);
 
 		// copy buffers
 		void* data = stagingBuffer.AllocationInfo.pMappedData;
@@ -65,6 +67,6 @@ namespace Moxel
 			vkCmdCopyBuffer(cmd, stagingBuffer.Buffer, m_indexBuffer.Buffer, 1, &indexCopy);
 		});
 
-		VulkanAllocator::destroy_buffer(stagingBuffer);
+		allocator.destroy_buffer(stagingBuffer);
 	}
 }

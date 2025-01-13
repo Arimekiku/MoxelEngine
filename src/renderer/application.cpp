@@ -1,6 +1,5 @@
 #include "application.h"
 #include "ui/gui_layer.h"
-#include "vulkan/vulkan_allocator.h"
 #include "vulkan/vulkan_renderer.h"
 
 namespace Moxel
@@ -16,8 +15,8 @@ namespace Moxel
 		constexpr auto initialSize = VkExtent2D(1600, 900);
 		m_window = new GameWindow(initialSize.width, initialSize.height);
 		m_context.initialize(m_window->get_native_window());
+		m_allocator.initialize();
 
-		VulkanAllocator::initialize();
 		VulkanRenderer::initialize(initialSize);
 
 		m_LayerStack = LayerStack();
@@ -30,8 +29,8 @@ namespace Moxel
 		m_LayerStack.clear();
 
 		VulkanRenderer::shutdown();
-		VulkanAllocator::destroy();
 
+		m_allocator.destroy();
 		m_context.destroy();
 	}
 

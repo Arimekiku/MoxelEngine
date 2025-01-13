@@ -26,10 +26,13 @@ namespace Moxel
 		bool get_block(const int index) const { return m_blocks[index]; }
 		void set_block(const int index) { m_blocks[index] = true; }
 
+		bool is_processed() const { return m_is_processed; }
+
 		void generate_data(ChunkPosition position);
 	private:
 		std::vector<bool> m_blocks;
 
+		bool m_is_processed = false;
 	};
 
 	class ChunkMesh

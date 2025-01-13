@@ -45,6 +45,8 @@ namespace Moxel
 				}
 			}
 		}
+
+		m_is_processed = true;
 	}
 
 	ChunkMesh::~ChunkMesh()
