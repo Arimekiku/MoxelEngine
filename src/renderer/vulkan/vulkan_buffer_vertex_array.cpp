@@ -1,5 +1,4 @@
 #include "vulkan_buffer_vertex_array.h"
-#include "vulkan.h"
 #include "vulkan_allocator.h"
 #include "vulkan_renderer.h"
 #include "renderer/application.h"

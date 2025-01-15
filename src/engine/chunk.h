@@ -55,6 +55,6 @@ struct std::hash<Moxel::ChunkPosition>
 {
 	std::size_t operator()(const Moxel::ChunkPosition& key) const noexcept
 	{
-		return std::hash<int>()(key.x ^ key.y ^ key.z);
+		return std::hash<int>()(key.x ^ (key.y << 1) ^ (key.z << 2));
 	}
 };

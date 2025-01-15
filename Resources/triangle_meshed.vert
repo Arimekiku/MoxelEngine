@@ -12,8 +12,8 @@ layout (push_constant) uniform Chunk
 
 layout (binding = 0) uniform GlobalData
 {
-    mat4 uCamera;
-} ubo;
+    mat4 cameraPosition;
+} global;
 
 void main()
 {
@@ -25,5 +25,5 @@ void main()
     vec3 localPosition = vec3(x, y, z);
 
     vec4 position = vec4(chunk.worldPosition + localPosition, 1.0f);
-    gl_Position = ubo.uCamera * position;
+    gl_Position = global.cameraPosition * position;
 }

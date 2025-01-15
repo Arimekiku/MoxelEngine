@@ -1,5 +1,4 @@
 #include "chunk.h"
-#include "render_quad.h"
 
 #include <PerlinNoise.hpp>
 
@@ -26,9 +25,7 @@ namespace Moxel
 		const int chunkSize = cbrt(m_blocks.size());
 
 		// generate chunk data from perlin
-		constexpr siv::PerlinNoise::seed_type seed = 123456u;
-		const auto perlin = siv::PerlinNoise(seed);
-
+		const auto perlin = siv::PerlinNoise(123456u);
 		for (int z = 0; z < chunkSize; ++z)
 		{
 			for (int y = 0; y < chunkSize; ++y)
