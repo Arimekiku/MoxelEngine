@@ -13,7 +13,7 @@ namespace Moxel
 
 	void ChunkBuilder::destroy_world()
 	{ 
-		for (const auto& chunk: std::views::values(m_meshChunks))
+		for (const auto& chunk: m_meshChunks | std::views::values)
 		{
 			if (chunk == nullptr || chunk->get_chunk_mesh() == nullptr)
 			{
@@ -25,6 +25,27 @@ namespace Moxel
 
 		m_meshChunks.clear();
 	}
+
+	int ChunkBuilder::get_total_chunks_data_count() const
+	{
+		return m_dataChunks.size();
+	}
+
+	int ChunkBuilder::get_total_chunks_mesh_count()
+	{
+		int meshes = 0;
+		for (const auto& mesh: m_meshChunks | std::views::values)
+		{
+			if (mesh == nullptr || mesh->get_chunk_mesh() == nullptr)
+			{
+				continue;
+			}
+
+			meshes++;
+		}
+
+		return meshes;
+	}
 	
 	void ChunkBuilder::update(const glm::vec3 playerPosition)
 	{
@@ -34,7 +55,7 @@ namespace Moxel
 		// update deletion data
 		m_threadPool.enqueue([this, playerChunkPosition, shouldGenerateData]
 		{
-			update_data_deletion_queue();
+			update_data_deletion_queue(playerChunkPosition);
 
 			if (shouldGenerateData)
 			{
@@ -43,14 +64,18 @@ namespace Moxel
 		});
 
 		// update render data
-		m_threadPool.enqueue([this, playerChunkPosition, shouldGenerateData] 
+		m_threadPool.enqueue(
+		[this, playerChunkPosition, shouldGenerateData]
 		{
 			if (shouldGenerateData)
 			{
-				update_data_generation_queue(playerChunkPosition);
+				update_mesh_generation_queue(playerChunkPosition);
 			}
+		});
 
-			std::vector<ChunkPosition> chunkDataToUpdate;
+		// generate render data
+		m_threadPool.enqueue([this, playerChunkPosition]
+		{
 			for (int i = 0; i < MAX_CHUNKS_DATA_PER_FRAME_GENERATED; i++)
 			{
 				auto lock = std::unique_lock(m_worldMutex);
@@ -60,25 +85,13 @@ namespace Moxel
 					break;
 				}
 
-				chunkDataToUpdate.push_back(m_dataGenerationQueue.front());
+				const auto position = m_dataGenerationQueue.front();
+				m_dataChunks[position]->generate_data(position);
+
 				m_dataGenerationQueue.pop();
 			}
 
-			for (const auto& position: chunkDataToUpdate)
-			{
-				m_dataChunks[position]->generate_data(position);
-			}
-		});
-
-		// generate render data
-		m_threadPool.enqueue([this, playerChunkPosition, shouldGenerateData]
-		{
-			if (shouldGenerateData)
-			{
-				update_mesh_generation_queue(playerChunkPosition);
-			}
-
-			std::vector<ChunkPosition> meshDataToUpdate;
+			const int renderDistance = m_specs.RenderDistance;
 			for (int i = 0; i < MAX_CHUNKS_PER_FRAME_GENERATED; i++)
 			{
 				auto lock = std::unique_lock(m_worldMutex);
@@ -88,13 +101,56 @@ namespace Moxel
 					break;
 				}
 
-				meshDataToUpdate.push_back(m_meshGenerationQueue.front());
-				m_meshGenerationQueue.pop();
-			}
+				const auto position = m_meshGenerationQueue.front();
+				const auto xDistance = abs(position.x - playerChunkPosition.x);
+				const auto yDistance = abs(position.y - playerChunkPosition.y);
+				const auto zDistance = abs(position.z - playerChunkPosition.z);
 
-			for (const auto& position: meshDataToUpdate)
-			{
+				if (xDistance > renderDistance || yDistance > renderDistance || zDistance > renderDistance)
+				{
+					m_meshGenerationQueue.pop();
+					continue;
+				}
+
+				const auto left = ChunkPosition(position.x - 1, position.y, position.z);
+				if (m_dataChunks.contains(left) == false || m_dataChunks[left]->is_processed() == false)
+				{
+					break;
+				}
+
+				const auto down = ChunkPosition(position.x, position.y - 1, position.z);
+				if (m_dataChunks.contains(down) == false || m_dataChunks[down]->is_processed() == false)
+				{
+					break;
+				}
+
+				const auto back = ChunkPosition(position.x, position.y, position.z - 1);
+				if (m_dataChunks.contains(back) == false || m_dataChunks[back]->is_processed() == false)
+				{
+					break;
+				}
+
+				const auto right = ChunkPosition(position.x + 1, position.y, position.z);
+				if (m_dataChunks.contains(right) == false || m_dataChunks[right]->is_processed() == false)
+				{
+					break;
+				}
+
+				const auto up = ChunkPosition(position.x, position.y + 1, position.z);
+				if (m_dataChunks.contains(up) == false || m_dataChunks[up]->is_processed() == false)
+				{
+					break;
+				}
+
+				const auto front = ChunkPosition(position.x, position.y, position.z + 1);
+				if (m_dataChunks.contains(front) == false || m_dataChunks[front]->is_processed() == false)
+				{
+					break;
+				}
+
 				generate_chunk_mesh(position);
+
+				m_meshGenerationQueue.pop();
 			}
 		});
 
@@ -106,36 +162,20 @@ namespace Moxel
 		m_requestedMeshes.clear();
 
 		update_render_queue(playerChunkPosition);
-
 		m_oldPlayerChunkPosition = playerChunkPosition;
 	}
 
-	void ChunkBuilder::update_data_generation_queue(const ChunkPosition playerChunkPosition)
+	void ChunkBuilder::enqueue_data_generation(ChunkPosition position)
 	{
-		const int totalSize = m_specs.ChunkSize * m_specs.ChunkSize * m_specs.ChunkSize;
-		const int renderDistance = m_specs.RenderDistance;
-
-		for (int z = -(renderDistance + 1) + playerChunkPosition.z; z < (renderDistance + 1) + playerChunkPosition.z; ++z)
+		if (m_dataChunks.contains(position))
 		{
-			for (int y = -(renderDistance + 1) + playerChunkPosition.y; y < (renderDistance + 1) + playerChunkPosition.y; ++y)
-			{
-				for (int x = -(renderDistance + 1) + playerChunkPosition.x; x < (renderDistance + 1) + playerChunkPosition.x; ++x)
-				{
-					auto lock = std::unique_lock(m_worldMutex);
-
-					auto chunkPosition = ChunkPosition(x, y, z);
-
-					if (m_dataChunks.contains(chunkPosition) || m_meshChunks.contains(chunkPosition))
-					{
-						continue;
-					}
-
-					const auto chunk = std::make_shared<Chunk>(totalSize);
-					m_dataChunks.emplace(chunkPosition, chunk);
-					m_dataGenerationQueue.emplace(chunkPosition);
-				}
-			}
+			return;
 		}
+
+		const auto chunk = std::make_shared<Chunk>(m_specs.ChunkSize * m_specs.ChunkSize * m_specs.ChunkSize);
+		m_dataChunks.emplace(position, chunk);
+
+		m_dataGenerationQueue.emplace(position);
 	}
 
 	void ChunkBuilder::update_mesh_generation_queue(const ChunkPosition playerChunkPosition)
@@ -151,80 +191,57 @@ namespace Moxel
 					auto lock = std::unique_lock(m_worldMutex);
 
 					auto chunkPosition = ChunkPosition(x, y, z);
-					if (m_meshChunks.contains(chunkPosition) == false)
+
+					if (m_meshChunks.contains(chunkPosition))
 					{
-						const auto left = ChunkPosition(chunkPosition.x - 1, chunkPosition.y, chunkPosition.z);
-						if (m_dataChunks.contains(left) == false || m_dataChunks[left]->is_processed() == false)
-						{
-							continue;
-						}
-
-						const auto down = ChunkPosition(chunkPosition.x, chunkPosition.y - 1, chunkPosition.z);
-						if (m_dataChunks.contains(down) == false || m_dataChunks[down]->is_processed() == false)
-						{
-							continue;
-						}
-
-						const auto back = ChunkPosition(chunkPosition.x, chunkPosition.y, chunkPosition.z - 1);
-						if (m_dataChunks.contains(back) == false || m_dataChunks[back]->is_processed() == false)
-						{
-							continue;
-						}
-
-						const auto right = ChunkPosition(chunkPosition.x + 1, chunkPosition.y, chunkPosition.z);
-						if (m_dataChunks.contains(right) == false || m_dataChunks[right]->is_processed() == false)
-						{
-							continue;
-						}
-
-						const auto up = ChunkPosition(chunkPosition.x, chunkPosition.y + 1, chunkPosition.z);
-						if (m_dataChunks.contains(up) == false || m_dataChunks[up]->is_processed() == false)
-						{
-							continue;
-						}
-
-						const auto front = ChunkPosition(chunkPosition.x, chunkPosition.y, chunkPosition.z + 1);
-						if (m_dataChunks.contains(front) == false || m_dataChunks[front]->is_processed() == false)
-						{
-							continue;
-						}
-
-						m_meshChunks[chunkPosition] = nullptr;
-						m_meshGenerationQueue.emplace(chunkPosition);
+						continue;
 					}
+
+					enqueue_data_generation(chunkPosition);
+					enqueue_data_generation(ChunkPosition(x + 1, y, z));
+					enqueue_data_generation(ChunkPosition(x - 1, y, z));
+					enqueue_data_generation(ChunkPosition(x, y + 1, z));
+					enqueue_data_generation(ChunkPosition(x, y - 1, z));
+					enqueue_data_generation(ChunkPosition(x, y, z + 1));
+					enqueue_data_generation(ChunkPosition(x, y, z - 1));
+
+					m_meshChunks.emplace(chunkPosition, nullptr);
+					m_meshGenerationQueue.emplace(chunkPosition);
 				}
 			}
 		}
 	}
 
-	void ChunkBuilder::update_render_queue(ChunkPosition playerChunkPosition)
+	void ChunkBuilder::update_render_queue(const ChunkPosition playerChunkPosition)
 	{
 		const int renderDistance = m_specs.RenderDistance;
 
-		for (const auto& position: std::views::keys(m_meshChunks))
+		for (const auto& position: m_meshChunks | std::views::keys)
 		{
 			const auto xDistance = abs(position.x - playerChunkPosition.x);
 			const auto yDistance = abs(position.y - playerChunkPosition.y);
 			const auto zDistance = abs(position.z - playerChunkPosition.z);
 
-			if (xDistance <= renderDistance && yDistance <= renderDistance && zDistance <= renderDistance)
+			if (xDistance < renderDistance && yDistance < renderDistance && zDistance < renderDistance)
 			{
 				if (m_meshChunks[position] == nullptr || m_meshChunks[position]->get_chunk_mesh() == nullptr)
 				{
 					continue;
 				}
 
-				m_renderQueue.push(position);
+				m_renderQueue.emplace(position, m_meshChunks[position]);
 			}
 		}
 	}
 
-	void ChunkBuilder::update_data_deletion_queue()
+
+	void ChunkBuilder::update_data_deletion_queue(const ChunkPosition playerChunkPosition)
 	{
 		auto lock = std::unique_lock(m_worldMutex);
 
+		const int renderDistance = m_specs.RenderDistance;
 		auto chunksToErase = std::vector<ChunkPosition>();
-		for (const auto& position: std::views::keys(m_dataChunks))
+		for (const auto& position: m_dataChunks | std::views::keys)
 		{
 			const auto right = ChunkPosition(position.x + 1, position.y, position.z);
 			const auto up = ChunkPosition(position.x, position.y + 1, position.z);
@@ -240,11 +257,17 @@ namespace Moxel
 				&& m_meshChunks.contains(down) && m_meshChunks[down] != nullptr 
 				&& m_meshChunks.contains(back) && m_meshChunks[back] != nullptr)
 			{
-				if (m_dataChunks.contains(position) == false)
-				{
-					continue;
-				}
+				chunksToErase.emplace_back(position);
 
+				continue;
+			}
+
+			const auto xDistance = abs(position.x - playerChunkPosition.x);
+			const auto yDistance = abs(position.y - playerChunkPosition.y);
+			const auto zDistance = abs(position.z - playerChunkPosition.z);
+
+			if (xDistance > renderDistance * 2 || yDistance > renderDistance * 2 || zDistance > renderDistance * 2)
+			{
 				chunksToErase.emplace_back(position);
 			}
 		}
@@ -261,7 +284,7 @@ namespace Moxel
 
 		auto chunksToErase = std::vector<ChunkPosition>();
 		const auto renderDistance = m_specs.RenderDistance;
-		for (const auto& position: std::views::keys(m_meshChunks))
+		for (const auto& position: m_meshChunks | std::views::keys)
 		{
 			const auto xDistance = abs(position.x - playerChunkPosition.x);
 			const auto yDistance = abs(position.y - playerChunkPosition.y);

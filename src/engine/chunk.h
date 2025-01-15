@@ -14,7 +14,10 @@ namespace Moxel
 		ChunkPosition(const int x, const int y, const int z)
 			: x(x), y(y), z(z) { }
 
-		bool operator==(const ChunkPosition& check) const { return x == check.x && y == check.y && z == check.z; }
+		bool operator==(const ChunkPosition& second) const
+		{
+			return x == second.x && y == second.y && z == second.z;
+		}
 	};
 
 	class Chunk
@@ -55,6 +58,10 @@ struct std::hash<Moxel::ChunkPosition>
 {
 	std::size_t operator()(const Moxel::ChunkPosition& key) const noexcept
 	{
-		return std::hash<int>()(key.x ^ (key.y << 1) ^ (key.z << 2));
+		const size_t hx = std::hash<int>()(key.x);
+		const size_t hy = std::hash<int>()(key.y);
+		const size_t hz = std::hash<int>()(key.z);
+
+		return hx ^	((hy << 1) >> 1) ^ (hz << 1);
 	}
 };

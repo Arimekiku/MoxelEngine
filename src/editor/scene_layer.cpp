@@ -22,10 +22,11 @@ namespace Moxel
 		auto& renderChunks = m_chunks.get_render_queue();
 		while (renderChunks.empty() == false)
 		{
-			const auto& position = renderChunks.front();
-			const auto& chunk = m_chunks.get_render_chunk(position);
+			const auto& position = renderChunks.front().first;
+			const auto& chunk = renderChunks.front().second;
 
 			VulkanRenderer::render_chunk(position, chunk, m_camera.get_proj_view_mat());
+			m_verticesCount += chunk->get_chunk_mesh()->get_vertices().size();
 
 			renderChunks.pop();
 		}
@@ -34,6 +35,16 @@ namespace Moxel
 	void SceneLayer::on_gui_update()
 	{
 		ImGui::ShowDemoWindow();
+
+		ImGui::Begin("Stats");
+
+		ImGui::Text("Chunks Generated: %d", m_chunks.get_total_chunks_data_count());
+		ImGui::Text("Meshes Generated: %d", m_chunks.get_total_chunks_mesh_count());
+		ImGui::Text("Vertices Rendered: %d", m_verticesCount);
+
+		ImGui::End();
+
+		m_verticesCount = 0;
 	}
 
 	void SceneLayer::detach()

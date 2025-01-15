@@ -29,8 +29,10 @@ namespace Moxel
 		void update(glm::vec3 playerPosition);
 		void destroy_world();
 
-		std::queue<ChunkPosition>& get_render_queue() { return m_renderQueue; }
-		std::shared_ptr<ChunkMesh>& get_render_chunk(ChunkPosition position) { return m_meshChunks[position]; }
+		int get_total_chunks_data_count() const;
+		int get_total_chunks_mesh_count();
+
+		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>>& get_render_queue() { return m_renderQueue; }
 	private:
 		void generate_chunk_mesh(ChunkPosition position);
 		bool get_voxel(ChunkPosition position, int x, int y, int z) const;
@@ -38,13 +40,13 @@ namespace Moxel
 		void update_mesh_generation_queue(ChunkPosition playerChunkPosition);
 		void update_mesh_deletion_queue(ChunkPosition playerChunkPosition);
 
-		void update_data_generation_queue(ChunkPosition playerChunkPosition);
-		void update_data_deletion_queue();
+		void enqueue_data_generation(ChunkPosition position);
+		void update_data_deletion_queue(ChunkPosition playerChunkPosition);
 
 		void update_render_queue(ChunkPosition playerChunkPosition);
 
-		const int MAX_CHUNKS_PER_FRAME_GENERATED = 32;
-		const int MAX_CHUNKS_DATA_PER_FRAME_GENERATED = 64;
+		const int MAX_CHUNKS_PER_FRAME_GENERATED = 16;
+		const int MAX_CHUNKS_DATA_PER_FRAME_GENERATED = 32;
 
 		ChunkWorldSpecs m_specs;
 		ThreadPool m_threadPool;
@@ -56,9 +58,9 @@ namespace Moxel
 
 		std::queue<ChunkPosition> m_dataGenerationQueue;
 		std::queue<ChunkPosition> m_meshGenerationQueue;
-		std::queue<ChunkPosition> m_renderQueue;
+		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_renderQueue;
 
 		std::mutex m_worldMutex;
-		ChunkPosition m_oldPlayerChunkPosition = { 0, 0, 0 };
+		ChunkPosition m_oldPlayerChunkPosition = { 100, 100, 100 };
 	};
 }

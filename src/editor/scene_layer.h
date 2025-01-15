@@ -19,5 +19,7 @@ namespace Moxel
 	private:
 		RenderCamera m_camera;
 		ChunkBuilder m_chunks;
+
+		int m_verticesCount;
 	};
 }
