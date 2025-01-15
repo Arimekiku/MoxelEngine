@@ -13,11 +13,22 @@ You can use CLion or Visual Studio with Ninja for building
 # Implemented Features
 The Engine is in a pretty raw stage, but it already has:
 
+## Engine Features
+There listed all capabilities engine supports at the moment
+
 * Compile time SPIRV
 * All the preparation needed for vulkan API
 * Simple buffer allocations
 * Vertex/Uniform/Index buffer objects
-* Perspective camera rendering
+
+## Application Features
+* Perspective camera object
+* Fully functional scene based on voxels with chunks and multithreading
+
+![image info](./Resources/Preview/voxels.png)
 
 # TODO
-There's a lot of features in plans and pretty good updates rate so no need for this for now
+* Texturing
+* Cubemaps
+* Mesh-Importer
+* Asset manager
