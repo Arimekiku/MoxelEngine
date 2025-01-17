@@ -16,10 +16,10 @@ namespace Moxel
 
 		const auto colorSpecs = VulkanImageSpecs
 		{
-			VK_FORMAT_R16G16B16A16_SFLOAT,
-			windowSize,
-			drawImageUsages,
-			VK_IMAGE_ASPECT_COLOR_BIT
+			.Format = VK_FORMAT_R16G16B16A16_SFLOAT,
+			.InitialSize = windowSize,
+			.ImageUsages = drawImageUsages,
+			.ImageAspects = VK_IMAGE_ASPECT_COLOR_BIT
 		};
 
 		m_colorImage = std::make_shared<VulkanImage>(colorSpecs, false);
@@ -32,10 +32,10 @@ namespace Moxel
 
 		const auto depthSpecs = VulkanImageSpecs
 		{
-			VK_FORMAT_D32_SFLOAT_S8_UINT,
-			windowSize, 
-			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+			.Format = VK_FORMAT_D32_SFLOAT_S8_UINT,
+			.InitialSize = windowSize, 
+			.ImageUsages = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			.ImageAspects = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
 		};
 
 		m_depthImage = std::make_shared<VulkanImage>(depthSpecs, false);
@@ -46,14 +46,6 @@ namespace Moxel
 		m_depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		m_depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		m_depthAttachment.clearValue.depthStencil.depth = 1.0f;
-	}
-
-	VulkanFramebuffer::~VulkanFramebuffer() 
-	{
-		auto& allocator = Application::get().get_allocator();
-
-		allocator.destroy_image(m_colorImage->get_image_asset());
-		allocator.destroy_image(m_depthImage->get_image_asset());
 	}
 
 	void VulkanFramebuffer::bind() const

@@ -29,7 +29,7 @@ namespace Moxel
 		}
 
 		s_renderData.m_globalDescriptorPool = VulkanDescriptorPool::Builder()
-			.set_max_sets(s_renderData.m_specs.FRAMES_IN_FLIGHT)
+			.with_max_sets(s_renderData.m_specs.FRAMES_IN_FLIGHT)
 			.add_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, s_renderData.m_specs.FRAMES_IN_FLIGHT)
 			.build();
 
@@ -48,32 +48,29 @@ namespace Moxel
 		}
 
 		const auto fragment = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle.frag.spv", ShaderType::FRAGMENT);
-		const auto triangleVertexShader = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle_meshed.vert.spv", ShaderType::VERTEX);
+		const auto vertex = std::make_shared<VulkanShader>(RESOURCES_PATH "triangle_meshed.vert.spv", ShaderType::VERTEX);
 
 		auto pushConstant = VkPushConstantRange();
 		pushConstant.offset = 0;
 		pushConstant.size = sizeof(glm::mat4);
 		pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		const auto meshedSpecs = VulkanGraphicsPipelineSpecs
-		{
-			fragment,
-			triangleVertexShader,
-			s_renderData.m_swapchain.get_framebuffer()->get_render_image(),
-
-			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_FRONT_BIT,
-			VK_FRONT_FACE_CLOCKWISE,
-			pushConstant
-		};
-		s_renderData.m_meshedPipeline = VulkanGraphicsPipeline(meshedSpecs, globalSetLayout->get_descriptor_set_layout());
+		s_renderData.m_meshedPipeline = VulkanGraphicsPipeline::Builder()
+			.with_fragment(fragment->get_pipeline_create_info())
+			.with_vertex(vertex->get_pipeline_create_info())
+		// TODO: this is a MESS, should think about it
+			.add_color_attachment(s_renderData.m_swapchain.get_framebuffer()->get_render_image()->get_image_asset().ImageFormat)
+			.with_depth_attachment(s_renderData.m_swapchain.get_framebuffer()->get_depth_image()->get_image_asset().ImageFormat)
+		//
+			.add_push_constant(pushConstant)
+			.add_layout(globalSetLayout->get_descriptor_set_layout())
+			.build();
 
 		// release shaders
 		s_renderData.m_shaderLibrary.add(fragment);
 		fragment->release();
-		s_renderData.m_shaderLibrary.add(triangleVertexShader);
-		triangleVertexShader->release();
+		s_renderData.m_shaderLibrary.add(vertex);
+		vertex->release();
 	}
 
 	void VulkanRenderer::immediate_submit(std::function<void(VkCommandBuffer freeBuffer)>&& function)
@@ -233,11 +230,11 @@ namespace Moxel
 		s_renderData.m_uniforms[s_renderData.m_currentFrameIndex]->write_data(&ubo, sizeof(ubo));
 
 		// launch a draw command to draw vertices
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline->get_pipeline());
 
 		// update per-vertex data
 		const glm::vec3 chunkWorld = glm::vec3(chunkPosition.X, chunkPosition.Y, chunkPosition.Z) * 16.0f; 
-		vkCmdPushConstants(buffer, s_renderData.m_meshedPipeline.get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &chunkWorld);
+		vkCmdPushConstants(buffer, s_renderData.m_meshedPipeline->get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &chunkWorld);
 
 		const auto& vertexArray = chunk->get_chunk_mesh();
 		VkBuffer vertexBuffer = vertexArray->get_vertex_buffer().Buffer;
@@ -247,7 +244,7 @@ namespace Moxel
 		vkCmdBindIndexBuffer(buffer, vertexArray->get_index_buffer().Buffer, 0, VK_INDEX_TYPE_UINT32);
 
 		const auto& set = s_renderData.m_globalSets[s_renderData.m_currentFrameIndex];
-		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline_layout(), 0, 1, &set, 0, nullptr);
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline->get_pipeline_layout(), 0, 1, &set, 0, nullptr);
 		vkCmdDrawIndexed(buffer, vertexArray->get_index_buffer_size(), 1, 0, 0, 0);
 	}
 
@@ -256,8 +253,8 @@ namespace Moxel
 		s_renderData.m_commandPool.destroy();
 		s_renderData.m_swapchain.destroy();
 
-		s_renderData.m_meshedPipeline.destroy();
 		s_renderData.m_shaderLibrary.destroy();
+		s_renderData.m_meshedPipeline = nullptr;
 
 		// clear resources
 		s_renderData.m_globalDescriptorPool = nullptr;

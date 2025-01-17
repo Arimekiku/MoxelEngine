@@ -8,7 +8,6 @@ namespace Moxel
 	{
 	public:
 		VulkanFramebuffer();
-		~VulkanFramebuffer();
 
 		void bind() const;
 

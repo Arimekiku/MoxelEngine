@@ -17,14 +17,14 @@ namespace Moxel
 		return *this;
 	}
 
-	VulkanDescriptorPool::Builder &VulkanDescriptorPool::Builder::set_create_flags(const VkDescriptorPoolCreateFlags flags)
+	VulkanDescriptorPool::Builder &VulkanDescriptorPool::Builder::with_create_flags(const VkDescriptorPoolCreateFlags flags)
 	{
 		m_poolFlags = flags;
 
 		return *this;
 	}
 
-	VulkanDescriptorPool::Builder &VulkanDescriptorPool::Builder::set_max_sets(const uint32_t count)
+	VulkanDescriptorPool::Builder &VulkanDescriptorPool::Builder::with_max_sets(const uint32_t count)
 	{
 		m_maxSets = count;
 

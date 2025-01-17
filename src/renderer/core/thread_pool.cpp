@@ -15,10 +15,10 @@ namespace Moxel
 					unique_lock lock(m_queueMutex);
 					m_notifier.wait(lock, [this]
 					{
-						return m_queue.empty() == false || is_running == false;
+						return m_queue.empty() == false || m_isRunning == false;
 					});
 
-					if (is_running == false)
+					if (m_isRunning == false)
 					{
 						return;
 					}
@@ -34,9 +34,7 @@ namespace Moxel
 
 	ThreadPool::~ThreadPool()
 	{
-		std::unique_lock lock = std::unique_lock(m_queueMutex);
-		is_running = false;
-		lock.unlock();
+		m_isRunning = false;
 
 		m_notifier.notify_all();
 		for (auto& thread : m_threads)

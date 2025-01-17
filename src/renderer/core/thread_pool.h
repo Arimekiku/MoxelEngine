@@ -18,7 +18,7 @@ namespace Moxel
 
 	private:
 		std::vector<std::thread> m_threads;
-		bool is_running = true;
+		bool m_isRunning = true;
 
 		std::queue<std::function<void()>> m_queue;
 		std::mutex m_queueMutex;

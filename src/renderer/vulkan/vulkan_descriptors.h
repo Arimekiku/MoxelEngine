@@ -13,8 +13,8 @@ namespace Moxel
 			Builder() = default;
 
 			Builder& add_pool_size(VkDescriptorType descriptorType, uint32_t count);
-			Builder& set_create_flags(VkDescriptorPoolCreateFlags flags);
-			Builder& set_max_sets(uint32_t count);
+			Builder& with_create_flags(VkDescriptorPoolCreateFlags flags);
+			Builder& with_max_sets(uint32_t count);
 
 			std::unique_ptr<VulkanDescriptorPool> build() const;
 		private:

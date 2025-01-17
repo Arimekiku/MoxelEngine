@@ -20,7 +20,7 @@ namespace Moxel
 				continue;
 			}
 
-			VulkanRenderer::queue_resource_free(chunk->get_chunk_mesh());
+			VulkanRenderer::queue_vao_free(chunk->get_chunk_mesh());
 		}
 
 		m_meshChunks.clear();
@@ -305,7 +305,7 @@ namespace Moxel
 		{
 			if (m_meshChunks[position]->get_chunk_mesh() != nullptr)
 			{
-				VulkanRenderer::queue_resource_free(m_meshChunks[position]->get_chunk_mesh());
+				VulkanRenderer::queue_vao_free(m_meshChunks[position]->get_chunk_mesh());
 			}
 
 			m_meshChunks.erase(position);

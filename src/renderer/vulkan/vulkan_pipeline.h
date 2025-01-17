@@ -7,43 +7,42 @@
 
 namespace Moxel
 {
-	struct VulkanGraphicsPipelineSpecs
-	{
-		std::shared_ptr<VulkanShader> Fragment;
-		std::shared_ptr<VulkanShader> Vertex;
-		std::shared_ptr<VulkanImage> Framebuffer;
-
-		VkPrimitiveTopology Topology;
-		VkPolygonMode PolygonMode;
-		VkCullModeFlags CullMode;
-		VkFrontFace FrontFace;
-		VkPushConstantRange PushConstants;
-		VkBool32 MultisamplingEnable = VK_FALSE;
-		VkBool32 BlendEnable = VK_FALSE;
-		VkBool32 DepthTest = VK_FALSE;
-
-		void clear()
-		{ 
-			Fragment = nullptr;
-			Vertex = nullptr;
-			Framebuffer = nullptr;
-		}
-	};
-
 	class VulkanGraphicsPipeline
 	{
 	public:
-		VulkanGraphicsPipeline() = default;
-		VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout);
+		class Builder
+		{
+		public:
+			Builder() = default;
 
-		void destroy();
+			Builder& add_layout(VkDescriptorSetLayout newLayout);
+			Builder& add_push_constant(VkPushConstantRange pushConstant);
+			Builder& add_color_attachment(VkFormat attachment);
+			Builder& with_fragment(VkPipelineShaderStageCreateInfo& fragment);
+			Builder& with_vertex(VkPipelineShaderStageCreateInfo& vertex);
+			Builder& with_depth_attachment(VkFormat attachment);
+
+			std::unique_ptr<VulkanGraphicsPipeline> build();
+		private:
+			std::vector<VkPushConstantRange> m_ranges;
+			std::vector<VkDescriptorSetLayout> m_layouts;
+
+			std::vector<VkFormat> m_colorAttachments;
+			VkFormat m_depthAttachment;
+
+			VkPipelineShaderStageCreateInfo* m_fragment = nullptr;
+			VkPipelineShaderStageCreateInfo* m_vertex = nullptr;
+			std::vector<VkPipelineShaderStageCreateInfo> m_shaders;
+		};
+
+		VulkanGraphicsPipeline(VkPipelineLayoutCreateInfo graphicsInfo, VkPipelineRenderingCreateInfo renderingInfo,
+							   std::vector<VkPipelineShaderStageCreateInfo>& shaders);
+		~VulkanGraphicsPipeline();
 
 		VkPipeline get_pipeline() const { return m_pipeline; }
 		VkPipelineLayout get_pipeline_layout() const { return m_layout; }
 
 	private:
-		VulkanGraphicsPipelineSpecs m_specs;
-
 		VkPipelineLayout m_layout = nullptr;
 		VkPipeline m_pipeline = nullptr;
 	};

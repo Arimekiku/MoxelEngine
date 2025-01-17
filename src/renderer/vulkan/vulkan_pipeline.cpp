@@ -3,42 +3,110 @@
 #include "engine/render_quad.h"
 #include "renderer/application.h"
 
+#include <ranges>
+#include <vulkan/vk_enum_string_helper.h>
+
 namespace Moxel
 {
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineSpecs& specs, VkDescriptorSetLayout layout)
+	//
+	// VulkanGraphicsPipeline::Builder
+	//
+
+	VulkanGraphicsPipeline::Builder& VulkanGraphicsPipeline::Builder::add_layout(const VkDescriptorSetLayout newLayout)
 	{
-		m_specs = specs;
-		const auto device = Application::get().get_context().get_logical_device();
-		const auto shaderInfo = std::vector
-		{
-			specs.Fragment->get_pipeline_create_info(),
-			specs.Vertex->get_pipeline_create_info(),
-		};
+		m_layouts.push_back(newLayout);
 
-		// set layout create info
-		auto graphicsInfo = VkPipelineLayoutCreateInfo();
-		graphicsInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		graphicsInfo.setLayoutCount = layout ? 1 : 0;
-		graphicsInfo.pSetLayouts = &layout;
-		graphicsInfo.pushConstantRangeCount = 0;
-		graphicsInfo.pPushConstantRanges = nullptr;
+		return *this;
+	}
 
-		if (specs.PushConstants.size > 0)
+	VulkanGraphicsPipeline::Builder& VulkanGraphicsPipeline::Builder::add_push_constant(const VkPushConstantRange pushConstant)
+	{
+		m_ranges.push_back(pushConstant);
+
+		return *this;
+	}
+
+	VulkanGraphicsPipeline::Builder& VulkanGraphicsPipeline::Builder::with_fragment(VkPipelineShaderStageCreateInfo& fragment)
+	{
+		m_fragment = &fragment;
+
+		return *this;
+	}
+
+	VulkanGraphicsPipeline::Builder& VulkanGraphicsPipeline::Builder::add_color_attachment(const VkFormat attachment)
+	{
+		for (const auto& colorAttachment: m_colorAttachments)
 		{
-			graphicsInfo.pushConstantRangeCount = 1;
-			graphicsInfo.pPushConstantRanges = &specs.PushConstants;
+			if (colorAttachment != attachment)
+			{
+				continue;
+			}
+
+			LOG_WARN("Color attachment format {0} is already in builder!", string_VkFormat(attachment));
+			return *this;
 		}
 
-		auto result = vkCreatePipelineLayout(device, &graphicsInfo, nullptr, &m_layout);
-		VULKAN_CHECK(result);
+		m_colorAttachments.push_back(attachment);
+		return *this;
+	}
+
+	VulkanGraphicsPipeline::Builder& VulkanGraphicsPipeline::Builder::with_vertex(VkPipelineShaderStageCreateInfo& vertex)
+	{
+		m_vertex = &vertex;
+
+		return *this;
+	}
+
+	VulkanGraphicsPipeline::Builder& VulkanGraphicsPipeline::Builder::with_depth_attachment(VkFormat attachment)
+	{
+		m_depthAttachment = attachment;
+
+		return *this;
+	}
+
+	std::unique_ptr<VulkanGraphicsPipeline> VulkanGraphicsPipeline::Builder::build()
+	{
+		// set pipeline graphics info
+		auto graphicsInfo = VkPipelineLayoutCreateInfo();
+		graphicsInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		graphicsInfo.setLayoutCount = m_layouts.size();
+		graphicsInfo.pSetLayouts = m_layouts.data();
+		graphicsInfo.pushConstantRangeCount = m_ranges.size();
+		graphicsInfo.pPushConstantRanges = m_ranges.data();
+
+		// set pipeline shader info
+		if (m_fragment != nullptr)
+		{
+			m_shaders.push_back(*m_fragment);
+		}
+
+		if (m_vertex != nullptr)
+		{
+			m_shaders.push_back(*m_vertex);
+		}
 
 		// set pipeline rendering info
 		auto renderingInfo = VkPipelineRenderingCreateInfo();
 		renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingInfo.pNext = nullptr;
-		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachmentFormats = &specs.Framebuffer->get_image_asset().ImageFormat;
+		renderingInfo.colorAttachmentCount = m_colorAttachments.size();
+		renderingInfo.pColorAttachmentFormats = m_colorAttachments.data();
 		renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+		return std::make_unique<VulkanGraphicsPipeline>(graphicsInfo, renderingInfo, m_shaders);
+	}
+
+	//
+	// VulkanGraphicsPipeline
+	//
+
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkPipelineLayoutCreateInfo graphicsInfo, VkPipelineRenderingCreateInfo renderingInfo, std::vector<VkPipelineShaderStageCreateInfo>& shaders)
+	{
+		const auto device = Application::get().get_context().get_logical_device();
+
+		// set layout create info
+		auto result = vkCreatePipelineLayout(device, &graphicsInfo, nullptr, &m_layout);
+		VULKAN_CHECK(result);
 
 		// set vertex input info
 		auto bindingDescription = VkVertexInputBindingDescription();
@@ -69,7 +137,7 @@ namespace Moxel
 		auto inputAssemblyInfo = VkPipelineInputAssemblyStateCreateInfo();
 		inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		inputAssemblyInfo.pNext = nullptr;
-		inputAssemblyInfo.topology = specs.Topology;
+		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
 		// set viewport state
@@ -83,10 +151,10 @@ namespace Moxel
 		auto rasterizationInfo = VkPipelineRasterizationStateCreateInfo();
 		rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		rasterizationInfo.pNext = nullptr;
-		rasterizationInfo.polygonMode = specs.PolygonMode;
-		rasterizationInfo.cullMode = specs.CullMode;
-		rasterizationInfo.frontFace = specs.FrontFace;
-		rasterizationInfo.lineWidth = 1.f;
+		rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterizationInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
+		rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizationInfo.lineWidth = 1.0f;
 
 		// TODO: currently not supported dynamic multisampling pipelines
 		// multisampling
@@ -132,8 +200,8 @@ namespace Moxel
 		auto pipelineInfo = VkGraphicsPipelineCreateInfo();
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.pNext = &renderingInfo;
-		pipelineInfo.stageCount = static_cast<uint32_t>(shaderInfo.size());
-		pipelineInfo.pStages = shaderInfo.data();
+		pipelineInfo.stageCount = static_cast<uint32_t>(shaders.size());
+		pipelineInfo.pStages = shaders.data();
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
 		pipelineInfo.pViewportState = &viewportState;
@@ -156,15 +224,17 @@ namespace Moxel
 		VULKAN_CHECK(result);
 	}
 
-	void VulkanGraphicsPipeline::destroy()
+	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 	{
 		const auto device = Application::get().get_context().get_logical_device();
-
-		m_specs.clear();
 
 		vkDestroyPipelineLayout(device, m_layout, nullptr);
 		vkDestroyPipeline(device, m_pipeline, nullptr);
 	}
+
+	//
+	// VulkanComputePipeline
+	//
 
 	VulkanComputePipeline::VulkanComputePipeline(const VulkanComputePipelineSpecs& specs)
 	{

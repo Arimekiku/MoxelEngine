@@ -24,6 +24,7 @@ namespace Moxel
 		void destroy() const;
 
 		const VkPipelineShaderStageCreateInfo& get_pipeline_create_info() const { return m_createInfo; }
+		VkPipelineShaderStageCreateInfo& get_pipeline_create_info() { return m_createInfo; }
 
 	private:
 		VkPipelineShaderStageCreateInfo m_createInfo;

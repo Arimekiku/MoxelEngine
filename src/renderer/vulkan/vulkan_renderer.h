@@ -21,7 +21,7 @@ namespace Moxel
 		static void shutdown();
 
 		static void immediate_submit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
-		static void queue_resource_free(const std::shared_ptr<VulkanVertexArray>& vertexArray) { s_deletionQueue.push_back(vertexArray); }
+		static void queue_vao_free(const std::shared_ptr<VulkanVertexArray>& vertexArray) { s_deletionQueue.push_back(vertexArray); }
 
 		static void prepare_frame();
 		static void end_frame();
@@ -43,7 +43,7 @@ namespace Moxel
 			VulkanSwapchain m_swapchain = VulkanSwapchain();
 			VulkanCommandBuffer m_commandPool = VulkanCommandBuffer();
 
-			VulkanGraphicsPipeline m_meshedPipeline;
+			std::unique_ptr<VulkanGraphicsPipeline> m_meshedPipeline;
 
 			std::unique_ptr<VulkanDescriptorPool> m_globalDescriptorPool;
 			std::vector<VkDescriptorSet> m_globalSets;

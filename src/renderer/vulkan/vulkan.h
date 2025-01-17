@@ -16,7 +16,7 @@ namespace Moxel
 				LOG_CRITICAL("Vulkan error: {0}", string_VkResult(result));
 			}
 
-			LOG_ASSERT(result == VK_SUCCESS, "Vulkan");
+			LOG_ASSERT((result == VK_SUCCESS), "Vulkan");
 		}
 	};
 }
