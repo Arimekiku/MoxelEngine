@@ -10,7 +10,7 @@ namespace Moxel
 
 		switch (side)
 		{
-			case Side::Down:
+			case Side::DOWN:
 			{
 				m_vertices[0] = VoxelVertex({0 + position.x, 0 + position.y, 0 + position.z}, {1, 0, 0});
 				m_vertices[1] = VoxelVertex({1 + position.x, 0 + position.y, 0 + position.z}, {0, 1, 0});
@@ -19,7 +19,7 @@ namespace Moxel
 
 				break;
 			}
-			case Side::Up:
+			case Side::UP:
 			{
 				m_vertices[0] = VoxelVertex({0 + position.x, 1 + position.y, 1 + position.z}, {1, 0, 0});
 				m_vertices[1] = VoxelVertex({1 + position.x, 1 + position.y, 1 + position.z}, {0, 1, 0});
@@ -28,7 +28,7 @@ namespace Moxel
 
 				break;
 			}
-			case Side::Left:
+			case Side::LEFT:
 			{
 				m_vertices[0] = VoxelVertex({0 + position.x, 0 + position.y, 0 + position.z}, {1, 0, 0});
 				m_vertices[1] = VoxelVertex({0 + position.x, 0 + position.y, 1 + position.z}, {0, 1, 0});
@@ -37,7 +37,7 @@ namespace Moxel
 
 				break;
 			}
-			case Side::Right: 
+			case Side::RIGHT: 
 			{
 				m_vertices[0] = VoxelVertex({1 + position.x, 1 + position.y, 0 + position.z}, {1, 0, 0});
 				m_vertices[1] = VoxelVertex({1 + position.x, 1 + position.y, 1 + position.z}, {0, 1, 0});
@@ -46,7 +46,7 @@ namespace Moxel
 
 				break;
 			}
-			case Side::Back:
+			case Side::BACK:
 			{
 				m_vertices[0] = VoxelVertex({0 + position.x, 0 + position.y, 0 + position.z}, {1, 0, 0});
 				m_vertices[1] = VoxelVertex({0 + position.x, 1 + position.y, 0 + position.z}, {0, 1, 0});
@@ -55,7 +55,7 @@ namespace Moxel
 
 				break;
 			}
-			case Side::Front:
+			case Side::FRONT:
 			{
 				m_vertices[0] = VoxelVertex({1 + position.x, 0 + position.y, 1 + position.z}, {1, 0, 0});
 				m_vertices[1] = VoxelVertex({1 + position.x, 1 + position.y, 1 + position.z}, {0, 1, 0});

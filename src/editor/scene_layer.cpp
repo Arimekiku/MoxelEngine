@@ -3,12 +3,16 @@
 
 #include <imgui.h>
 
+#include "renderer/application.h"
+
 namespace Moxel
 {
 	SceneLayer::SceneLayer()
 	{
 		constexpr auto cameraPosition = glm::vec3(0, 0, 1);
 		m_camera = RenderCamera(cameraPosition, glm::vec3(0, 0, -1));
+
+		m_image = std::make_shared<VulkanImage>(RESOURCES_PATH "Preview/voxels.png");
 	}
 
 	void SceneLayer::on_every_update()
@@ -41,6 +45,7 @@ namespace Moxel
 		ImGui::Text("Chunks Generated: %d", m_chunks.get_total_chunks_data_count());
 		ImGui::Text("Meshes Generated: %d", m_chunks.get_total_chunks_mesh_count());
 		ImGui::Text("Vertices Rendered: %d", m_verticesCount);
+		ImGui::Image(reinterpret_cast<ImTextureID>(m_image->get_image_id()), {400, 400});
 
 		ImGui::End();
 
@@ -50,5 +55,7 @@ namespace Moxel
 	void SceneLayer::detach()
 	{ 
 		m_chunks.destroy_world();
+
+		m_image = nullptr;
 	}
 }

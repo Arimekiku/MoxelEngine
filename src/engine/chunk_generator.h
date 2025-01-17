@@ -49,7 +49,7 @@ namespace Moxel
 		const int MAX_CHUNKS_DATA_PER_FRAME_GENERATED = 32;
 
 		ChunkWorldSpecs m_specs;
-		ThreadPool m_threadPool;
+		ChunkPosition m_oldPlayerChunkPosition = {100, 100, 100};
 
 		std::unordered_map<ChunkPosition, std::shared_ptr<Chunk>> m_dataChunks;
 		std::unordered_map<ChunkPosition, std::shared_ptr<ChunkMesh>> m_meshChunks;
@@ -61,6 +61,6 @@ namespace Moxel
 		std::queue<std::pair<ChunkPosition, std::shared_ptr<ChunkMesh>>> m_renderQueue;
 
 		std::mutex m_worldMutex;
-		ChunkPosition m_oldPlayerChunkPosition = { 100, 100, 100 };
+		ThreadPool m_threadPool;
 	};
 }

@@ -1,11 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <unordered_map>
-#include <vector>
-#include <vulkan/vulkan_core.h>
-
-#include "vulkan_buffer_uniform.h"
+#include "vulkan_buffer.h"
 
 namespace Moxel
 {
@@ -22,7 +17,6 @@ namespace Moxel
 			Builder& set_max_sets(uint32_t count);
 
 			std::unique_ptr<VulkanDescriptorPool> build() const;
-
 		private:
 			std::vector<VkDescriptorPoolSize> m_poolSizes;
 			VkDescriptorPoolCreateFlags m_poolFlags = 0;
@@ -52,8 +46,8 @@ namespace Moxel
 			Builder() = default;
 
 			Builder& add_binding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count = 1);
-			std::unique_ptr<VulkanDescriptorSetLayout> build() const;
 
+			std::unique_ptr<VulkanDescriptorSetLayout> build() const;
 		private:
 			std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_bindings;
 		};
@@ -81,7 +75,6 @@ namespace Moxel
 
 		bool build(VkDescriptorSet& set);
 		void overwrite(const VkDescriptorSet& set);
-
 	private:
 		VulkanDescriptorSetLayout& m_setLayout;
 		VulkanDescriptorPool& m_pool;

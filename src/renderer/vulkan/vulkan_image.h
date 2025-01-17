@@ -6,6 +6,15 @@
 
 namespace Moxel
 {
+	struct ImageAsset final : Asset
+	{
+		VkImageLayout Layout = VK_IMAGE_LAYOUT_UNDEFINED;
+		VkImage Image = nullptr;
+		VkImageView ImageView = nullptr;
+		VkExtent3D ImageExtent = {0, 0, 0};
+		VkFormat ImageFormat = VK_FORMAT_UNDEFINED;
+	};
+
 	struct VulkanImageSpecs
 	{
 		VkFormat Format = VK_FORMAT_UNDEFINED;
@@ -14,16 +23,24 @@ namespace Moxel
 		VkImageAspectFlags ImageAspects = VK_IMAGE_ASPECT_COLOR_BIT;
 	};
 
-	struct VulkanImage final : Asset
+	class VulkanImage
 	{
-		VkImageLayout Layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		VkImage Image = nullptr;
-		VkImageView ImageView = nullptr;
-		VkFormat ImageFormat = VK_FORMAT_UNDEFINED;
-		VkExtent3D ImageExtent = { 0, 0, 0 };
+	public:
+		VulkanImage(VulkanImageSpecs specs, bool storeTexture);
+		VulkanImage(const char* path);
+		~VulkanImage();
 
-		void copy_into(const VulkanImage& target) const;
+		VkDescriptorSet get_image_id() const { return m_imageId; }
+		const ImageAsset& get_image_asset() const { return m_asset; }
+
+		void copy_into(const ImageAsset& target) const;
 		void copy_raw(VkImage target, const VkExtent2D& imageSize) const;
+
 		static void transit(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+	private:
+		ImageAsset m_asset;
+
+		VkDescriptorSet m_imageId = nullptr;
+		VkSampler m_sampler = nullptr;
 	};
 }

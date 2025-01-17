@@ -34,7 +34,9 @@ namespace Moxel
 
 	ThreadPool::~ThreadPool()
 	{
+		std::unique_lock lock = std::unique_lock(m_queueMutex);
 		is_running = false;
+		lock.unlock();
 
 		m_notifier.notify_all();
 		for (auto& thread : m_threads)

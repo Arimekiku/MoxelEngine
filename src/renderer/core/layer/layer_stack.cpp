@@ -21,10 +21,11 @@ namespace Moxel
 
 	void LayerStack::clear()
 	{
-		for (Layer* layer : m_layers)
+		std::ranges::reverse(m_layers);
+		for (const auto layer : m_layers)
 		{
 			layer->detach();
-			delete layer;
 		}
+		m_layers.clear();
 	}
 }

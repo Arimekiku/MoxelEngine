@@ -31,7 +31,7 @@ namespace Moxel
 			{
 				for (int x = 0; x < chunkSize; ++x)
 				{
-					const auto offset = glm::vec3(position.x * chunkSize + x, position.y * chunkSize + y, position.z * chunkSize + z);
+					const auto offset = glm::vec3(position.X * chunkSize + x, position.Y * chunkSize + y, position.Z * chunkSize + z);
 					const double noise = perlin.octave3D_01(offset.x * 0.01f, offset.y * 0.01f, offset.z * 0.01f, 4);
 
 					if (noise > 0.5f)
@@ -42,7 +42,7 @@ namespace Moxel
 			}
 		}
 
-		m_is_processed = true;
+		m_isProcessed = true;
 	}
 
 	ChunkMesh::~ChunkMesh()

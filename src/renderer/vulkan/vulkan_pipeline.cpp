@@ -1,6 +1,5 @@
 #include "vulkan_pipeline.h"
 #include "vulkan.h"
-#include "vulkan_buffer_vertex_array.h"
 #include "engine/render_quad.h"
 #include "renderer/application.h"
 
@@ -38,13 +37,13 @@ namespace Moxel
 		renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingInfo.pNext = nullptr;
 		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachmentFormats = &specs.Framebuffer->ImageFormat;
+		renderingInfo.pColorAttachmentFormats = &specs.Framebuffer->get_image_asset().ImageFormat;
 		renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 		// set vertex input info
 		auto bindingDescription = VkVertexInputBindingDescription();
 		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
+		bindingDescription.stride = sizeof(VoxelVertex);
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 		auto attributeDescriptions = std::vector<VkVertexInputAttributeDescription>(2);
@@ -80,7 +79,7 @@ namespace Moxel
 		viewportState.viewportCount = 1;
 		viewportState.scissorCount = 1;
 
-		// set rasterizer info
+		// set rasterization info
 		auto rasterizationInfo = VkPipelineRasterizationStateCreateInfo();
 		rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		rasterizationInfo.pNext = nullptr;
@@ -91,14 +90,14 @@ namespace Moxel
 
 		// TODO: currently not supported dynamic multisampling pipelines
 		// multisampling
-		auto multisampleInfo = VkPipelineMultisampleStateCreateInfo();
-		multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampleInfo.pNext = nullptr;
-		multisampleInfo.sampleShadingEnable = VK_FALSE;
-		multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-		multisampleInfo.minSampleShading = 1.0f;
-		multisampleInfo.alphaToCoverageEnable = VK_FALSE;
-		multisampleInfo.alphaToOneEnable = VK_FALSE;
+		auto multisamplingInfo = VkPipelineMultisampleStateCreateInfo();
+		multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisamplingInfo.pNext = nullptr;
+		multisamplingInfo.sampleShadingEnable = VK_FALSE;
+		multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisamplingInfo.minSampleShading = 1.0f;
+		multisamplingInfo.alphaToCoverageEnable = VK_FALSE;
+		multisamplingInfo.alphaToOneEnable = VK_FALSE;
 
 		// TODO: currently not supported dynamic blending pipelines
 		// setup dummy color blending. We aren't using transparent objects yet
@@ -139,7 +138,7 @@ namespace Moxel
 		pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizationInfo;
-		pipelineInfo.pMultisampleState = &multisampleInfo;
+		pipelineInfo.pMultisampleState = &multisamplingInfo;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDepthStencilState = &depthStencilInfo;
 		pipelineInfo.layout = m_layout;

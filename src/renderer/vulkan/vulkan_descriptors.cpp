@@ -6,6 +6,10 @@
 
 namespace Moxel
 {
+	//
+	// VulkanDescriptorPool::Builder
+	//
+
 	VulkanDescriptorPool::Builder &VulkanDescriptorPool::Builder::add_pool_size(const VkDescriptorType descriptorType, const uint32_t count)
 	{
 		m_poolSizes.push_back(VkDescriptorPoolSize(descriptorType, count));
@@ -31,6 +35,10 @@ namespace Moxel
 	{
 		return std::make_unique<VulkanDescriptorPool>(m_maxSets, m_poolFlags, m_poolSizes);
 	}
+
+	//
+	// VulkanDescriptorPool
+	//
 
 	VulkanDescriptorPool::VulkanDescriptorPool(const uint32_t maxSets, const VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes)
 	{
@@ -84,9 +92,13 @@ namespace Moxel
 		vkResetDescriptorPool(device, m_descriptorPool, 0);
 	}
 
+	//
+	// VulkanDescriptorSetLayout::Builder
+	//
+
 	VulkanDescriptorSetLayout::Builder& VulkanDescriptorSetLayout::Builder::add_binding(const uint32_t binding, const VkDescriptorType descriptorType, const VkShaderStageFlags stageFlags, const uint32_t count)
 	{
-		LOG_ASSERT(m_bindings.contains(binding) == false, "Binding already exists");
+		LOG_ASSERT((m_bindings.contains(binding) == false), "Binding already exists");
 
 		auto layoutBinding = VkDescriptorSetLayoutBinding();
 		layoutBinding.binding = binding;
@@ -103,6 +115,10 @@ namespace Moxel
 	{
 		return std::make_unique<VulkanDescriptorSetLayout>(m_bindings);
 	}
+
+	//
+	// VulkanDescriptorSetLayout
+	//
 
 	VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& bindings)
 	{
@@ -133,11 +149,11 @@ namespace Moxel
 
 	DescriptorWriter& DescriptorWriter::write_buffer(const uint32_t binding, const VkDescriptorBufferInfo& bufferInfo)
 	{
-		LOG_ASSERT(m_setLayout.m_bindings.contains(binding) == true, "Binding does not exists");
+		LOG_ASSERT((m_setLayout.m_bindings.contains(binding) == true), "Binding does not exists");
 
 		const auto& description = m_setLayout.m_bindings[binding];
 
-		LOG_ASSERT(description.descriptorCount == 1, "Multiple bindings is not supported");
+		LOG_ASSERT((description.descriptorCount == 1), "Multiple bindings is not supported");
 
 		auto write = VkWriteDescriptorSet();
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -152,11 +168,11 @@ namespace Moxel
 
 	DescriptorWriter &DescriptorWriter::write_image(const uint32_t binding, const VkDescriptorImageInfo& imageInfo)
 	{
-		LOG_ASSERT(m_setLayout.m_bindings.contains(binding) == true, "Binding does not exists");
+		LOG_ASSERT((m_setLayout.m_bindings.contains(binding) == true), "Binding does not exists");
 
 		const auto& description = m_setLayout.m_bindings[binding];
 
-		LOG_ASSERT(description.descriptorCount == 1, "Multiple bindings is not supported");
+		LOG_ASSERT((description.descriptorCount == 1), "Multiple bindings is not supported");
 
 		auto write = VkWriteDescriptorSet();
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -171,7 +187,7 @@ namespace Moxel
 
 	bool DescriptorWriter::build(VkDescriptorSet& set)
 	{
-		bool success = m_pool.allocate_descriptor(m_setLayout.get_descriptor_set_layout(), set);
+		const bool success = m_pool.allocate_descriptor(m_setLayout.get_descriptor_set_layout(), set);
 		if (success == false)
 		{
 			return false;

@@ -3,6 +3,7 @@
 #include "renderer/core/layer/layer.h"
 #include "engine/render_camera.h"
 #include "engine/chunk_generator.h"
+#include "renderer/vulkan/vulkan_image.h"
 
 namespace Moxel
 {
@@ -17,9 +18,10 @@ namespace Moxel
 		void on_gui_update() override;
 
 	private:
+		std::shared_ptr<VulkanImage> m_image = nullptr;
 		RenderCamera m_camera;
 		ChunkBuilder m_chunks;
 
-		int m_verticesCount;
+		int m_verticesCount = 0;
 	};
 }

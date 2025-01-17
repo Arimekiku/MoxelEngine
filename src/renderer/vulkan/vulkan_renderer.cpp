@@ -116,7 +116,7 @@ namespace Moxel
 		s_renderData.m_swapchain.update_frame(s_renderData.m_bufferData);
 
 		// clear resources
-		VulkanImage::transit(framebuffer->get_render_image()->Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		VulkanImage::transit(framebuffer->get_render_image()->get_image_asset().Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		auto vulkanSubresourceRange = VkImageSubresourceRange();
 		vulkanSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -134,7 +134,7 @@ namespace Moxel
 		clearValue.color = clearColor;
 
 		vkCmdClearColorImage(buffer,
-			framebuffer->get_render_image()->Image,
+			framebuffer->get_render_image()->get_image_asset().Image,
 			VK_IMAGE_LAYOUT_GENERAL,
 			reinterpret_cast<VkClearColorValue*>(&clearValue),
 			1,
@@ -184,7 +184,7 @@ namespace Moxel
 		vkCmdEndRendering(buffer);
 
 		// copy framebuffer into swapchain
-		VulkanImage::transit(framebuffer->get_render_image()->Image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		VulkanImage::transit(framebuffer->get_render_image()->get_image_asset().Image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		VulkanImage::transit(swapchainImage.ImageData, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 		framebuffer->get_render_image()->copy_raw(swapchainImage.ImageData, s_renderData.m_swapchain.get_swapchain_size());
@@ -236,7 +236,7 @@ namespace Moxel
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, s_renderData.m_meshedPipeline.get_pipeline());
 
 		// update per-vertex data
-		glm::vec3 chunkWorld = glm::vec3(chunkPosition.x, chunkPosition.y, chunkPosition.z) * 16.0f; 
+		const glm::vec3 chunkWorld = glm::vec3(chunkPosition.X, chunkPosition.Y, chunkPosition.Z) * 16.0f; 
 		vkCmdPushConstants(buffer, s_renderData.m_meshedPipeline.get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &chunkWorld);
 
 		const auto& vertexArray = chunk->get_chunk_mesh();

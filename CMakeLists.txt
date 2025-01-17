@@ -36,6 +36,7 @@ add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 target_compile_definitions("${CMAKE_PROJECT_NAME}" 
     PUBLIC
         RESOURCES_PATH="${RESOURCE_DIR}"
+        STB_IMAGE_IMPLEMENTATION
         $<$<CONFIG:Debug>:DEBUG>
         $<$<CONFIG:RelWithDebInfo>:RELEASE>
         $<$<CONFIG:Release>:RELEASE>

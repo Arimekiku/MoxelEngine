@@ -15,11 +15,11 @@ namespace Moxel
 		void initialize();
 		void destroy() const;
 
-		VulkanBuffer allocate_buffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
-		VulkanImage allocate_image(const VulkanImageSpecs& specs, VmaMemoryUsage usage);
+		BufferAsset allocate_buffer(const VkBufferCreateInfo& bufferCreateInfo, VmaMemoryUsage usage);
+		void destroy_buffer(const BufferAsset& buffer);
 
-		void destroy_buffer(const VulkanBuffer& buffer);
-		void destroy_vulkan_image(const VulkanImage& image);
+		ImageAsset allocate_image(const VkImageCreateInfo& imageCreateInfo, VmaMemoryUsage usage);
+		void destroy_image(const ImageAsset& image);
 	private:
 		VmaAllocator m_allocator;
 

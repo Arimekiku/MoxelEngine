@@ -21,10 +21,7 @@ namespace Moxel
 		static void shutdown();
 
 		static void immediate_submit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
-		static void queue_resource_free(const std::shared_ptr<VulkanVertexArray>& vertexArray)
-		{
-			s_deletionQueue.push_back(vertexArray);
-		}
+		static void queue_resource_free(const std::shared_ptr<VulkanVertexArray>& vertexArray) { s_deletionQueue.push_back(vertexArray); }
 
 		static void prepare_frame();
 		static void end_frame();

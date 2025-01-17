@@ -10,21 +10,21 @@ namespace Moxel
 		glm::vec3 Color;
 
 		VoxelVertex() = default;
-		VoxelVertex(glm::u8vec3 localCoord, glm::vec3 color) 
+		VoxelVertex(const glm::u8vec3 localCoord, const glm::vec3 color) 
 		{
 			Color = color;
-			Position = (uint32_t) localCoord.x | (uint32_t) localCoord.y << 5 | (uint32_t) localCoord.z << 10;
+			Position = static_cast<uint32_t>(localCoord.x) | static_cast<uint32_t>(localCoord.y) << 5 | static_cast<uint32_t>(localCoord.z) << 10;
 		}
 	};
 
 	enum class Side
 	{
-		Front,
-		Back,
-		Left,
-		Right,
-		Up,
-		Down
+		FRONT,
+		BACK,
+		LEFT,
+		RIGHT,
+		UP,
+		DOWN
 	};
 
 	class RenderQuad

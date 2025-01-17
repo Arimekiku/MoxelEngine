@@ -102,9 +102,9 @@ namespace Moxel
 				}
 
 				const auto position = m_meshGenerationQueue.front();
-				const auto xDistance = abs(position.x - playerChunkPosition.x);
-				const auto yDistance = abs(position.y - playerChunkPosition.y);
-				const auto zDistance = abs(position.z - playerChunkPosition.z);
+				const auto xDistance = abs(position.X - playerChunkPosition.X);
+				const auto yDistance = abs(position.Y - playerChunkPosition.Y);
+				const auto zDistance = abs(position.Z - playerChunkPosition.Z);
 
 				if (xDistance > renderDistance || yDistance > renderDistance || zDistance > renderDistance)
 				{
@@ -112,37 +112,37 @@ namespace Moxel
 					continue;
 				}
 
-				const auto left = ChunkPosition(position.x - 1, position.y, position.z);
+				const auto left = ChunkPosition(position.X - 1, position.Y, position.Z);
 				if (m_dataChunks.contains(left) == false || m_dataChunks[left]->is_processed() == false)
 				{
 					break;
 				}
 
-				const auto down = ChunkPosition(position.x, position.y - 1, position.z);
+				const auto down = ChunkPosition(position.X, position.Y - 1, position.Z);
 				if (m_dataChunks.contains(down) == false || m_dataChunks[down]->is_processed() == false)
 				{
 					break;
 				}
 
-				const auto back = ChunkPosition(position.x, position.y, position.z - 1);
+				const auto back = ChunkPosition(position.X, position.Y, position.Z - 1);
 				if (m_dataChunks.contains(back) == false || m_dataChunks[back]->is_processed() == false)
 				{
 					break;
 				}
 
-				const auto right = ChunkPosition(position.x + 1, position.y, position.z);
+				const auto right = ChunkPosition(position.X + 1, position.Y, position.Z);
 				if (m_dataChunks.contains(right) == false || m_dataChunks[right]->is_processed() == false)
 				{
 					break;
 				}
 
-				const auto up = ChunkPosition(position.x, position.y + 1, position.z);
+				const auto up = ChunkPosition(position.X, position.Y + 1, position.Z);
 				if (m_dataChunks.contains(up) == false || m_dataChunks[up]->is_processed() == false)
 				{
 					break;
 				}
 
-				const auto front = ChunkPosition(position.x, position.y, position.z + 1);
+				const auto front = ChunkPosition(position.X, position.Y, position.Z + 1);
 				if (m_dataChunks.contains(front) == false || m_dataChunks[front]->is_processed() == false)
 				{
 					break;
@@ -182,11 +182,11 @@ namespace Moxel
 	{
 		const int renderDistance = m_specs.RenderDistance;
 
-		for (int z = -renderDistance + playerChunkPosition.z; z < renderDistance + playerChunkPosition.z; ++z)
+		for (int z = -renderDistance + playerChunkPosition.Z; z < renderDistance + playerChunkPosition.Z; ++z)
 		{
-			for (int y = -renderDistance + playerChunkPosition.y; y < renderDistance + playerChunkPosition.y; ++y)
+			for (int y = -renderDistance + playerChunkPosition.Y; y < renderDistance + playerChunkPosition.Y; ++y)
 			{
-				for (int x = -renderDistance + playerChunkPosition.x; x < renderDistance + playerChunkPosition.x; ++x)
+				for (int x = -renderDistance + playerChunkPosition.X; x < renderDistance + playerChunkPosition.X; ++x)
 				{
 					auto lock = std::unique_lock(m_worldMutex);
 
@@ -218,9 +218,9 @@ namespace Moxel
 
 		for (const auto& position: m_meshChunks | std::views::keys)
 		{
-			const auto xDistance = abs(position.x - playerChunkPosition.x);
-			const auto yDistance = abs(position.y - playerChunkPosition.y);
-			const auto zDistance = abs(position.z - playerChunkPosition.z);
+			const auto xDistance = abs(position.X - playerChunkPosition.X);
+			const auto yDistance = abs(position.Y - playerChunkPosition.Y);
+			const auto zDistance = abs(position.Z - playerChunkPosition.Z);
 
 			if (xDistance < renderDistance && yDistance < renderDistance && zDistance < renderDistance)
 			{
@@ -243,12 +243,12 @@ namespace Moxel
 		auto chunksToErase = std::vector<ChunkPosition>();
 		for (const auto& position: m_dataChunks | std::views::keys)
 		{
-			const auto right = ChunkPosition(position.x + 1, position.y, position.z);
-			const auto up = ChunkPosition(position.x, position.y + 1, position.z);
-			const auto front = ChunkPosition(position.x, position.y, position.z + 1);
-			const auto left = ChunkPosition(position.x - 1, position.y, position.z);
-			const auto down = ChunkPosition(position.x, position.y - 1, position.z);
-			const auto back = ChunkPosition(position.x, position.y, position.z - 1);
+			const auto right = ChunkPosition(position.X + 1, position.Y, position.Z);
+			const auto up = ChunkPosition(position.X, position.Y + 1, position.Z);
+			const auto front = ChunkPosition(position.X, position.Y, position.Z + 1);
+			const auto left = ChunkPosition(position.X - 1, position.Y, position.Z);
+			const auto down = ChunkPosition(position.X, position.Y - 1, position.Z);
+			const auto back = ChunkPosition(position.X, position.Y, position.Z - 1);
 
 			if (m_meshChunks.contains(right) && m_meshChunks[right] != nullptr 
 				&& m_meshChunks.contains(up) && m_meshChunks[up] != nullptr 
@@ -262,9 +262,9 @@ namespace Moxel
 				continue;
 			}
 
-			const auto xDistance = abs(position.x - playerChunkPosition.x);
-			const auto yDistance = abs(position.y - playerChunkPosition.y);
-			const auto zDistance = abs(position.z - playerChunkPosition.z);
+			const auto xDistance = abs(position.X - playerChunkPosition.X);
+			const auto yDistance = abs(position.Y - playerChunkPosition.Y);
+			const auto zDistance = abs(position.Z - playerChunkPosition.Z);
 
 			if (xDistance > renderDistance * 2 || yDistance > renderDistance * 2 || zDistance > renderDistance * 2)
 			{
@@ -286,9 +286,9 @@ namespace Moxel
 		const auto renderDistance = m_specs.RenderDistance;
 		for (const auto& position: m_meshChunks | std::views::keys)
 		{
-			const auto xDistance = abs(position.x - playerChunkPosition.x);
-			const auto yDistance = abs(position.y - playerChunkPosition.y);
-			const auto zDistance = abs(position.z - playerChunkPosition.z);
+			const auto xDistance = abs(position.X - playerChunkPosition.X);
+			const auto yDistance = abs(position.Y - playerChunkPosition.Y);
+			const auto zDistance = abs(position.Z - playerChunkPosition.Z);
 
 			if (xDistance > renderDistance || yDistance > renderDistance || zDistance > renderDistance)
 			{
@@ -336,19 +336,19 @@ namespace Moxel
 		if (x < 0 || x >= chunkSize)
 		{
 			actualX = x < 0 ? chunkSize - 1 : 0;
-			position.x += x < 0 ? -1 : 1;
+			position.X += x < 0 ? -1 : 1;
 		}
 
 		if (y < 0 || y >= chunkSize)
 		{
 			actualY = y < 0 ? chunkSize - 1 : 0;
-			position.y += y < 0 ? -1 : 1;
+			position.Y += y < 0 ? -1 : 1;
 		}
 
 		if (z < 0 || z >= chunkSize)
 		{
 			actualZ = z < 0 ? chunkSize - 1 : 0;
-			position.z += z < 0 ? -1 : 1;
+			position.Z += z < 0 ? -1 : 1;
 		}
 
 		return m_dataChunks.at(position)->get_block(actualZ * chunkSize * chunkSize + actualY * chunkSize + actualX);
@@ -386,7 +386,7 @@ namespace Moxel
 
 					if (downBlock == false)
 					{
-						auto quadDown = RenderQuad(Side::Down, positionOffset);
+						auto quadDown = RenderQuad(Side::DOWN, positionOffset);
 						quadDown.add_indices_offset(indexOffset + indexQuadOffset);
 						totalVertices.insert(totalVertices.end(), quadDown.get_vertices().begin(), quadDown.get_vertices().end());
 						totalIndices.insert(totalIndices.end(), quadDown.get_indices().begin(), quadDown.get_indices().end());
@@ -396,7 +396,7 @@ namespace Moxel
 
 					if (upBlock == false)
 					{
-						auto quadUp = RenderQuad(Side::Up, positionOffset);
+						auto quadUp = RenderQuad(Side::UP, positionOffset);
 						quadUp.add_indices_offset(indexOffset + indexQuadOffset);
 						totalVertices.insert(totalVertices.end(), quadUp.get_vertices().begin(), quadUp.get_vertices().end());
 						totalIndices.insert(totalIndices.end(), quadUp.get_indices().begin(), quadUp.get_indices().end());
@@ -406,7 +406,7 @@ namespace Moxel
 
 					if (leftBlock == false)
 					{
-						auto quadLeft = RenderQuad(Side::Left, positionOffset);
+						auto quadLeft = RenderQuad(Side::LEFT, positionOffset);
 						quadLeft.add_indices_offset(indexOffset + indexQuadOffset);
 						totalVertices.insert(totalVertices.end(), quadLeft.get_vertices().begin(), quadLeft.get_vertices().end());
 						totalIndices.insert(totalIndices.end(), quadLeft.get_indices().begin(), quadLeft.get_indices().end());
@@ -416,7 +416,7 @@ namespace Moxel
 
 					if (rightBlock == false)
 					{
-						auto quadRight = RenderQuad(Side::Right, positionOffset);
+						auto quadRight = RenderQuad(Side::RIGHT, positionOffset);
 						quadRight.add_indices_offset(indexOffset + indexQuadOffset);
 						totalVertices.insert(totalVertices.end(), quadRight.get_vertices().begin(), quadRight.get_vertices().end());
 						totalIndices.insert(totalIndices.end(), quadRight.get_indices().begin(), quadRight.get_indices().end());
@@ -426,7 +426,7 @@ namespace Moxel
 
 					if (backBlock == false)
 					{
-						auto quadBack = RenderQuad(Side::Back, positionOffset);
+						auto quadBack = RenderQuad(Side::BACK, positionOffset);
 						quadBack.add_indices_offset(indexOffset + indexQuadOffset);
 						totalVertices.insert(totalVertices.end(), quadBack.get_vertices().begin(), quadBack.get_vertices().end());
 						totalIndices.insert(totalIndices.end(), quadBack.get_indices().begin(), quadBack.get_indices().end());
@@ -436,7 +436,7 @@ namespace Moxel
 
 					if (frontBlock == false)
 					{
-						auto quadFront = RenderQuad(Side::Front, positionOffset);
+						auto quadFront = RenderQuad(Side::FRONT, positionOffset);
 						quadFront.add_indices_offset(indexOffset + indexQuadOffset);
 						totalVertices.insert(totalVertices.end(), quadFront.get_vertices().begin(), quadFront.get_vertices().end());
 						totalIndices.insert(totalIndices.end(), quadFront.get_indices().begin(), quadFront.get_indices().end());

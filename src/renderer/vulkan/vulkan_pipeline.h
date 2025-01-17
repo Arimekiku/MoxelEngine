@@ -18,7 +18,7 @@ namespace Moxel
 		VkCullModeFlags CullMode;
 		VkFrontFace FrontFace;
 		VkPushConstantRange PushConstants;
-		VkBool32 MultisampleEnable = VK_FALSE;
+		VkBool32 MultisamplingEnable = VK_FALSE;
 		VkBool32 BlendEnable = VK_FALSE;
 		VkBool32 DepthTest = VK_FALSE;
 
@@ -51,7 +51,7 @@ namespace Moxel
 	struct VulkanComputePipelineSpecs
 	{
 		std::shared_ptr<VulkanShader> Compute;
-		std::shared_ptr<VulkanImage> Framebuffer;
+		std::shared_ptr<ImageAsset> Framebuffer;
 
 		VkPushConstantRange PushConstants;
 
