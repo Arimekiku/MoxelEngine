@@ -1,6 +1,6 @@
-﻿#include "renderer/ui/gui_layer.h"
-#include "editor/scene_layer.h"
-#include "renderer/application.h"
+﻿#include "engine/application.h"
+#include "engine/ui/gui_layer.h"
+#include "scene/scene_layer.h"
 
 int main(int argc, char** argv) 
 {
