@@ -25,7 +25,7 @@ There listed all capabilities engine supports at the moment
 * Perspective camera object
 * Fully functional scene based on voxels with chunks and multithreading
 
-![image info](./Resources/Preview/voxels.png)
+![image info](./resources/preview/voxels.png)
 
 # TODO
 * Texturing

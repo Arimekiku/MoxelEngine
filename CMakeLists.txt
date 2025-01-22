@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(PROJECT_OUTPUT_DIR "build")
 set(PROJECT_SOURCE_DIR "src")
-set(RESOURCE_DIR "Resources/")
+set(RESOURCE_DIR "resources/")
 
 # hot reload for MSVC compilers if supported
 if (MSVC)
@@ -57,10 +57,10 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
 # compile shaders
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
-    set(SPIRV "${PROJECT_BINARY_DIR}/Resources/${FILE_NAME}.spv")
+    set(SPIRV "${PROJECT_BINARY_DIR}/resources/${FILE_NAME}.spv")
     add_custom_command(
             OUTPUT ${SPIRV}
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/Resources/"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/resources/"
             COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
             DEPENDS ${GLSL})
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})
@@ -70,11 +70,11 @@ add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
 add_dependencies(${PROJECT_NAME} Shaders)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:MoxelEngine>/Resources/"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:MoxelEngine>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PROJECT_BINARY_DIR}/Resources"
-        "$<TARGET_FILE_DIR:MoxelEngine>/Resources"
+        "${PROJECT_BINARY_DIR}/resources"
+        "$<TARGET_FILE_DIR:MoxelEngine>/resources"
 )
 
 # define resources in binaries
-file(COPY ${RESOURCE_DIR} DESTINATION "${CMAKE_BINARY_DIR}/Resources/")
+file(COPY ${RESOURCE_DIR} DESTINATION "${CMAKE_BINARY_DIR}/resources/")
