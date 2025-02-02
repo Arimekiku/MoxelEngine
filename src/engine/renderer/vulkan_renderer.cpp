@@ -7,7 +7,7 @@
 
 namespace Moxel
 {
-	VulkanRenderer::RenderStaticData VulkanRenderer::s_renderData;
+	VulkanRenderer::RenderData VulkanRenderer::s_renderData;
 	std::vector<std::function<void()>> VulkanRenderer::s_deletionQueue;
 
 	struct GlobalRenderData

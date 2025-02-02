@@ -34,7 +34,7 @@ namespace Moxel
 
 		static int get_current_frame_index() { return s_renderData.CurrentFrameIndex % 2; }
 	private:
-		struct RenderStaticData
+		struct RenderData
 		{
 			CommandBufferData BufferData;
 			int CurrentFrameIndex = 0;
@@ -53,6 +53,6 @@ namespace Moxel
 		};
 
 		static std::vector<std::function<void()>> s_deletionQueue;
-		static RenderStaticData s_renderData;
+		static RenderData s_renderData;
 	};
 }

@@ -167,12 +167,16 @@ namespace Moxel
 		multisamplingInfo.alphaToCoverageEnable = VK_FALSE;
 		multisamplingInfo.alphaToOneEnable = VK_FALSE;
 
-		// TODO: currently not supported dynamic blending pipelines
-		// setup dummy color blending. We aren't using transparent objects yet
-		// the blending is just "no blend", but we do write to the color attachment
+		// blending
 		auto colorBlendAttachment = VkPipelineColorBlendAttachmentState();
 		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
+		colorBlendAttachment.blendEnable = VK_TRUE;
+		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 		auto colorBlending = VkPipelineColorBlendStateCreateInfo();
 		colorBlending.pNext = nullptr;
