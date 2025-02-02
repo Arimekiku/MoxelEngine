@@ -13,16 +13,6 @@ namespace Moxel
 
 	void ChunkBuilder::destroy_world()
 	{ 
-		for (const auto& chunk: m_meshChunks | std::views::values)
-		{
-			if (chunk == nullptr || chunk->get_chunk_mesh() == nullptr)
-			{
-				continue;
-			}
-
-			VulkanRenderer::queue_vao_free(chunk->get_chunk_mesh());
-		}
-
 		m_meshChunks.clear();
 	}
 
@@ -64,8 +54,7 @@ namespace Moxel
 		});
 
 		// update render data
-		m_threadPool.enqueue(
-		[this, playerChunkPosition, shouldGenerateData]
+		m_threadPool.enqueue([this, playerChunkPosition, shouldGenerateData]
 		{
 			if (shouldGenerateData)
 			{
@@ -303,11 +292,6 @@ namespace Moxel
 
 		for (const auto& position: chunksToErase)
 		{
-			if (m_meshChunks[position]->get_chunk_mesh() != nullptr)
-			{
-				VulkanRenderer::queue_vao_free(m_meshChunks[position]->get_chunk_mesh());
-			}
-
 			m_meshChunks.erase(position);
 		}
 	}

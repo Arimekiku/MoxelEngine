@@ -1,5 +1,4 @@
 ﻿#include "engine/application.h"
-#include "engine/ui/gui_layer.h"
 #include "scene/scene_layer.h"
 
 int main(int argc, char** argv) 

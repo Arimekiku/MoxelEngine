@@ -9,8 +9,6 @@ namespace Moxel
 	{
 		VkImage ImageData = nullptr;
 		VkImageView ImageViewData = nullptr;
-
-		FrameData() = default;
 	};
 
 	class VulkanSwapchain 

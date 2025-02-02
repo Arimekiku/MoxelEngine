@@ -3,6 +3,7 @@
 #include "core/core.h"
 #include "renderer/vulkan_allocator.h"
 #include "renderer/vulkan_context.h"
+#include "ui/gui_layer.h"
 
 namespace Moxel
 {
@@ -14,9 +15,9 @@ namespace Moxel
 
 		static Application& get() { return *s_instance; }
 
-		void add_layer(Layer* layer);
-
 		void run() const;
+
+		void add_layer(Layer* layer);
 
 		VulkanAllocator& get_allocator() { return m_allocator; }
 		const VulkanContext& get_context() const { return m_context; }
@@ -28,6 +29,8 @@ namespace Moxel
 		GameWindow* m_window;
 		VulkanAllocator m_allocator;
 		VulkanContext m_context;
-		LayerStack m_LayerStack;
+
+		LayerStack m_layerStack;
+		GuiLayer* m_guiLayer;
 	};
 }

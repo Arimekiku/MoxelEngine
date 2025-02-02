@@ -214,16 +214,23 @@ namespace Moxel
 
 	VulkanImage::~VulkanImage()
 	{
-		const auto device = Application::get().get_context().get_logical_device();
-
-		vkDestroySampler(device, m_sampler, nullptr);
-
-		if (m_imageId != nullptr)
+		if (m_asset.Image == nullptr)
 		{
-			ImGui_ImplVulkan_RemoveTexture(m_imageId);
+			return;
 		}
 
-		Application::get().get_allocator().destroy_image(m_asset);
+		VulkanRenderer::free_resource_submit([sampler = m_sampler, id = m_imageId, asset = m_asset]()
+		{
+			if (id != nullptr)
+			{
+				const auto device = Application::get().get_context().get_logical_device();
+
+				vkDestroySampler(device, sampler, nullptr);
+				ImGui_ImplVulkan_RemoveTexture(id);
+			}
+
+			Application::get().get_allocator().destroy_image(asset);
+		});
 	}
 
 	void VulkanImage::copy_into(const ImageAsset& target) const

@@ -11,6 +11,8 @@ namespace Moxel
     void GuiLayer::attach()
     {
 		const auto& vulkan = Application::get().get_context();
+
+        // create imgui pool
         const VkDescriptorPoolSize poolSizes[] =
         { 
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -72,15 +74,16 @@ namespace Moxel
 
     void GuiLayer::detach()
     {
-        const auto device = Application::get().get_context().get_logical_device();
+        VulkanRenderer::free_resource_submit([pool = m_imguiPool]()
+        {
+            const auto device = Application::get().get_context().get_logical_device();
 
-        vkDeviceWaitIdle(device);
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplSDL3_Shutdown();
 
-        ImGui_ImplVulkan_Shutdown();
-        ImGui_ImplSDL3_Shutdown();
-
-        vkDestroyDescriptorPool(device, m_imguiPool, nullptr);
-        ImGui::DestroyContext();
+            vkDestroyDescriptorPool(device, pool, nullptr);
+            ImGui::DestroyContext();
+        });
     }
 
     void GuiLayer::process_events(const SDL_Event& event)

@@ -18,6 +18,7 @@ namespace Moxel
 	public:
 		VulkanVertexArray() = default;
 		VulkanVertexArray(const std::vector<uint32_t>& indices, const std::vector<VoxelVertex>& vertices);
+		~VulkanVertexArray();
 
 		const std::vector<VoxelVertex>& get_vertices() { return m_vertices; }
 		size_t get_index_buffer_size() const { return m_indices; }

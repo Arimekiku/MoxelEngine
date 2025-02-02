@@ -21,38 +21,38 @@ namespace Moxel
 		static void shutdown();
 
 		static void immediate_submit(std::function<void(VkCommandBuffer freeBuffer)>&& function);
-		static void queue_vao_free(const std::shared_ptr<VulkanVertexArray>& vertexArray) { s_deletionQueue.push_back(vertexArray); }
+		static void free_resource_submit(std::function<void()>&& function) { s_deletionQueue.push_back(function); }
 
 		static void prepare_frame();
 		static void end_frame();
 
 		static void render_chunk(const ChunkPosition chunkPosition, const std::shared_ptr<ChunkMesh>& chunk, const glm::mat4& cameraMat);
 
-		static VulkanSwapchain& get_swapchain() { return s_renderData.m_swapchain; }
-		static VulkanCommandBuffer& get_command_pool() { return s_renderData.m_commandPool; }
-		static VulkanRendererSpecs& get_specifications() { return s_renderData.m_specs; }
+		static VulkanSwapchain& get_swapchain() { return s_renderData.Swapchain; }
+		static VulkanCommandBuffer& get_command_pool() { return s_renderData.CommandPool; }
+		static VulkanRendererSpecs& get_specifications() { return s_renderData.Specs; }
 
-		static int get_current_frame_index() { return s_renderData.m_currentFrameIndex % 2; }
+		static int get_current_frame_index() { return s_renderData.CurrentFrameIndex % 2; }
 	private:
 		struct RenderStaticData
 		{
-			CommandBufferData m_bufferData;
-			int m_currentFrameIndex = 0;
+			CommandBufferData BufferData;
+			int CurrentFrameIndex = 0;
 
-			VulkanRendererSpecs m_specs = VulkanRendererSpecs();
-			VulkanSwapchain m_swapchain = VulkanSwapchain();
-			VulkanCommandBuffer m_commandPool = VulkanCommandBuffer();
+			VulkanRendererSpecs Specs = VulkanRendererSpecs();
+			VulkanSwapchain Swapchain = VulkanSwapchain();
+			VulkanCommandBuffer CommandPool = VulkanCommandBuffer();
 
-			std::unique_ptr<VulkanGraphicsPipeline> m_meshedPipeline;
+			std::unique_ptr<VulkanGraphicsPipeline> MeshedPipeline;
 
-			std::unique_ptr<VulkanDescriptorPool> m_globalDescriptorPool;
-			std::vector<VkDescriptorSet> m_globalSets;
+			std::unique_ptr<VulkanDescriptorPool> GlobalDescriptorPool;
+			std::vector<VkDescriptorSet> GlobalSets;
 
-			VulkanShaderLibrary m_shaderLibrary = VulkanShaderLibrary();
-			std::vector<std::shared_ptr<VulkanBufferUniform>> m_uniforms;
+			VulkanShaderLibrary ShaderLibrary = VulkanShaderLibrary();
+			std::vector<std::shared_ptr<VulkanBufferUniform>> Uniforms;
 		};
 
-		static std::vector<std::shared_ptr<VulkanVertexArray>> s_deletionQueue;
+		static std::vector<std::function<void()>> s_deletionQueue;
 		static RenderStaticData s_renderData;
 	};
 }

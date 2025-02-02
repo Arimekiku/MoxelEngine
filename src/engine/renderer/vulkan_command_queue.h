@@ -13,8 +13,6 @@ namespace Moxel
 		VkSemaphore SwapchainSemaphore = nullptr;
 		VkSemaphore RenderSemaphore = nullptr;
 		VkFence RenderFence = nullptr;
-
-		CommandBufferData() = default;
 	};
 
 	class VulkanCommandBuffer 

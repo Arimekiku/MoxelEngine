@@ -21,7 +21,6 @@ namespace Moxel
 		auto swapchainFormat = VkSurfaceFormatKHR();
 		swapchainFormat.format = VK_FORMAT_B8G8R8A8_SRGB;
 		swapchainFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-		m_swapchainImageFormat = swapchainFormat.format;
 
 		vkb::Swapchain vkbSwapchain = swapchainBuilder
 			.set_desired_format(swapchainFormat)
@@ -35,6 +34,7 @@ namespace Moxel
 		m_imageViews = vkbSwapchain.get_image_views().value();
 		m_swapchainInstance = vkbSwapchain.swapchain;
 		m_swapchainExtent = vkbSwapchain.extent;
+		m_swapchainImageFormat = swapchainFormat.format;
 	}
 
 	void VulkanSwapchain::resize()

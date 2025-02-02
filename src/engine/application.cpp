@@ -18,14 +18,14 @@ namespace Moxel
 
 		VulkanRenderer::initialize(initialSize);
 
-		m_LayerStack = LayerStack();
+		m_layerStack = LayerStack();
 	}
 
 	Application::~Application()
 	{
 		vkDeviceWaitIdle(m_context.get_logical_device());
 
-		m_LayerStack.clear();
+		m_layerStack.clear();
 
 		VulkanRenderer::shutdown();
 
@@ -35,12 +35,12 @@ namespace Moxel
 
 	void Application::run() const
 	{
-		m_window->update(m_LayerStack);
+		m_window->update(m_layerStack);
 	}
 
 	void Application::add_layer(Layer* layer)
 	{
-		m_LayerStack.push(layer);
+		m_layerStack.push(layer);
 		layer->attach();
 	}
 }

@@ -72,6 +72,17 @@ namespace Moxel
 		allocator.destroy_buffer(stagingBuffer);
 	}
 
+	VulkanVertexArray::~VulkanVertexArray()
+	{
+		VulkanRenderer::free_resource_submit([vertex = m_vertexBuffer, index = m_indexBuffer]()
+		{
+			auto allocator = Application::get().get_allocator();
+
+			allocator.destroy_buffer(vertex);
+			allocator.destroy_buffer(index);
+		});
+	}
+
 	//
 	// VulkanBufferUniform
 	//
@@ -94,7 +105,12 @@ namespace Moxel
 
 	VulkanBufferUniform::~VulkanBufferUniform()
 	{
-		Application::get().get_allocator().destroy_buffer(m_buffer);
+		VulkanRenderer::free_resource_submit([buffer = m_buffer]()
+		{
+			auto allocator = Application::get().get_allocator();
+
+			allocator.destroy_buffer(buffer);
+		});
 	}
 
 	void VulkanBufferUniform::write_data(const void* data, const uint32_t size) const

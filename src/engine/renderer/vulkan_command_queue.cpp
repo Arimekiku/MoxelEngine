@@ -114,7 +114,8 @@ namespace Moxel
 		const auto device = Application::get().get_context().get_logical_device();
 		const auto queue = Application::get().get_context().get_render_queue();
 
-		VULKAN_CHECK(vkEndCommandBuffer(m_immediateBuffer));
+		auto result = vkEndCommandBuffer(m_immediateBuffer);
+		VULKAN_CHECK(result);
 
 		auto bufferSubmitInfo = VkCommandBufferSubmitInfo();
 		bufferSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
@@ -128,14 +129,17 @@ namespace Moxel
 		submit.commandBufferInfoCount = 1;
 		submit.pCommandBufferInfos = &bufferSubmitInfo;
 
-		VULKAN_CHECK(vkQueueSubmit2(queue, 1, &submit, m_immediateFence));
-		VULKAN_CHECK(vkWaitForFences(device, 1, &m_immediateFence, true, 9999999999));
+		result = vkQueueSubmit2(queue, 1, &submit, m_immediateFence);
+		VULKAN_CHECK(result);
+
+		result = vkWaitForFences(device, 1, &m_immediateFence, true, 9999999999);
+		VULKAN_CHECK(result);
 	}
 
 	void VulkanCommandBuffer::begin_command_queue() const
 	{
-		// prepare current command buffer
 		const auto currentCommandBuffer = m_currentBuffer.CommandBuffer;
+
 		auto result = vkResetCommandBuffer(currentCommandBuffer, 0);
 		VULKAN_CHECK(result);
 

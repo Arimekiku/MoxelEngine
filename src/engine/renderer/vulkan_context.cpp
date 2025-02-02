@@ -9,7 +9,7 @@ namespace Moxel
 	{
 		auto builder = vkb::InstanceBuilder();
 		auto vkbInstance = builder
-			.set_app_name("Vulkan Engine Application")
+			.set_app_name("Moxel")
 			.request_validation_layers(true)
 			.use_default_debug_messenger()
 			.require_api_version(1, 3, 0)
