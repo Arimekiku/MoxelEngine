@@ -49,9 +49,7 @@ namespace Moxel
 
 		// create descriptor set for imgui
 		if (storeTexture == false)
-		{
 			return;
-		}
 
 		auto samplerInfo = VkSamplerCreateInfo();
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -80,9 +78,7 @@ namespace Moxel
 		stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
 		if (!pixels)
-		{
 			LOG_ASSERT(false, "Couldn't load image from path {}", path);
-		}
 
 		const void* pPixels = pixels;
 		const VkDeviceSize imageSize = texWidth * texHeight * 4;

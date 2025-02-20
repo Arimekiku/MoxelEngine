@@ -112,9 +112,9 @@ namespace Moxel
 
 		// clear color image with pink color
 		framebuffer->get_render_image()->clear({
-				164.0f / 256.0f,
-				30.0f / 256.0f,
-				34.0f / 256.0f,
+			164.0f / 256.0f,
+			30.0f / 256.0f,
+			34.0f / 256.0f,
 		});
 
 		// bind dynamic resources
@@ -240,9 +240,9 @@ namespace Moxel
 		s_renderData.GlobalSets.clear();
 		s_renderData.Uniforms.clear();
 
-		for (const auto& function: s_deletionQueue)
+		for (const auto& func: s_deletionQueue)
 		{
-			function();
+			func();
 		}
 		s_deletionQueue.clear();
 	}

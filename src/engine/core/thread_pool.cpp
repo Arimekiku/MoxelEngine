@@ -19,9 +19,7 @@ namespace Moxel
 					});
 
 					if (m_isRunning == false)
-					{
 						return;
-					}
 
 					function<void()> task = std::move(m_queue.front());
 					m_queue.pop();

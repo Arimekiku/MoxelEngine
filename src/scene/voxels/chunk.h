@@ -45,7 +45,7 @@ namespace Moxel
 			: m_chunkMesh(mesh) { }
 		~ChunkMesh();
 
-		void destroy_mesh();
+		void clear_mesh();
 
 		const std::shared_ptr<VulkanVertexArray>& get_chunk_mesh() { return m_chunkMesh; }
 	private:

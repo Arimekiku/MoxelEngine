@@ -38,9 +38,7 @@ namespace Moxel
 		for (const auto& colorAttachment: m_colorAttachments)
 		{
 			if (colorAttachment != attachment)
-			{
 				continue;
-			}
 
 			LOG_WARN("Color attachment format {0} is already in builder!", string_VkFormat(attachment));
 			return *this;
@@ -76,14 +74,10 @@ namespace Moxel
 
 		// set pipeline shader info
 		if (m_fragment != nullptr)
-		{
 			m_shaders.push_back(*m_fragment);
-		}
 
 		if (m_vertex != nullptr)
-		{
 			m_shaders.push_back(*m_vertex);
-		}
 
 		// set pipeline rendering info
 		auto renderingInfo = VkPipelineRenderingCreateInfo();

@@ -35,9 +35,7 @@ namespace Moxel
 					const double noise = perlin.octave3D_01(offset.x * 0.01f, offset.y * 0.01f, offset.z * 0.01f, 4);
 
 					if (noise > 0.5f)
-					{
 						set_block(z * chunkSize * chunkSize + y * chunkSize + x);
-					}
 				}
 			}
 		}
@@ -47,15 +45,13 @@ namespace Moxel
 
 	ChunkMesh::~ChunkMesh()
 	{
-		destroy_mesh();
+		clear_mesh();
 	}
 
-	void ChunkMesh::destroy_mesh()
+	void ChunkMesh::clear_mesh()
 	{
 		if (m_chunkMesh == nullptr)
-		{
 			return;
-		}
 
 		m_chunkMesh = nullptr;
 	}

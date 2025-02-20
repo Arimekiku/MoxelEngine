@@ -97,8 +97,11 @@ namespace Moxel
 	{
 		const auto device = Application::get().get_context().get_logical_device();
 
-		VULKAN_CHECK(vkResetFences(device, 1, &m_immediateFence));
-		VULKAN_CHECK(vkResetCommandBuffer(m_immediateBuffer, 0));
+		auto result = vkResetFences(device, 1, &m_immediateFence);
+		VULKAN_CHECK(result);
+
+		result = vkResetCommandBuffer(m_immediateBuffer, 0);
+		VULKAN_CHECK(result);
 
 		auto bufferBeginInfo = VkCommandBufferBeginInfo();
 		bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -106,7 +109,8 @@ namespace Moxel
 		bufferBeginInfo.pInheritanceInfo = nullptr;
 		bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		VULKAN_CHECK(vkBeginCommandBuffer(m_immediateBuffer, &bufferBeginInfo));
+		result = vkBeginCommandBuffer(m_immediateBuffer, &bufferBeginInfo);
+		VULKAN_CHECK(result);
 	}
 
 	void VulkanCommandBuffer::end_immediate_queue() const

@@ -16,9 +16,7 @@ namespace Moxel
 
 		// Decides whether the next vertical Orientation is legal or not
 		if (std::abs(angle(newOrientation, glm::vec3(0, 1, 0)) - glm::radians(90.0f)) <= glm::radians(85.0f))
-		{
 			m_orientation = newOrientation;
-		}
 
 		// Rotates the Orientation left and right
 		m_orientation = rotate(m_orientation, glm::radians(-rotY), glm::vec3(0, 1, 0));
@@ -52,9 +50,7 @@ namespace Moxel
 		}
 
 		if (m_cameraMode == false)
-		{
 			return;
-		}
 
 		const glm::vec2 rotationVector = Input::Mouse::get_normalized_cursor();
 		set_orientation(rotationVector.y / 10, rotationVector.x / 10);

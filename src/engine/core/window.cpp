@@ -9,15 +9,13 @@ namespace Moxel
 	{
 		SDL_Init(SDL_INIT_VIDEO);
 
-		constexpr SDL_WindowFlags window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
+		constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
 
-		m_nativeWindow = SDL_CreateWindow("Vulkan Engine", width, height, window_flags);
+		m_nativeWindow = SDL_CreateWindow("Vulkan Engine", width, height, windowFlags);
 		m_windowSize = VkExtent2D(width, height);
 
 		if (m_nativeWindow == nullptr)
-		{
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window: %s\n", SDL_GetError());
-		}
 	}
 
 	GameWindow::~GameWindow()
@@ -39,9 +37,7 @@ namespace Moxel
 					case SDL_EVENT_KEY_DOWN:
 					{
 						if (event.key.key == SDLK_ESCAPE)
-						{
 							m_isOpen = false;
-						}
 
 						Input::Key::set_key_value(event.key.key, true);
 						break;

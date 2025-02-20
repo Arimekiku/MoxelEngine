@@ -66,12 +66,10 @@ namespace Moxel
 	void VulkanSwapchain::update_frame(const CommandBufferData& reservedBuffer)
 	{
 		const auto device = Application::get().get_context().get_logical_device();
-
 		const auto result = vkAcquireNextImageKHR(device, m_swapchainInstance, 1000000000, reservedBuffer.SwapchainSemaphore, nullptr, &m_currentFrameIndex);
+
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
-		{
 			resize();
-		}
 
 		m_currentFrame.ImageData = m_images[m_currentFrameIndex];
 		m_currentFrame.ImageViewData = m_imageViews[m_currentFrameIndex];
@@ -94,9 +92,8 @@ namespace Moxel
 		presentInfo.pImageIndices = &m_currentFrameIndex;
 
 		const auto result = vkQueuePresentKHR(queue, &presentInfo);
+
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
-		{
 			resize();
-		}
 	}
 }

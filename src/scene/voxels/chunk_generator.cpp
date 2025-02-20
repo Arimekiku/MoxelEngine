@@ -27,9 +27,7 @@ namespace Moxel
 		for (const auto& mesh: m_meshChunks | std::views::values)
 		{
 			if (mesh == nullptr || mesh->get_chunk_mesh() == nullptr)
-			{
 				continue;
-			}
 
 			meshes++;
 		}
@@ -48,18 +46,14 @@ namespace Moxel
 			update_data_deletion_queue(playerChunkPosition);
 
 			if (shouldGenerateData)
-			{
 				update_mesh_deletion_queue(playerChunkPosition);
-			}
 		});
 
 		// update render data
 		m_threadPool.enqueue([this, playerChunkPosition, shouldGenerateData]
 		{
 			if (shouldGenerateData)
-			{
 				update_mesh_generation_queue(playerChunkPosition);
-			}
 		});
 
 		// generate render data
@@ -70,9 +64,7 @@ namespace Moxel
 				auto lock = std::unique_lock(m_worldMutex);
 
 				if (m_dataGenerationQueue.empty())
-				{
 					break;
-				}
 
 				const auto position = m_dataGenerationQueue.front();
 				m_dataChunks[position]->generate_data(position);
@@ -86,9 +78,7 @@ namespace Moxel
 				auto lock = std::unique_lock(m_worldMutex);
 
 				if (m_meshGenerationQueue.empty())
-				{
 					break;
-				}
 
 				const auto position = m_meshGenerationQueue.front();
 				const auto xDistance = abs(position.X - playerChunkPosition.X);
@@ -103,39 +93,27 @@ namespace Moxel
 
 				const auto left = ChunkPosition(position.X - 1, position.Y, position.Z);
 				if (m_dataChunks.contains(left) == false || m_dataChunks[left]->is_processed() == false)
-				{
 					break;
-				}
 
 				const auto down = ChunkPosition(position.X, position.Y - 1, position.Z);
 				if (m_dataChunks.contains(down) == false || m_dataChunks[down]->is_processed() == false)
-				{
 					break;
-				}
 
 				const auto back = ChunkPosition(position.X, position.Y, position.Z - 1);
 				if (m_dataChunks.contains(back) == false || m_dataChunks[back]->is_processed() == false)
-				{
 					break;
-				}
 
 				const auto right = ChunkPosition(position.X + 1, position.Y, position.Z);
 				if (m_dataChunks.contains(right) == false || m_dataChunks[right]->is_processed() == false)
-				{
 					break;
-				}
 
 				const auto up = ChunkPosition(position.X, position.Y + 1, position.Z);
 				if (m_dataChunks.contains(up) == false || m_dataChunks[up]->is_processed() == false)
-				{
 					break;
-				}
 
 				const auto front = ChunkPosition(position.X, position.Y, position.Z + 1);
 				if (m_dataChunks.contains(front) == false || m_dataChunks[front]->is_processed() == false)
-				{
 					break;
-				}
 
 				generate_chunk_mesh(position);
 
@@ -157,9 +135,7 @@ namespace Moxel
 	void ChunkBuilder::enqueue_data_generation(ChunkPosition position)
 	{
 		if (m_dataChunks.contains(position))
-		{
 			return;
-		}
 
 		const auto chunk = std::make_shared<Chunk>(m_specs.ChunkSize * m_specs.ChunkSize * m_specs.ChunkSize);
 		m_dataChunks.emplace(position, chunk);
@@ -182,9 +158,7 @@ namespace Moxel
 					auto chunkPosition = ChunkPosition(x, y, z);
 
 					if (m_meshChunks.contains(chunkPosition))
-					{
 						continue;
-					}
 
 					enqueue_data_generation(chunkPosition);
 					enqueue_data_generation(ChunkPosition(x + 1, y, z));
@@ -214,9 +188,7 @@ namespace Moxel
 			if (xDistance < renderDistance && yDistance < renderDistance && zDistance < renderDistance)
 			{
 				if (m_meshChunks[position] == nullptr || m_meshChunks[position]->get_chunk_mesh() == nullptr)
-				{
 					continue;
-				}
 
 				m_renderQueue.emplace(position, m_meshChunks[position]);
 			}
@@ -256,9 +228,7 @@ namespace Moxel
 			const auto zDistance = abs(position.Z - playerChunkPosition.Z);
 
 			if (xDistance > renderDistance * 2 || yDistance > renderDistance * 2 || zDistance > renderDistance * 2)
-			{
 				chunksToErase.emplace_back(position);
-			}
 		}
 
 		for (const auto& position: chunksToErase)
@@ -282,9 +252,7 @@ namespace Moxel
 			if (xDistance > renderDistance || yDistance > renderDistance || zDistance > renderDistance)
 			{
 				if (m_meshChunks[position] == nullptr)
-				{
 					continue;
-				}
 
 				chunksToErase.emplace_back(position);
 			}
@@ -354,9 +322,7 @@ namespace Moxel
 				{
 					const auto mainBlock = m_dataChunks.at(position)->get_block(z * chunkSize * chunkSize + y * chunkSize + x);
 					if (mainBlock == false)
-					{
 						continue;
-					}
 
 					const auto positionOffset = glm::i32vec3(x, y, z);
 					int indexQuadOffset = 0;

@@ -14,9 +14,7 @@ namespace Moxel
 		const auto iterator = std::ranges::find(m_layers, layer);
 
 		if (iterator != m_layers.end())
-		{
 			m_layers.erase(iterator);
-		}
 	}
 
 	void LayerStack::clear()
